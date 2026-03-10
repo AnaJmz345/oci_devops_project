@@ -1,0 +1,17 @@
+
+target/
+*.jar
+*.war
+
+# Ignora la carpeta del Wallet 
+wallet/
+# Ignora archivos de variables de entorno locales
+.env
+
+# Ignorar archivos de configuración del IDE
+.idea/
+.vscode/
+*.swp
+
+# Ignorar logs de Docker
+*.log
