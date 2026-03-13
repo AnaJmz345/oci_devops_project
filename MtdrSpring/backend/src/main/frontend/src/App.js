@@ -23,9 +23,10 @@ function App() {
       );
     }
 
-    function toggleDone(event, id, description, done) {
+    function toggleDone(event, id, description, currentDone) {
       event.preventDefault();
-      modifyItem(id, description, done).then(
+      const newDone = currentDone === "DONE" ? "TODO" : "DONE";
+      modifyItem(id, description, newDone).then(
         () => { reloadOneItem(id); },
         (error) => { setError(error); }
       );
@@ -123,7 +124,7 @@ function App() {
                     {item.storyPoints != null ? `⏱ ${item.storyPoints}h` : ''}
                   </td>
                   <td><Button variant="contained" className="DoneButton"
-                        onClick={(event) => toggleDone(event, item.id, item.description, !item.done)}
+                        onClick={(event) => toggleDone(event, item.id, item.description, item.done)}
                         size="small">Done</Button></td>
                 </tr>
                 ) : null
@@ -144,7 +145,7 @@ function App() {
                     {item.storyPoints != null ? `⏱ ${item.storyPoints}h` : ''}
                   </td>
                   <td><Button variant="contained" className="DoneButton"
-                        onClick={(event) => toggleDone(event, item.id, item.description, !item.done)}
+                        onClick={(event) => toggleDone(event, item.id, item.description, item.done)}
                         size="small">Undo</Button></td>
                   <td><Button startIcon={<DeleteIcon />} variant="contained" className="DeleteButton"
                         onClick={() => deleteItem(item.id)} size="small">Delete</Button></td>
