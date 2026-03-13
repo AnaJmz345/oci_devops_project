@@ -86,7 +86,7 @@ public class BotActions{
         try {
 
             ToDoItem item = todoService.getToDoItemById(id);
-            item.setDone(true);
+            item.setDone("DONE");
             todoService.updateToDoItem(id, item);
             BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DONE.getMessage(), telegramClient);
 
@@ -107,7 +107,7 @@ public class BotActions{
         try {
 
             ToDoItem item = todoService.getToDoItemById(id);
-            item.setDone(false);
+            item.setDone("DONE");
             todoService.updateToDoItem(id, item);
             BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_UNDONE.getMessage(), telegramClient);
 
@@ -172,7 +172,7 @@ public class BotActions{
         myTodoListTitleRow.add(BotLabels.MY_TODO_LIST.getLabel());
         keyboard.add(myTodoListTitleRow);
 
-        List<ToDoItem> activeItems = allItems.stream().filter(item -> item.isDone() == false)
+        List<ToDoItem> activeItems = allItems.stream().filter(item -> "TO DO".equalsIgnoreCase(item.getDone()))
                 .collect(Collectors.toList());
 
         for (ToDoItem item : activeItems) {
@@ -182,7 +182,7 @@ public class BotActions{
             keyboard.add(currentRow);
         }
 
-        List<ToDoItem> doneItems = allItems.stream().filter(item -> item.isDone() == true)
+        List<ToDoItem> doneItems = allItems.stream().filter(item -> "DONE".equalsIgnoreCase(item.getDone()))
                 .collect(Collectors.toList());
 
         for (ToDoItem item : doneItems) {
@@ -220,8 +220,7 @@ public class BotActions{
             return;
         ToDoItem newItem = new ToDoItem();
         newItem.setDescription(requestText);
-        newItem.setCreation_ts(OffsetDateTime.now());
-        newItem.setDone(false);
+        newItem.setDone("TO DO");
         todoService.addToDoItem(newItem);
 
         BotHelper.sendMessageToTelegram(chatId, BotMessages.NEW_ITEM_ADDED.getMessage(), telegramClient, null);

@@ -12,6 +12,4 @@ import jakarta.transaction.Transactional;
 @Transactional
 @EnableTransactionManagement
 public interface ToDoItemRepository extends JpaRepository<ToDoItem,Integer> {
-
-
 }

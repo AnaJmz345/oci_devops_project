@@ -9,9 +9,9 @@ import java.time.OffsetDateTime;
     in the autonomous database
  */
 @Entity
-@Table(name = "TODOITEM")
+@Table(name = "TASK", schema = "TODOUSER")
 public class ToDoItem {
-    @Id
+    /*@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int ID;
     @Column(name = "DESCRIPTION")
@@ -19,14 +19,26 @@ public class ToDoItem {
     @Column(name = "CREATION_TS")
     OffsetDateTime creation_ts;
     @Column(name = "done")
-    boolean done;
+    boolean done;*/
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "TASK_ID")
+    int ID;
+
+    @Column(name = "TASK_NAME")
+    String description;
+
+    @Column(name = "STATUS")
+    String done;
+
     public ToDoItem(){
 
     }
-    public ToDoItem(int ID, String description, OffsetDateTime creation_ts, boolean done) {
+    //public ToDoItem(int ID, String description, OffsetDateTime creation_ts, boolean done) {
+    public ToDoItem(int ID, String description, String done) {
         this.ID = ID;
         this.description = description;
-        this.creation_ts = creation_ts;
+        //this.creation_ts = creation_ts;
         this.done = done;
     }
 
@@ -45,20 +57,20 @@ public class ToDoItem {
     public void setDescription(String description) {
         this.description = description;
     }
-
+    /* 
     public OffsetDateTime getCreation_ts() {
         return creation_ts;
     }
 
     public void setCreation_ts(OffsetDateTime creation_ts) {
         this.creation_ts = creation_ts;
-    }
+    }*/
 
-    public boolean isDone() {
+    public String getDone() {
         return done;
     }
 
-    public void setDone(boolean done) {
+    public void setDone(String done) {
         this.done = done;
     }
 
@@ -67,7 +79,7 @@ public class ToDoItem {
         return "ToDoItem{" +
                 "ID=" + ID +
                 ", description='" + description + '\'' +
-                ", creation_ts=" + creation_ts +
+                //", creation_ts=" + creation_ts +
                 ", done=" + done +
                 '}';
     }
