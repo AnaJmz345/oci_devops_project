@@ -21,7 +21,7 @@ function NewItem(props) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
           <input
             id="newiteminput"
-            placeholder="Task name *"
+            placeholder="Task description"
             type="text"
             autoComplete="off"
             value={taskName}
@@ -30,7 +30,7 @@ function NewItem(props) {
           />
           <input
             id="descriptioninput"
-            placeholder="Description"
+            placeholder="Person in charge"
             type="text"
             autoComplete="off"
             value={description}
@@ -40,7 +40,7 @@ function NewItem(props) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <input
               id="storypointsinput"
-              placeholder="Hours (story points)"
+              placeholder="Hours spent"
               type="number"
               min="0"
               autoComplete="off"
