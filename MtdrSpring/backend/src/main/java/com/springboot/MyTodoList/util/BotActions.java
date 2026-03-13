@@ -172,7 +172,7 @@ public class BotActions{
         myTodoListTitleRow.add(BotLabels.MY_TODO_LIST.getLabel());
         keyboard.add(myTodoListTitleRow);
 
-        List<ToDoItem> activeItems = allItems.stream().filter(item -> "TO DO".equalsIgnoreCase(item.getDone()))
+        List<ToDoItem> activeItems = allItems.stream().filter(item -> "TODO".equalsIgnoreCase(item.getDone()))
                 .collect(Collectors.toList());
 
         for (ToDoItem item : activeItems) {
@@ -220,7 +220,7 @@ public class BotActions{
             return;
         ToDoItem newItem = new ToDoItem();
         newItem.setDescription(requestText);
-        newItem.setDone("TO DO");
+        newItem.setDone("TODO");
         todoService.addToDoItem(newItem);
 
         BotHelper.sendMessageToTelegram(chatId, BotMessages.NEW_ITEM_ADDED.getMessage(), telegramClient, null);
