@@ -1,62 +1,67 @@
-/*
-## MyToDoReact version 1.0.
-##
-## Copyright (c) 2022 Oracle, Inc.
-## Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
-*/
-/*
- * Component that supports creating a new todo item.
- * @author  jean.de.lavarene@oracle.com
- */
-
 import React, { useState } from "react";
 import Button from '@mui/material/Button';
 
-
 function NewItem(props) {
-  const [item, setItem] = useState('');
+  const [taskName, setTaskName] = useState('');
+  const [description, setDescription] = useState('');
+  const [storyPoints, setStoryPoints] = useState('');
+
   function handleSubmit(e) {
-    // console.log("NewItem.handleSubmit("+e+")");
-    if (!item.trim()) {
-      return;
-    }
-    // addItem makes the REST API call:
-    props.addItem(item);
-    setItem("");
+    if (!taskName.trim()) return;
+    props.addItem(taskName, description, storyPoints ? parseInt(storyPoints) : null);
+    setTaskName('');
+    setDescription('');
+    setStoryPoints('');
     e.preventDefault();
   }
-  function handleChange(e) {
-    setItem(e.target.value);
-  }
+
   return (
     <div id="newinputform">
-    <form>
-      <input
-        id="newiteminput"
-        placeholder="New item"
-        type="text"
-        autoComplete="off"
-        value={item}
-        onChange={handleChange}
-        // No need to click on the "ADD" button to add a todo item. You
-        // can simply press "Enter":
-        onKeyDown={event => {
-          if (event.key === 'Enter') {
-            handleSubmit(event);
-          }
-        }}
-      />
-      <span>&nbsp;&nbsp;</span>
-      <Button
-        className="AddButton"
-        variant="contained"
-        disabled={props.isInserting}
-        onClick={!props.isInserting ? handleSubmit : null}
-        size="small"
-      >
-        {props.isInserting ? 'Adding…' : 'Add'}
-      </Button>
-    </form>
+      <form>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+          <input
+            id="newiteminput"
+            placeholder="Task name *"
+            type="text"
+            autoComplete="off"
+            value={taskName}
+            onChange={e => setTaskName(e.target.value)}
+            onKeyDown={event => { if (event.key === 'Enter') handleSubmit(event); }}
+          />
+          <input
+            id="descriptioninput"
+            placeholder="Description"
+            type="text"
+            autoComplete="off"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            onKeyDown={event => { if (event.key === 'Enter') handleSubmit(event); }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <input
+              id="storypointsinput"
+              placeholder="Hours (story points)"
+              type="number"
+              min="0"
+              autoComplete="off"
+              value={storyPoints}
+              onChange={e => setStoryPoints(e.target.value)}
+              onKeyDown={event => { if (event.key === 'Enter') handleSubmit(event); }}
+              style={{ width: '12rem' }}
+            />
+            <span>&nbsp;&nbsp;</span>
+            <Button
+              className="AddButton"
+              variant="contained"
+              disabled={props.isInserting}
+              onClick={!props.isInserting ? handleSubmit : null}
+              size="small"
+            >
+              {props.isInserting ? 'Adding…' : 'Add'}
+            </Button>
+          </div>
+        </div>
+      </form>
     </div>
   );
 }

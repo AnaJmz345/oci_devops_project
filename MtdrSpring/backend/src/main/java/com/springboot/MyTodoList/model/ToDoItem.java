@@ -36,6 +36,13 @@ public class ToDoItem {
     @Column(name = "STATUS")
     String done="TODO";
 
+    @Column(name = "DESCRIPTION")
+    String name;
+ 
+    @Column(name = "STORY_POINTS")
+    Integer storyPoints;
+
+
     public ToDoItem(){
 
     }
@@ -79,13 +86,20 @@ public class ToDoItem {
         this.done = done;
     }
 
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public Integer getStoryPoints() { return storyPoints; }
+    public void setStoryPoints(Integer storyPoints) { this.storyPoints = storyPoints; }
+
     @Override
     public String toString() {
         return "ToDoItem{" +
                 "ID=" + ID +
                 ", description='" + description + '\'' +
-                //", creation_ts=" + creation_ts +
                 ", done=" + done +
+                ", name='" + name + '\'' +
+                ", storyPoints=" + storyPoints +
                 '}';
     }
 }
