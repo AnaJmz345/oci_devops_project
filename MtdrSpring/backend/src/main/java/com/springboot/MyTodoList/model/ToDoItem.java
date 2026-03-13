@@ -34,7 +34,7 @@ public class ToDoItem {
     String description;
 
     @Column(name = "STATUS")
-    String done;
+    String done="TODO";
 
     public ToDoItem(){
 

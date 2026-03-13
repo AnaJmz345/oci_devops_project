@@ -107,7 +107,7 @@ public class BotActions{
         try {
 
             ToDoItem item = todoService.getToDoItemById(id);
-            item.setDone("DONE");
+            item.setDone("TODO");
             todoService.updateToDoItem(id, item);
             BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_UNDONE.getMessage(), telegramClient);
 
