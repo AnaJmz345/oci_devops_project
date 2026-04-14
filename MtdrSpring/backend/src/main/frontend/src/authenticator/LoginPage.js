@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from 'AuthContext';
+import { useAuth } from './AuthContext';
+
 
 function LoginPage({ onGoRegister }) {
   const { login } = useAuth();

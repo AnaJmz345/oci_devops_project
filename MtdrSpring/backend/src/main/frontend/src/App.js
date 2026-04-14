@@ -1,6 +1,5 @@
-
-import { AuthProvider} from './AuthContext';
-import {MainApp} from 'MainApp.js'
+import { AuthProvider } from './authenticator/AuthContext';
+import MainApp from './MainApp';
 
 
 function App() {

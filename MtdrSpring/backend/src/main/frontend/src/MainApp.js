@@ -3,9 +3,10 @@ import NewItem from './NewItem';
 import API_LIST from './API';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Button, TableBody, CircularProgress } from '@mui/material';
-import {useAuth } from './AuthContext';
-import LoginPage from './LoginPage';
-import RegisterPage from './RegisterPage';
+
+import { useAuth } from './authenticator/AuthContext';
+import LoginPage from './authenticator/LoginPage';
+import RegisterPage from './authenticator/RegisterPage';
 
 function MainApp() {
   const { user, logout } = useAuth();
