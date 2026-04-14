@@ -16,50 +16,25 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<User> findAll(){
-        List<User> users = userRepository.findAll();
-        return users;
+    public List<User> findAll() {
+        return userRepository.findAll();
     }
 
-    public ResponseEntity<User> getUserById(int id){
-        Optional<User> userById = userRepository.findById(id);
-        if (userById.isPresent()){
-            return new ResponseEntity<>(userById.get(), HttpStatus.OK);
-        }else{
+    public ResponseEntity<User> getUserById(Long id) {
+        Optional<User> user = userRepository.findById(id);
+        if (user.isPresent()) {
+            return new ResponseEntity<>(user.get(), HttpStatus.OK);
+        } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-
-    public User addUser(User newUser){
+    public User addUser(User newUser) {
+        newUser.setRole("DEVELOPER"); // default siempre
         return userRepository.save(newUser);
     }
 
-    public User test(){
-        User newUser = new User(88,"someNumber","pwd");
-
-        return userRepository.save(newUser);
+    public Optional<User> findByMail(String mail) {
+        return userRepository.findByMail(mail);
     }
-
-    public boolean deleteUser(int id){
-        try{
-            userRepository.deleteById(id);
-            return true;
-        }catch(Exception e){
-            return false;
-        }
-    }
-    public User updateUser(int id, User user2update){
-        Optional<User> dbUser = userRepository.findById(id);
-        if(dbUser.isPresent()){
-            User user = dbUser.get();
-            user.setID(id);
-            user.setPhoneNumber(user2update.getPhoneNumber());
-            user.setUserPassword(user2update.getUserPassword());
-            return userRepository.save(user);
-        }else{
-            return null;
-        }
-    }
-
 }

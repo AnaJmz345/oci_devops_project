@@ -9,7 +9,7 @@ import java.time.OffsetDateTime;
     in the autonomous database
  */
 @Entity
-@Table(name = "TASK", schema = "TODOUSER")
+@Table(name = "TASK", schema = "VANTAGE")
 public class ToDoItem {
     /*@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +24,7 @@ public class ToDoItem {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "task_seq_gen")
     @SequenceGenerator(
         name = "task_seq_gen",
-        sequenceName = "TODOUSER.TASK_SEQ",
+        sequenceName = "VANTAGE.TASK_SEQ",
         allocationSize = 1
     )
     @Column(name = "TASK_ID")
