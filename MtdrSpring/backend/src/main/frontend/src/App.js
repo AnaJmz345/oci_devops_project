@@ -4,6 +4,7 @@ import API_LIST from './API';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Button, TableBody, CircularProgress } from '@mui/material';
 import Moment from 'react-moment';
+import RegisterTest from './RegisterTest';
 
 function App() {
     const [isLoading, setLoading] = useState(false);
@@ -105,6 +106,7 @@ function App() {
 
     return (
       <div className="App">
+        <RegisterTest />
         <h1>MY TODO LIST</h1>
         <NewItem addItem={addItem} isInserting={isInserting}/>
         { error && <p>Error: {error.message}</p> }
