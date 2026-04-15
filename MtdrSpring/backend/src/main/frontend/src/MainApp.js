@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import NewItem from './NewItem';
 import API_LIST from './API';
 import DeleteIcon from '@mui/icons-material/Delete';
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { Button, TableBody, CircularProgress } from '@mui/material';
 
 import './vantage.css';
@@ -14,6 +16,12 @@ function MainApp() {
   const { user, logout } = useAuth();
   const [page, setPage] = useState('login'); // 'login' o 'register'
   const [activePage, setActivePage] = useState('overview'); // overview | backlog | board | calendar | chatbot | tasks
+  const [activeSprintId, setActiveSprintId] = useState('sprint2'); // sprint2 | sprint1 | all
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isProjectsOpen, setIsProjectsOpen] = useState(true);
+  const [isProjectOpen, setIsProjectOpen] = useState(true);
+  const [isTeamsOpen, setIsTeamsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setLoading] = useState(false);
   const [isInserting, setInserting] = useState(false);
   const [items, setItems] = useState([]);
@@ -123,14 +131,27 @@ function MainApp() {
     );
   }
 
-  const navItems = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'backlog', label: 'Backlog' },
-    { id: 'board', label: 'Board' },
-    { id: 'calendar', label: 'Calendar' },
-    { id: 'chatbot', label: 'Chatbot' },
-    { id: 'tasks', label: 'Tasks (legacy)' },
+  const projectPages = [
+    { id: 'overview', label: 'OVERVIEW' },
+    { id: 'backlog', label: 'BACKLOG' },
+    { id: 'board', label: 'BOARD' },
+    { id: 'calendar', label: 'CALENDAR' },
+    { id: 'chatbot', label: 'CHATBOT' },
+    { id: 'tasks', label: 'TASKS (LEGACY)' },
   ];
+
+  const activeProjectName = 'SIXTH SEMESTER';
+  const activeTeamName = 'PLACEHOLDER TEAM';
+
+  const sprintOptions = [
+    { id: 'all', label: 'All sprints' },
+    { id: 'sprint2', label: 'Sprint 2' },
+    { id: 'sprint1', label: 'Sprint 1' },
+  ];
+
+  const activeSprintLabel = (
+    sprintOptions.find(s => s.id === activeSprintId)?.label || 'Sprint'
+  );
 
   const pageTitle = (
     {
@@ -148,6 +169,7 @@ function MainApp() {
       <div className="VantagePageHeader">
         <h1 className="VantageH1">{title}</h1>
         <div className="VantageMuted">{subtitle}</div>
+        <div className="VantageMuted">Project: {activeProjectName} • Sprint: {activeSprintLabel}</div>
       </div>
     );
   }
@@ -382,41 +404,159 @@ function MainApp() {
 
   return (
     <div className="VantageShell">
-      <aside className="VantageSidebar">
-        <div className="VantageBrand">
-          <div className="VantageBrandName">Vantage</div>
-          <div className="VantageBrandTag">Placeholder UI</div>
-        </div>
-
-        <nav className="VantageNav">
-          {navItems.map(item => (
+      {isSidebarOpen && (
+        <aside className="VantageSidebar">
+          <div className="VantageSidebarHeader">
+            <div className="VantageBrandName">VANTAGE</div>
             <button
-              key={item.id}
               type="button"
-              className={
-                `VantageNavItem ${activePage === item.id ? 'is-active' : ''}`
-              }
-              onClick={() => setActivePage(item.id)}
+              className="VantageIconButton"
+              onClick={() => setIsSidebarOpen(false)}
+              aria-label="Hide sidebar"
+              title="Hide sidebar"
             >
-              {item.label}
+              ⟨
             </button>
-          ))}
-        </nav>
+          </div>
 
-        <div className="VantageSidebarFooter">
-          <div className="VantageMuted">Signed in as</div>
-          <div className="VantageSidebarUser">{user.name}</div>
-        </div>
-      </aside>
+          <div className="VantageSearchWrap">
+            <input
+              className="VantageSearch"
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for projects or teams…"
+              aria-label="Search for projects or teams"
+            />
+          </div>
+
+          <div className="VantageSection">
+            <button
+              type="button"
+              className="VantageSectionHeader"
+              onClick={() => setIsProjectsOpen(v => !v)}
+              aria-expanded={isProjectsOpen}
+            >
+              <span className="VantageSectionTitle">PROJECTS</span>
+              <span className="VantageBadge VantageBadgeRed">1</span>
+              <span className="VantageChevron">{isProjectsOpen ? '▾' : '▸'}</span>
+            </button>
+
+            {isProjectsOpen && (
+              <div className="VantageSectionBody">
+                <button
+                  type="button"
+                  className="VantageRowButton"
+                  onClick={() => setIsProjectOpen(v => !v)}
+                  aria-expanded={isProjectOpen}
+                >
+                  <span className="VantageBadgeMini VantageBadgePurple">01</span>
+                  <span className="VantageRowText">{activeProjectName}</span>
+                  <span className="VantageChevron">{isProjectOpen ? '▾' : '▸'}</span>
+                </button>
+
+                {isProjectOpen && (
+                  <div className="VantageNested">
+                    {projectPages.map(p => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={
+                          `VantagePageLink ${activePage === p.id ? 'is-active' : ''}`
+                        }
+                        onClick={() => setActivePage(p.id)}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="VantageSection">
+            <button
+              type="button"
+              className="VantageSectionHeader"
+              onClick={() => setIsTeamsOpen(v => !v)}
+              aria-expanded={isTeamsOpen}
+            >
+              <span className="VantageSectionTitle">TEAMS</span>
+              <span className="VantageBadge VantageBadgeGreen">1</span>
+              <span className="VantageChevron">{isTeamsOpen ? '▾' : '▸'}</span>
+            </button>
+
+            {isTeamsOpen && (
+              <div className="VantageSectionBody">
+                <button type="button" className="VantageRowButton" onClick={() => setActivePage('overview')}>
+                  <span className="VantageBadgeMini VantageBadgeAmber">01</span>
+                  <span className="VantageRowText">{activeTeamName}</span>
+                </button>
+                <div className="VantageTeamHint">Team screens coming later (placeholder).</div>
+              </div>
+            )}
+          </div>
+
+          <div className="VantageSidebarBottom">
+            <button
+              type="button"
+              className="VantageIconButton"
+              title="Profile (placeholder)"
+              aria-label="Profile"
+              onClick={() => {}}
+            >
+              <AccountCircleOutlinedIcon fontSize="small" />
+            </button>
+
+            <Button variant="contained" size="small" className="VantageLogout" onClick={logout}>
+              Logout
+            </Button>
+
+            <button
+              type="button"
+              className="VantageIconButton is-disabled"
+              title="Settings (coming soon)"
+              aria-label="Settings"
+              disabled
+            >
+              <SettingsOutlinedIcon fontSize="small" />
+            </button>
+          </div>
+        </aside>
+      )}
 
       <div className="VantageMain">
         <header className="VantageTopbar">
-          <div>
-            <div className="VantageTopbarTitle">{pageTitle}</div>
-            <div className="VantageTopbarMeta">Project: Placeholder • Sprint: Placeholder</div>
+          <div className="VantageTopbarLeft">
+            <button
+              type="button"
+              className="VantageIconButton"
+              onClick={() => setIsSidebarOpen(v => !v)}
+              aria-label={isSidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
+              title={isSidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
+            >
+              ☰
+            </button>
+
+            <div>
+              <div className="VantageTopbarTitle">{pageTitle}</div>
+              <div className="VantageTopbarMeta">Project: {activeProjectName} • Team: {activeTeamName} • Sprint: {activeSprintLabel}</div>
+            </div>
           </div>
-          <div className="VantageTopbarActions">
-            <Button variant="contained" size="small" onClick={logout}>Logout</Button>
+
+          <div className="VantageTopbarRight">
+            <label className="VantageSprintLabel" htmlFor="vantage-sprint-select">Sprint</label>
+            <select
+              id="vantage-sprint-select"
+              className="VantageSprintSelect"
+              value={activeSprintId}
+              onChange={(e) => setActiveSprintId(e.target.value)}
+            >
+              {sprintOptions.map(s => (
+                <option key={s.id} value={s.id}>{s.label}</option>
+              ))}
+            </select>
           </div>
         </header>
 
