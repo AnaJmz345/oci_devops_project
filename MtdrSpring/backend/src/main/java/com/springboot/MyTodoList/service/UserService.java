@@ -5,6 +5,7 @@ import com.springboot.MyTodoList.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,6 +16,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public List<User> findAll() {
         return userRepository.findAll();
@@ -30,11 +34,17 @@ public class UserService {
     }
 
     public User addUser(User newUser) {
-        newUser.setRole("DEVELOPER"); // default siempre
+        // Encriptar password antes de guardar
+        newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
+        newUser.setRole("DEVELOPER");
         return userRepository.save(newUser);
     }
 
     public Optional<User> findByMail(String mail) {
         return userRepository.findByMail(mail);
+    }
+
+    public boolean checkPassword(String rawPassword, String encodedPassword) {
+        return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 }
