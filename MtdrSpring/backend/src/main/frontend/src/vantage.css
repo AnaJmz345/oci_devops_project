@@ -1,0 +1,215 @@
+/* Vantage placeholder manager shell (scoped styles)
+ * Keep this file separate so the legacy todo app styling remains untouched.
+ */
+
+.VantageShell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  background: #0b0f19;
+  color: #e6e8ee;
+}
+
+.VantageSidebar {
+  width: 260px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #0f172a;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.VantageBrandName {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  font-size: 18px;
+}
+
+.VantageBrandTag {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(230, 232, 238, 0.72);
+}
+
+.VantageNav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.VantageNavItem {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(17, 24, 39, 0.55);
+  color: inherit;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.VantageNavItem:hover {
+  background: rgba(30, 41, 59, 0.75);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.VantageNavItem.is-active {
+  background: rgba(59, 130, 246, 0.20);
+  border-color: rgba(59, 130, 246, 0.55);
+}
+
+.VantageSidebarFooter {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.VantageSidebarUser {
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.VantageMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.VantageTopbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: rgba(15, 23, 42, 0.55);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.VantageTopbarTitle {
+  font-weight: 700;
+}
+
+.VantageTopbarMeta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(230, 232, 238, 0.72);
+}
+
+.VantageTopbarActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.VantageContent {
+  flex: 1;
+  overflow: auto;
+  padding: 18px;
+}
+
+.VantagePage {
+  max-width: 1100px;
+}
+
+.VantagePageHeader {
+  margin-bottom: 14px;
+}
+
+.VantageH1 {
+  margin: 0;
+  padding: 0;
+  font-size: 22px;
+}
+
+.VantageMuted {
+  color: rgba(230, 232, 238, 0.72);
+  font-size: 13px;
+}
+
+.VantageGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.VantageCard {
+  background: rgba(17, 24, 39, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.VantageCardTitle {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.VantageCardBody {
+  color: rgba(230, 232, 238, 0.86);
+  font-size: 14px;
+}
+
+.VantageTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.VantageTable th,
+.VantageTable td {
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.VantageTable th {
+  color: rgba(230, 232, 238, 0.72);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 12px;
+}
+
+.VantageBoard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.VantageBoardCol {
+  background: rgba(17, 24, 39, 0.40);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+  min-height: 300px;
+}
+
+.VantageBoardColTitle {
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: rgba(230, 232, 238, 0.80);
+  font-size: 12px;
+  letter-spacing: 0.6px;
+}
+
+.VantageBoardCard {
+  background: rgba(30, 41, 59, 0.70);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 900px) {
+  .VantageSidebar {
+    width: 220px;
+  }
+  .VantageGrid {
+    grid-template-columns: 1fr;
+  }
+  .VantageBoard {
+    grid-template-columns: 1fr;
+  }
+}
