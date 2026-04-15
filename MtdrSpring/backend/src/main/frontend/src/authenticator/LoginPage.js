@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 
 
-function LoginPage({ onGoRegister }) {
+function LoginPage(props) {
+  const { onGoRegister } = props;
   const { login } = useAuth();
   const [form, setForm] = useState({ mail: '', password: '' });
   const [error, setError] = useState('');

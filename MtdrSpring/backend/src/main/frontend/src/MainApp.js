@@ -9,8 +9,7 @@ import { Button, TableBody, CircularProgress } from '@mui/material';
 import './vantage.css';
 
 import { useAuth } from './authenticator/AuthContext';
-import LoginPage from './authenticator/LoginPage';
-import RegisterPage from './authenticator/RegisterPage';
+import AuthLanding from './authenticator/AuthLanding';
 
 function MainApp() {
   const { user, logout } = useAuth();
@@ -48,12 +47,14 @@ function MainApp() {
       );
   }, [user, activePage]);
 
-  // Si no hay usuario loggeado, mostrar login o registro
+  // Si no hay usuario loggeado, mostrar login/registro (misma pantalla con animación)
   if (!user) {
-    if (page === 'register') {
-      return <RegisterPage onGoLogin={() => setPage('login')} />;
-    }
-    return <LoginPage onGoRegister={() => setPage('register')} />;
+    return (
+      <AuthLanding
+        mode={page}
+        onModeChange={setPage}
+      />
+    );
   }
 
   // ... resto de funciones igual que antes
