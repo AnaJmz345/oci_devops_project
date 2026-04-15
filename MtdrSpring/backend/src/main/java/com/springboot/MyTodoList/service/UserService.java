@@ -36,7 +36,7 @@ public class UserService {
     public User addUser(User newUser) {
         // Encriptar password antes de guardar
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
-        newUser.setRole("MANAGER");
+        newUser.setRole("DEVELOPER");
         return userRepository.save(newUser);
     }
 
