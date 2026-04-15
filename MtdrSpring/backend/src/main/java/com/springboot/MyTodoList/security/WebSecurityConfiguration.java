@@ -8,19 +8,21 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfiguration {
-
+    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
+                .anyRequest().permitAll() // Permitir todo sin autenticación
             )
-            .csrf(csrf -> csrf.disable())
-            .httpBasic(httpBasic -> httpBasic.disable())
-            .formLogin(formLogin -> formLogin.disable());
+            .csrf(csrf -> csrf.disable()) // Desactivar CSRF si no usas formularios
+            .httpBasic(httpBasic -> httpBasic.disable()) // Desactivar autenticación básica
+            .formLogin(formLogin -> formLogin.disable()); // Desactivar login por formulario
+
         return http.build();
     }
 
@@ -28,4 +30,5 @@ public class WebSecurityConfiguration {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }
