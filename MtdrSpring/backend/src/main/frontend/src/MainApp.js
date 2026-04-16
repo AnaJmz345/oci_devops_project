@@ -11,6 +11,7 @@ import './vantage.css';
 import { useAuth } from './authenticator/AuthContext';
 import AuthLanding from './authenticator/AuthLanding';
 import CreateTaskModal from './task/CreateTaskModal';
+import EditTaskModal from './task/EditTaskModal';
 import CreateSprintModal from './sprint/CreateSprintModal';
 
 function MainApp() {
@@ -29,6 +30,7 @@ function MainApp() {
   const [error, setError] = useState();
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null); // task object being edited
   const [backlogTasks, setBacklogTasks] = useState([]);
   const [backlogLoading, setBacklogLoading] = useState(false);
   const [sprints, setSprints] = useState([]);
@@ -302,19 +304,23 @@ function MainApp() {
               <table className="VantageTable">
                 <thead>
                   <tr>
-                    <th style={{ width: showAllSprints ? '38%' : '45%' }}>Title</th>
+                    <th style={{ width: showAllSprints ? '34%' : '40%' }}>Title</th>
                     <th>Category</th>
                     <th>Status</th>
                     <th>Due Date</th>
                     {showAllSprints && <th>Sprint #</th>}
                     <th style={{ textAlign: 'right' }}>Points</th>
+                    <th style={{ textAlign: 'right' }}></th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredTasks.map(task => {
                     const sc = STATUS_COLORS[task.status] || STATUS_COLORS['TODO'];
                     return (
-                      <tr key={task.taskId}>
+                      <tr key={task.taskId} style={{ transition: 'background 120ms' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(194,212,212,0.18)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
                         <td>
                           <div style={{ fontWeight: 700 }}>{task.taskName}</div>
                           {task.description && (
@@ -351,6 +357,22 @@ function MainApp() {
                         )}
                         <td style={{ textAlign: 'right', fontWeight: 700 }}>
                           {task.storyPoints != null ? task.storyPoints : '—'}
+                        </td>
+                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          <button
+                            onClick={() => setEditingTask(task)}
+                            style={{
+                              appearance: 'none', border: '1px solid rgba(30,50,36,0.16)',
+                              background: '#fff', borderRadius: 8, padding: '4px 10px',
+                              fontSize: 11, fontWeight: 800, cursor: 'pointer',
+                              color: '#1E3224', letterSpacing: '0.3px',
+                              transition: 'background 120ms',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(194,212,212,0.35)'}
+                            onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                          >
+                            ✏ Edit
+                          </button>
                         </td>
                       </tr>
                     );
@@ -692,7 +714,22 @@ function MainApp() {
         onClose={() => setIsCreateSprintOpen(false)}
         onSprintCreated={() => {
           setIsCreateSprintOpen(false);
-          fetchSprints(); // refresh dropdown after creating sprint
+          fetchSprints();
+        }}
+      />
+
+      <EditTaskModal
+        open={editingTask !== null}
+        task={editingTask}
+        sprints={sprints}
+        onClose={() => setEditingTask(null)}
+        onTaskUpdated={(updated) => {
+          setBacklogTasks(prev => prev.map(t => t.taskId === updated.taskId ? updated : t));
+          setEditingTask(null);
+        }}
+        onTaskDeleted={(taskId) => {
+          setBacklogTasks(prev => prev.filter(t => t.taskId !== taskId));
+          setEditingTask(null);
         }}
       />
     </div>
