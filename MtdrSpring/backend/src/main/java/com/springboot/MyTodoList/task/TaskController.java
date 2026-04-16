@@ -35,17 +35,25 @@ public class TaskController {
             Task saved = taskService.addTask(task);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         } catch (Exception e) {
+            System.err.println("Error creating task: " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task task) {
-        Task updated = taskService.updateTask(id, task);
-        if (updated != null) {
-            return new ResponseEntity<>(updated, HttpStatus.OK);
+        try {
+            Task updated = taskService.updateTask(id, task);
+            if (updated != null) {
+                return new ResponseEntity<>(updated, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            System.err.println("Error updating task " + id + ": " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @DeleteMapping("/{id}")
@@ -54,6 +62,8 @@ public class TaskController {
             taskService.deleteTask(id);
             return new ResponseEntity<>(true, HttpStatus.OK);
         } catch (Exception e) {
+            System.err.println("Error deleting task " + id + ": " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>(false, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -64,6 +74,8 @@ public class TaskController {
             TaskAssignee saved = taskService.assignTask(assignee);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         } catch (Exception e) {
+            System.err.println("Error assigning task: " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

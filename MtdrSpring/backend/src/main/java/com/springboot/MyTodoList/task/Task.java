@@ -3,6 +3,7 @@ package com.springboot.MyTodoList.task;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Entity
 @Table(name = "TASK", schema = "VANTAGE")
@@ -28,6 +29,7 @@ public class Task {
     private String description;
 
     @Column(name = "DUE_DATE")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dueDate;
 
     @Column(name = "CATEGORY", nullable = false)
@@ -39,25 +41,15 @@ public class Task {
     @Column(name = "SPRINT_ID")
     private Long sprintId;
 
-    @Column(name = "CREATED_AT", updatable = false)
+    // insertable=false, updatable=false — Oracle handles these with DEFAULT CURRENT_TIMESTAMP
+    @Column(name = "CREATED_AT", insertable = false, updatable = false)
     private OffsetDateTime createdAt;
 
-    @Column(name = "UPDATED_AT")
+    @Column(name = "UPDATED_AT", insertable = false, updatable = false)
     private OffsetDateTime updatedAt;
 
     @Column(name = "CREATED_BY", nullable = false)
     private Long createdBy;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = OffsetDateTime.now();
-        updatedAt = OffsetDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = OffsetDateTime.now();
-    }
 
     public Task() {}
 
