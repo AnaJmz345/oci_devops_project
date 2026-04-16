@@ -147,7 +147,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
             {/* Tasks per member bar chart */}
             <div className="AN-card">
               <div className="AN-card-label">TASKS COMPLETED</div>
-              <div className="AN-card-title">Tasks per Member</div>
+              <div className="AN-card-title">TASK PER MEMBER</div>
               {tasksByMember.length === 0 ? (
                 <div className="AN-empty">No completed tasks yet for this sprint.</div>
               ) : (
@@ -162,7 +162,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
             {/* Hours per member bar chart */}
             <div className="AN-card">
               <div className="AN-card-label">TIME SPENT</div>
-              <div className="AN-card-title">Hours per Member</div>
+              <div className="AN-card-title">HOURS PER MEMBER</div>
               {hoursByMember.length === 0 ? (
                 <div className="AN-empty">No time logged yet for this sprint.</div>
               ) : (
