@@ -32,14 +32,14 @@ function MainApp() {
 
   const isManager = user?.role === 'MANAGER';
 
-  const fetchBacklogTasks = () => {
-    if (!user) return;
+  // Función estable con useCallback para poder usarla en useEffect y en onTaskCreated
+  const fetchBacklogTasks = React.useCallback(() => {
     setBacklogLoading(true);
-    fetch("/tasks")
+    fetch('/tasks')
       .then(r => r.ok ? r.json() : [])
       .then(data => { setBacklogTasks(data); setBacklogLoading(false); })
       .catch(() => setBacklogLoading(false));
-  };
+  }, []); // sin dependencias: fetch y setters son estables
 
   useEffect(() => {
     if (user) setActivePage('overview');
@@ -62,8 +62,8 @@ function MainApp() {
   }, [user, activePage]);
 
   useEffect(() => {
-    if (user && activePage === "backlog") fetchBacklogTasks();
-  }, [user, activePage]);
+    if (user && activePage === 'backlog') fetchBacklogTasks();
+  }, [user, activePage, fetchBacklogTasks]);
 
   // Si no hay usuario loggeado, mostrar AuthLanding (login/register con animación)
   if (!user) {
