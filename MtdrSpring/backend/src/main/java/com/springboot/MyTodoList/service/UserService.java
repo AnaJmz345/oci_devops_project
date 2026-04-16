@@ -34,7 +34,6 @@ public class UserService {
     }
 
     public User addUser(User newUser) {
-        // Encriptar password antes de guardar
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
         newUser.setRole("DEVELOPER");
         return userRepository.save(newUser);
@@ -42,6 +41,11 @@ public class UserService {
 
     public Optional<User> findByMail(String mail) {
         return userRepository.findByMail(mail);
+    }
+
+    // Nuevo: buscar por rol para el dropdown de assignees
+    public List<User> findByRole(String role) {
+        return userRepository.findByRole(role);
     }
 
     public boolean checkPassword(String rawPassword, String encodedPassword) {

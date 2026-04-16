@@ -8,9 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -29,10 +29,15 @@ public class UserController {
         return userService.getUserById(id);
     }
 
+    // Nuevo: retorna solo usuarios con rol DEVELOPER (para el dropdown de assignee)
+    @GetMapping("/developers")
+    public List<User> getDevelopers() {
+        return userService.findByRole("DEVELOPER");
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> addUser(@RequestBody User newUser) {
         try {
-            // Verificar si el mail ya existe
             if (userService.findByMail(newUser.getMail()).isPresent()) {
                 return new ResponseEntity<>("El correo ya está registrado", HttpStatus.CONFLICT);
             }
@@ -50,12 +55,11 @@ public class UserController {
             return new ResponseEntity<>("Credenciales inválidas", HttpStatus.UNAUTHORIZED);
         }
         User user = userOpt.get();
-        // Verificar con BCrypt en lugar de comparación directa
         if (!userService.checkPassword(loginRequest.getPassword(), user.getPassword())) {
             return new ResponseEntity<>("Credenciales inválidas", HttpStatus.UNAUTHORIZED);
         }
         Map<String, Object> response = new HashMap<>();
-        response.put("oracleId", user.getOracleId());
+        response.put("oracle_id", user.getOracleId());   // <-- snake_case para el frontend
         response.put("name", user.getName());
         response.put("mail", user.getMail());
         response.put("role", user.getRole());

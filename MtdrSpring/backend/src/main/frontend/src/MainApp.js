@@ -10,6 +10,7 @@ import './vantage.css';
 
 import { useAuth } from './authenticator/AuthContext';
 import AuthLanding from './authenticator/AuthLanding';
+import CreateTaskModal from './task/CreateTaskModal';
 
 function MainApp() {
   const { user, logout } = useAuth();
@@ -25,6 +26,9 @@ function MainApp() {
   const [isInserting, setInserting] = useState(false);
   const [items, setItems] = useState([]);
   const [error, setError] = useState();
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+
+  const isManager = user?.role === 'MANAGER';
 
   useEffect(() => {
     if (user) setActivePage('overview');
@@ -202,7 +206,7 @@ function MainApp() {
     );
   }
 
-  function BacklogPage() {
+    function BacklogPage() {
     return (
       <div className="VantagePage">
         <PlaceholderHeader
@@ -210,7 +214,32 @@ function MainApp() {
           subtitle="Placeholder backlog table (no CRUD yet)."
         />
         <div className="VantageCard">
-          <div className="VantageCardTitle">Backlog items</div>
+          <div className="VantageCardTitle" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>Backlog items</span>
+            {isManager && (
+              <button
+                type="button"
+                onClick={() => setIsCreateTaskOpen(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  appearance: 'none',
+                  border: 'none',
+                  background: '#C74634',
+                  color: '#fff',
+                  borderRadius: 10,
+                  padding: '7px 16px',
+                  fontSize: 12,
+                  fontWeight: 900,
+                  letterSpacing: '0.5px',
+                  cursor: 'pointer',
+                }}
+              >
+                + Create Task
+              </button>
+            )}
+          </div>
           <div className="VantageCardBody">
             <table className="VantageTable">
               <thead>
@@ -543,7 +572,21 @@ function MainApp() {
           {activePage === 'chatbot' && <ChatbotPage />}
           {activePage === 'tasks' && <TasksLegacyPage />}
         </main>
+
+        <CreateTaskModal
+          open={isCreateTaskOpen}
+          onClose={() => setIsCreateTaskOpen(false)}
+          onTaskCreated={(task) => {
+            console.log('Task created:', task);
+            setIsCreateTaskOpen(false);
+          }}
+          sprintId={activeSprintId !== 'all' ? activeSprintId : null}
+          createdBy={user?.oracle_id}
+        />
+
+
       </div>
+
     </div>
   );
 }
