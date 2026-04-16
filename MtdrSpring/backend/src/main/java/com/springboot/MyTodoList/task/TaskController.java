@@ -50,8 +50,12 @@ public class TaskController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Boolean> deleteTask(@PathVariable Long id) {
-        boolean deleted = taskService.deleteTask(id);
-        return new ResponseEntity<>(deleted, deleted ? HttpStatus.OK : HttpStatus.NOT_FOUND);
+        try {
+            taskService.deleteTask(id);
+            return new ResponseEntity<>(true, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(false, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/assignees")

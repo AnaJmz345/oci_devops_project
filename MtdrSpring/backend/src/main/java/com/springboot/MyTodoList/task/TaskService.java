@@ -56,6 +56,11 @@ public class TaskService {
 
     public boolean deleteTask(Long id) {
         try {
+            // Borrar assignees primero para no violar FK constraint
+            List<TaskAssignee> assignees = taskAssigneeRepository.findByTaskId(id);
+            if (!assignees.isEmpty()) {
+                taskAssigneeRepository.deleteAll(assignees);
+            }
             taskRepository.deleteById(id);
             return true;
         } catch (Exception e) {
