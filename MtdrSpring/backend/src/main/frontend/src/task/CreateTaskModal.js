@@ -8,7 +8,6 @@ const EMPTY_FORM = {
   category: 'FEATURE',
   story_points: 1,
   due_date: '',
-  start_date: '',
   sprint_id: '',
   assignee_oracle_id: '',
   estimated_completion_time: '',
@@ -27,13 +26,16 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
     setForm({ ...EMPTY_FORM, sprint_id: sprintId || '' });
     setError('');
 
-    // Fetch developers
+    // Fetch developers - normalizamos oracle_id por si el backend devuelve oracleId
     fetch('/users/developers')
       .then(r => r.ok ? r.json() : [])
-      .then(setDevelopers)
+      .then(data => setDevelopers(data.map(d => ({
+        ...d,
+        oracle_id: d.oracle_id ?? d.oracleId,
+      }))))
       .catch(() => setDevelopers([]));
 
-    // Fetch sprints
+    // Fetch sprints - ignorar 404 si el endpoint no existe aún
     fetch('/sprints')
       .then(r => r.ok ? r.json() : [])
       .then(setSprints)
@@ -48,31 +50,23 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
   const handleSubmit = async () => {
     setError('');
 
-    if (!form.task_name.trim()) {
-      setError('Task name is required.');
-      return;
-    }
-    if (!form.due_date) {
-      setError('Due date is required.');
-      return;
-    }
-    if (!form.assignee_oracle_id) {
-      setError('You must assign this task to a developer.');
-      return;
-    }
+    if (!form.task_name.trim()) { setError('Task name is required.'); return; }
+    if (!form.due_date)         { setError('Due date is required.'); return; }
+    if (!form.assignee_oracle_id) { setError('You must assign this task to a developer.'); return; }
+    if (!createdBy)             { setError('Session error: user ID not found. Please log out and log in again.'); return; }
 
     setLoading(true);
     try {
-      // 1. Create the task
+      // 1. Crear la task — usamos camelCase para que coincida con los setters de Java
       const taskBody = {
-        task_name: form.task_name.trim(),
+        taskName:    form.task_name.trim(),
         description: form.description.trim(),
-        status: form.status,
-        category: form.category,
-        story_points: Number(form.story_points) || 1,
-        due_date: form.due_date,
-        sprint_id: form.sprint_id ? Number(form.sprint_id) : null,
-        created_by: createdBy,
+        status:      form.status,
+        category:    form.category,
+        storyPoints: Number(form.story_points) || 1,
+        dueDate:     form.due_date,
+        sprintId:    form.sprint_id ? Number(form.sprint_id) : null,
+        createdBy:   Number(createdBy),
       };
 
       const taskRes = await fetch('/tasks', {
@@ -83,21 +77,20 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
 
       if (!taskRes.ok) {
         const msg = await taskRes.text().catch(() => '');
-        throw new Error(msg || 'Failed to create task.');
+        throw new Error(msg || `Server error ${taskRes.status}`);
       }
 
       const createdTask = await taskRes.json();
-      const taskId = createdTask.task_id ?? createdTask.id;
+      // El backend devuelve taskId (camelCase desde el getter getTaskId())
+      const taskId = createdTask.taskId ?? createdTask.task_id ?? createdTask.id;
 
-      // 2. Assign the task to the selected developer
+      // 2. Asignar la task al developer seleccionado
       const assignBody = {
-        task_id: taskId,
-        oracle_id: Number(form.assignee_oracle_id),
-        estimated_completion_time: form.estimated_completion_time
-          ? Number(form.estimated_completion_time)
-          : null,
-        additional_comments: form.additional_comments.trim() || null,
-        real_time_spent: 0,
+        taskId:                  taskId,
+        oracleId:                Number(form.assignee_oracle_id),
+        estimatedCompletionTime: form.estimated_completion_time ? Number(form.estimated_completion_time) : null,
+        additionalComments:      form.additional_comments.trim() || null,
+        realTimeSpent:           0,
       };
 
       await fetch('/tasks/assignees', {
@@ -120,7 +113,6 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
   return (
     <div className="TM-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="TM-modal">
-        {/* Header */}
         <div className="TM-header">
           <div className="TM-header-left">
             <span className="TM-tag">NEW TASK</span>
@@ -130,40 +122,25 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
         </div>
 
         <div className="TM-body">
-          {/* Left column - main fields */}
           <div className="TM-col TM-col--main">
             <div className="TM-field">
               <label className="TM-label">Task Name <span className="TM-required">*</span></label>
-              <input
-                className="TM-input"
-                name="task_name"
+              <input className="TM-input" name="task_name"
                 placeholder="e.g. Implement login endpoint…"
-                value={form.task_name}
-                onChange={handleChange}
-                autoFocus
-              />
+                value={form.task_name} onChange={handleChange} autoFocus />
             </div>
 
             <div className="TM-field">
               <label className="TM-label">Description</label>
-              <textarea
-                className="TM-textarea"
-                name="description"
+              <textarea className="TM-textarea" name="description"
                 placeholder="Describe what needs to be done…"
-                value={form.description}
-                onChange={handleChange}
-                rows={4}
-              />
+                value={form.description} onChange={handleChange} rows={4} />
             </div>
 
             <div className="TM-field">
               <label className="TM-label">Assignee <span className="TM-required">*</span></label>
-              <select
-                className="TM-select"
-                name="assignee_oracle_id"
-                value={form.assignee_oracle_id}
-                onChange={handleChange}
-              >
+              <select className="TM-select" name="assignee_oracle_id"
+                value={form.assignee_oracle_id} onChange={handleChange}>
                 <option value="">— Select developer —</option>
                 {developers.map(dev => (
                   <option key={dev.oracle_id} value={dev.oracle_id}>
@@ -175,18 +152,12 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
 
             <div className="TM-field">
               <label className="TM-label">Additional Comments for Assignee</label>
-              <textarea
-                className="TM-textarea"
-                name="additional_comments"
+              <textarea className="TM-textarea" name="additional_comments"
                 placeholder="Any notes for the assignee…"
-                value={form.additional_comments}
-                onChange={handleChange}
-                rows={2}
-              />
+                value={form.additional_comments} onChange={handleChange} rows={2} />
             </div>
           </div>
 
-          {/* Right column - metadata */}
           <div className="TM-col TM-col--meta">
             <div className="TM-field">
               <label className="TM-label">Status</label>
@@ -212,7 +183,9 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
               <select className="TM-select" name="sprint_id" value={form.sprint_id} onChange={handleChange}>
                 <option value="">— Backlog (no sprint) —</option>
                 {sprints.map(s => (
-                  <option key={s.sprint_id} value={s.sprint_id}>{s.sprint_name}</option>
+                  <option key={s.sprintId ?? s.sprint_id} value={s.sprintId ?? s.sprint_id}>
+                    {s.sprintName ?? s.sprint_name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -220,39 +193,20 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
             <div className="TM-row">
               <div className="TM-field">
                 <label className="TM-label">Story Points</label>
-                <input
-                  className="TM-input"
-                  type="number"
-                  name="story_points"
-                  min={1}
-                  max={100}
-                  value={form.story_points}
-                  onChange={handleChange}
-                />
+                <input className="TM-input" type="number" name="story_points"
+                  min={1} max={100} value={form.story_points} onChange={handleChange} />
               </div>
               <div className="TM-field">
                 <label className="TM-label">Est. Time (h)</label>
-                <input
-                  className="TM-input"
-                  type="number"
-                  name="estimated_completion_time"
-                  min={0}
-                  placeholder="—"
-                  value={form.estimated_completion_time}
-                  onChange={handleChange}
-                />
+                <input className="TM-input" type="number" name="estimated_completion_time"
+                  min={0} placeholder="—" value={form.estimated_completion_time} onChange={handleChange} />
               </div>
             </div>
 
             <div className="TM-field">
               <label className="TM-label">Due Date <span className="TM-required">*</span></label>
-              <input
-                className="TM-input"
-                type="date"
-                name="due_date"
-                value={form.due_date}
-                onChange={handleChange}
-              />
+              <input className="TM-input" type="date" name="due_date"
+                value={form.due_date} onChange={handleChange} />
             </div>
           </div>
         </div>
@@ -260,9 +214,7 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
         {error && <div className="TM-error">{error}</div>}
 
         <div className="TM-footer">
-          <button className="TM-btn TM-btn--cancel" onClick={onClose} disabled={loading}>
-            Cancel
-          </button>
+          <button className="TM-btn TM-btn--cancel" onClick={onClose} disabled={loading}>Cancel</button>
           <button className="TM-btn TM-btn--submit" onClick={handleSubmit} disabled={loading}>
             {loading ? 'Creating…' : '+ Create Task'}
           </button>

@@ -9,8 +9,13 @@ export function AuthProvider({ children }) {
   });
 
   const login = (userData) => {
-    localStorage.setItem('vantage_user', JSON.stringify(userData));
-    setUser(userData);
+    // Normaliza el id sin importar si el backend devuelve oracleId o oracle_id
+    const normalized = {
+      ...userData,
+      oracle_id: userData.oracle_id ?? userData.oracleId ?? null,
+    };
+    localStorage.setItem('vantage_user', JSON.stringify(normalized));
+    setUser(normalized);
   };
 
   const logout = () => {
