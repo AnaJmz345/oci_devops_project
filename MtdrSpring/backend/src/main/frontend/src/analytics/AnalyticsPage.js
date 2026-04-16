@@ -66,19 +66,19 @@ function AnalyticsPage({ sprints, activeSprintId }) {
       return u && u.name.split(' ')[0] === d.label;
     }));
 
-  // Hours per member (from realTimeSpent in task_assignees)
+  // Hours per member (estimated_completion_time sum per developer)
   const hoursByMember = users
     .filter(u => u.role === 'DEVELOPER')
     .map(u => {
-      const spent = assignees
-        .filter(a => a.oracleId === u.oracleId)
-        .reduce((sum, a) => sum + (a.realTimeSpent || 0), 0);
-      return { label: u.name.split(' ')[0], value: Math.round(spent * 10) / 10 };
+      const estimated = assignees
+        .filter(a => String(a.oracleId) === String(u.oracleId))
+        .reduce((sum, a) => sum + (a.estimatedCompletionTime || 0), 0);
+      return { label: u.name.split(' ')[0], value: Math.round(estimated * 10) / 10 };
     })
-    .filter(d => {
+    .filter(d => assignees.some(a => {
       const u = users.find(u => u.name.split(' ')[0] === d.label);
-      return assignees.some(a => a.oracleId === u?.oracleId);
-    });
+      return u && String(a.oracleId) === String(u.oracleId);
+    }));
 
   const sprintOptions = sprints.map(s => ({ id: String(s.sprintId), label: s.sprintName }));
 
@@ -147,7 +147,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
             {/* Tasks per member bar chart */}
             <div className="AN-card">
               <div className="AN-card-label">TASKS COMPLETED</div>
-              <div className="AN-card-title">TASK PER MEMBER</div>
+              <div className="AN-card-title">Tasks per Member</div>
               {tasksByMember.length === 0 ? (
                 <div className="AN-empty">No completed tasks yet for this sprint.</div>
               ) : (
@@ -161,8 +161,8 @@ function AnalyticsPage({ sprints, activeSprintId }) {
 
             {/* Hours per member bar chart */}
             <div className="AN-card">
-              <div className="AN-card-label">TIME SPENT</div>
-              <div className="AN-card-title">HOURS PER MEMBER</div>
+              <div className="AN-card-label">ESTIMATED TIME</div>
+              <div className="AN-card-title">Est. Hours per Member</div>
               {hoursByMember.length === 0 ? (
                 <div className="AN-empty">No time logged yet for this sprint.</div>
               ) : (
