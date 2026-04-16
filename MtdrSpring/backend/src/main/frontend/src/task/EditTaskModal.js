@@ -18,7 +18,7 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
       status:      task.status      || 'TODO',
       category:    task.category    || 'FEATURE',
       storyPoints: task.storyPoints ?? 1,
-      dueDate:     task.dueDate     || '',
+      dueDate:     task.dueDate ? String(task.dueDate).split('T')[0] : '',
       sprintId:    task.sprintId != null ? String(task.sprintId) : '',
     });
   }, [open, task]);

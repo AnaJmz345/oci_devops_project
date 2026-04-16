@@ -265,7 +265,7 @@ function MainApp() {
     return (
       <div className="VantagePage">
         <div className="VantagePageHeader">
-          <h1 className="VantageH1">Backlog LUBUBUUU</h1>
+          <h1 className="VantageH1">Backlog</h1>
           <div className="VantageMuted">Project: {activeProjectName} • Sprint: {activeSprintLabel}</div>
         </div>
         <div className="VantageCard">
@@ -341,7 +341,7 @@ function MainApp() {
                         </td>
                         <td style={{ fontSize: 12, color: 'rgba(30,50,36,0.65)' }}>
                           {task.dueDate
-                            ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                            ? (() => { const [y,m,d] = String(task.dueDate).split(/[-T]/); return new Date(+y,+m-1,+d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); })()
                             : '—'}
                         </td>
                         {showAllSprints && (
