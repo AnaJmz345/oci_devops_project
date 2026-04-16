@@ -246,6 +246,20 @@ function MainApp() {
       'BLOCKED':     { background: 'rgba(199,70,52,0.15)', color: '#C74634' },
     };
 
+    const showAllSprints = activeSprintId === 'all';
+
+    // Filtra las tasks según el sprint seleccionado
+    const filteredTasks = showAllSprints
+      ? backlogTasks
+      : backlogTasks.filter(t => String(t.sprintId) === String(activeSprintId));
+
+    // Busca el nombre del sprint por id
+    const getSprintName = (sprintId) => {
+      if (!sprintId) return 'Not assigned';
+      const found = sprints.find(s => String(s.sprintId) === String(sprintId));
+      return found ? found.sprintName : `Sprint #${sprintId}`;
+    };
+
     return (
       <div className="VantagePage">
         <div className="VantagePageHeader">
@@ -254,7 +268,14 @@ function MainApp() {
         </div>
         <div className="VantageCard">
           <div className="VantageCardTitle" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>Backlog items {backlogTasks.length > 0 && <span style={{ fontWeight: 500, color: 'rgba(30,50,36,0.5)', fontSize: 13 }}>({backlogTasks.length})</span>}</span>
+            <span>
+              Backlog items
+              {filteredTasks.length > 0 && (
+                <span style={{ fontWeight: 500, color: 'rgba(30,50,36,0.5)', fontSize: 13 }}>
+                  {' '}({filteredTasks.length})
+                </span>
+              )}
+            </span>
             {isManager && (
               <button
                 type="button"
@@ -273,27 +294,34 @@ function MainApp() {
           <div className="VantageCardBody">
             {backlogLoading ? (
               <div style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}>Loading tasks…</div>
-            ) : backlogTasks.length === 0 ? (
-              <div style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}>No tasks yet. {isManager ? 'Click "+ Create Task" to add one.' : ''}</div>
+            ) : filteredTasks.length === 0 ? (
+              <div style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}>
+                No tasks {showAllSprints ? 'yet' : 'for this sprint'}.{isManager ? ' Click "+ Create Task" to add one.' : ''}
+              </div>
             ) : (
               <table className="VantageTable">
                 <thead>
                   <tr>
-                    <th style={{ width: '45%' }}>Title</th>
+                    <th style={{ width: showAllSprints ? '38%' : '45%' }}>Title</th>
                     <th>Category</th>
                     <th>Status</th>
                     <th>Due Date</th>
+                    {showAllSprints && <th>Sprint #</th>}
                     <th style={{ textAlign: 'right' }}>Points</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {backlogTasks.map(task => {
+                  {filteredTasks.map(task => {
                     const sc = STATUS_COLORS[task.status] || STATUS_COLORS['TODO'];
                     return (
                       <tr key={task.taskId}>
                         <td>
                           <div style={{ fontWeight: 700 }}>{task.taskName}</div>
-                          {task.description && <div style={{ fontSize: 12, color: 'rgba(30,50,36,0.55)', marginTop: 2 }}>{task.description}</div>}
+                          {task.description && (
+                            <div style={{ fontSize: 12, color: 'rgba(30,50,36,0.55)', marginTop: 2 }}>
+                              {task.description}
+                            </div>
+                          )}
                         </td>
                         <td>
                           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.4px', color: 'rgba(30,50,36,0.65)' }}>
@@ -306,10 +334,23 @@ function MainApp() {
                           </span>
                         </td>
                         <td style={{ fontSize: 12, color: 'rgba(30,50,36,0.65)' }}>
-                          {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                          {task.dueDate
+                            ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                            : '—'}
                         </td>
+                        {showAllSprints && (
+                          <td>
+                            <span style={{
+                              fontSize: 11, fontWeight: 800,
+                              color: task.sprintId ? '#1E3224' : 'rgba(30,50,36,0.38)',
+                              fontStyle: task.sprintId ? 'normal' : 'italic',
+                            }}>
+                              {getSprintName(task.sprintId)}
+                            </span>
+                          </td>
+                        )}
                         <td style={{ textAlign: 'right', fontWeight: 700 }}>
-                          {task.storyPoints ?? '—'}
+                          {task.storyPoints != null ? task.storyPoints : '—'}
                         </td>
                       </tr>
                     );
