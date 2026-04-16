@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './sprint.css';
+import { FiClock } from "react-icons/fi";
 
 const EMPTY_FORM = {
   sprintName: '',
@@ -126,7 +127,9 @@ function CreateSprintModal({ open, onClose, onSprintCreated }) {
             {/* Duration pill */}
             {duration !== null && (
               <div className="SM-duration-pill">
-                <span className="SM-duration-icon">📅</span>
+                <span className="SM-duration-icon">
+                  <FiClock size={18} color="#6b7280" />
+                </span>
                 <span><strong>{duration}</strong> day{duration !== 1 ? 's' : ''} duration</span>
               </div>
             )}
