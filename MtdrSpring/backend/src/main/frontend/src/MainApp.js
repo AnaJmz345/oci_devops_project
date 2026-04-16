@@ -450,7 +450,7 @@ function MainApp() {
                     <th>Due Date</th>
                     {showAllSprints && <th>Sprint #</th>}
                     <th style={{ textAlign: 'right' }}>Points</th>
-                    {!assignMode && <th style={{ textAlign: 'right' }}></th>}
+                    {!assignMode && isManager && <th style={{ textAlign: 'right' }}></th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -486,15 +486,87 @@ function MainApp() {
                             </div>
                           )}
                         </td>
+                        {/* Category cell — developer gets inline dropdown */}
                         <td>
-                          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.4px', color: 'rgba(30,50,36,0.65)' }}>
-                            {task.category || '—'}
-                          </span>
+                          {!isManager ? (
+                            <select
+                              value={task.category || 'FEATURE'}
+                              onChange={async e => {
+                                const newCat = e.target.value;
+                                await fetch(`/tasks/${task.taskId}`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    taskName: task.taskName, description: task.description,
+                                    status: task.status, category: newCat,
+                                    storyPoints: task.storyPoints, dueDate: task.dueDate,
+                                    sprintId: task.sprintId, createdBy: task.createdBy,
+                                  }),
+                                });
+                                setBacklogTasks(prev => prev.map(t =>
+                                  t.taskId === task.taskId ? { ...t, category: newCat } : t
+                                ));
+                              }}
+                              style={{
+                                appearance: 'none', border: '1px solid rgba(30,50,36,0.16)',
+                                borderRadius: 6, background: '#fff', color: 'rgba(30,50,36,0.75)',
+                                fontSize: 11, fontWeight: 800, padding: '3px 22px 3px 7px',
+                                cursor: 'pointer', outline: 'none',
+                                backgroundImage: "url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%231E3224'/%3E%3C/svg%3E")",
+                                backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center',
+                              }}
+                            >
+                              <option value="FEATURE">FEATURE</option>
+                              <option value="BUG">BUG</option>
+                              <option value="ISSUE">ISSUE</option>
+                            </select>
+                          ) : (
+                            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.4px', color: 'rgba(30,50,36,0.65)' }}>
+                              {task.category || '—'}
+                            </span>
+                          )}
                         </td>
+
+                        {/* Status cell — developer gets inline dropdown */}
                         <td>
-                          <span style={{ ...sc, borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 900, letterSpacing: '0.4px' }}>
-                            {task.status}
-                          </span>
+                          {!isManager ? (
+                            <select
+                              value={task.status || 'TODO'}
+                              onChange={async e => {
+                                const newStatus = e.target.value;
+                                await fetch(`/tasks/${task.taskId}`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    taskName: task.taskName, description: task.description,
+                                    status: newStatus, category: task.category,
+                                    storyPoints: task.storyPoints, dueDate: task.dueDate,
+                                    sprintId: task.sprintId, createdBy: task.createdBy,
+                                  }),
+                                });
+                                setBacklogTasks(prev => prev.map(t =>
+                                  t.taskId === task.taskId ? { ...t, status: newStatus } : t
+                                ));
+                              }}
+                              style={{
+                                appearance: 'none', border: 'none',
+                                borderRadius: 6, fontWeight: 900, fontSize: 11,
+                                padding: '3px 22px 3px 8px', cursor: 'pointer', outline: 'none',
+                                backgroundImage: "url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='currentColor'/%3E%3C/svg%3E")",
+                                backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center',
+                                ...sc,
+                              }}
+                            >
+                              <option value="TODO">TODO</option>
+                              <option value="IN_PROGRESS">IN PROGRESS</option>
+                              <option value="DONE">DONE</option>
+                              <option value="BLOCKED">BLOCKED</option>
+                            </select>
+                          ) : (
+                            <span style={{ ...sc, borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 900, letterSpacing: '0.4px' }}>
+                              {task.status}
+                            </span>
+                          )}
                         </td>
                         <td style={{ fontSize: 12, color: 'rgba(30,50,36,0.65)' }}>
                           {task.dueDate
@@ -515,7 +587,7 @@ function MainApp() {
                         <td style={{ textAlign: 'right', fontWeight: 700 }}>
                           {task.storyPoints != null ? task.storyPoints : '—'}
                         </td>
-                        {!assignMode && (
+                        {!assignMode && isManager && (
                           <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
                               <button
