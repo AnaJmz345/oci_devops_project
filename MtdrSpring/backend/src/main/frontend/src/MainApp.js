@@ -12,7 +12,7 @@ import { useAuth } from './authenticator/AuthContext';
 import AuthLanding from './authenticator/AuthLanding';
 import CreateTaskModal from './task/CreateTaskModal';
 import CreateSprintModal from './sprint/CreateSprintModal';
-import './sprint/sprint.css';
+
 
 function MainApp() {
   const { user, logout } = useAuth();
