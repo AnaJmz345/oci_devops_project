@@ -33,6 +33,10 @@ function MainApp() {
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null); // task object being edited
+  const [assignMode, setAssignMode] = useState(false);   // checkbox selection mode
+  const [selectedTaskIds, setSelectedTaskIds] = useState(new Set());
+  const [assignSprintId, setAssignSprintId] = useState('');
+  const [assigning, setAssigning] = useState(false);
   const [backlogTasks, setBacklogTasks] = useState([]);
   const [backlogLoading, setBacklogLoading] = useState(false);
   const [sprints, setSprints] = useState([]);
@@ -252,17 +256,72 @@ function MainApp() {
 
     const showAllSprints = activeSprintId === 'all';
 
-    // Filtra las tasks según el sprint seleccionado
     const filteredTasks = showAllSprints
       ? backlogTasks
       : backlogTasks.filter(t => String(t.sprintId) === String(activeSprintId));
 
-    // Busca el nombre del sprint por id
     const getSprintName = (sprintId) => {
       if (!sprintId) return 'Not assigned';
       const found = sprints.find(s => String(s.sprintId) === String(sprintId));
       return found ? found.sprintName : `Sprint #${sprintId}`;
     };
+
+    const toggleSelectTask = (taskId) => {
+      setSelectedTaskIds(prev => {
+        const next = new Set(prev);
+        next.has(taskId) ? next.delete(taskId) : next.add(taskId);
+        return next;
+      });
+    };
+
+    const toggleSelectAll = () => {
+      if (selectedTaskIds.size === filteredTasks.length) {
+        setSelectedTaskIds(new Set());
+      } else {
+        setSelectedTaskIds(new Set(filteredTasks.map(t => t.taskId)));
+      }
+    };
+
+    const handleAssignSprint = async () => {
+      if (!assignSprintId || selectedTaskIds.size === 0) return;
+      setAssigning(true);
+      try {
+        await Promise.all([...selectedTaskIds].map(taskId => {
+          const task = backlogTasks.find(t => t.taskId === taskId);
+          if (!task) return Promise.resolve();
+          return fetch(`/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              taskName:    task.taskName,
+              description: task.description,
+              status:      task.status,
+              category:    task.category,
+              storyPoints: task.storyPoints,
+              dueDate:     task.dueDate,
+              sprintId:    Number(assignSprintId),
+              createdBy:   task.createdBy,
+            }),
+          });
+        }));
+        await fetchBacklogTasks();
+        setSelectedTaskIds(new Set());
+        setAssignMode(false);
+        setAssignSprintId('');
+      } catch (e) {
+        console.error('Error assigning sprint:', e);
+      } finally {
+        setAssigning(false);
+      }
+    };
+
+    const cancelAssignMode = () => {
+      setAssignMode(false);
+      setSelectedTaskIds(new Set());
+      setAssignSprintId('');
+    };
+
+    const allSelected = filteredTasks.length > 0 && selectedTaskIds.size === filteredTasks.length;
 
     return (
       <div className="VantagePage">
@@ -271,7 +330,7 @@ function MainApp() {
           <div className="VantageMuted">Project: {activeProjectName} • Sprint: {activeSprintLabel}</div>
         </div>
         <div className="VantageCard">
-          <div className="VantageCardTitle" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="VantageCardTitle" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
             <span>
               Backlog items
               {filteredTasks.length > 0 && (
@@ -280,20 +339,85 @@ function MainApp() {
                 </span>
               )}
             </span>
-            {isManager && (
-              <button
-                type="button"
-                onClick={() => setIsCreateTaskOpen(true)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  appearance: 'none', border: 'none', background: '#C74634',
-                  color: '#fff', borderRadius: 10, padding: '7px 16px',
-                  fontSize: 12, fontWeight: 900, letterSpacing: '0.5px', cursor: 'pointer',
-                }}
-              >
-                + Create Task
-              </button>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* Assign to sprint controls */}
+              {assignMode ? (
+                <>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(30,50,36,0.6)' }}>
+                    {selectedTaskIds.size} selected
+                  </span>
+                  <select
+                    value={assignSprintId}
+                    onChange={e => setAssignSprintId(e.target.value)}
+                    style={{
+                      height: 32, border: '1.5px solid rgba(30,50,36,0.20)',
+                      borderRadius: 8, padding: '0 10px', fontSize: 12,
+                      fontWeight: 700, color: '#1E3224', background: '#fff',
+                      cursor: 'pointer', outline: 'none',
+                    }}
+                  >
+                    <option value="">— Select sprint —</option>
+                    {sprints.map(s => (
+                      <option key={s.sprintId} value={s.sprintId}>{s.sprintName}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleAssignSprint}
+                    disabled={assigning || !assignSprintId || selectedTaskIds.size === 0}
+                    style={{
+                      appearance: 'none', border: 'none', background: '#1E3224',
+                      color: '#fff', borderRadius: 8, padding: '6px 14px',
+                      fontSize: 12, fontWeight: 900, cursor: 'pointer', opacity: (!assignSprintId || selectedTaskIds.size === 0) ? 0.5 : 1,
+                    }}
+                  >
+                    {assigning ? 'Assigning…' : 'Confirm'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelAssignMode}
+                    style={{
+                      appearance: 'none', border: '1px solid rgba(30,50,36,0.20)',
+                      background: '#fff', color: 'rgba(30,50,36,0.7)', borderRadius: 8,
+                      padding: '6px 12px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                isManager && (
+                  <button
+                    type="button"
+                    onClick={() => { setAssignMode(true); setSelectedTaskIds(new Set()); }}
+                    style={{
+                      appearance: 'none', border: '1.5px solid rgba(30,50,36,0.22)',
+                      background: '#fff', color: '#1E3224', borderRadius: 10,
+                      padding: '6px 14px', fontSize: 12, fontWeight: 900,
+                      letterSpacing: '0.3px', cursor: 'pointer', display: 'flex',
+                      alignItems: 'center', gap: 6,
+                    }}
+                  >
+                    ⊕ Assign to Sprint
+                  </button>
+                )
+              )}
+              {/* Create task button — always visible for manager */}
+              {isManager && !assignMode && (
+                <button
+                  type="button"
+                  onClick={() => setIsCreateTaskOpen(true)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    appearance: 'none', border: 'none', background: '#C74634',
+                    color: '#fff', borderRadius: 10, padding: '7px 16px',
+                    fontSize: 12, fontWeight: 900, letterSpacing: '0.5px', cursor: 'pointer',
+                  }}
+                >
+                  + Create Task
+                </button>
+              )}
+            </div>
           </div>
           <div className="VantageCardBody">
             {backlogLoading ? (
@@ -306,23 +430,50 @@ function MainApp() {
               <table className="VantageTable">
                 <thead>
                   <tr>
+                    {assignMode && (
+                      <th style={{ width: 36, textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={allSelected}
+                          onChange={toggleSelectAll}
+                          style={{ cursor: 'pointer', accentColor: '#C74634' }}
+                        />
+                      </th>
+                    )}
                     <th style={{ width: showAllSprints ? '34%' : '40%' }}>Title</th>
                     <th>Category</th>
                     <th>Status</th>
                     <th>Due Date</th>
                     {showAllSprints && <th>Sprint #</th>}
                     <th style={{ textAlign: 'right' }}>Points</th>
-                    <th style={{ textAlign: 'right' }}></th>
+                    {!assignMode && <th style={{ textAlign: 'right' }}></th>}
                   </tr>
                 </thead>
                 <tbody>
                   {filteredTasks.map(task => {
                     const sc = STATUS_COLORS[task.status] || STATUS_COLORS['TODO'];
                     return (
-                      <tr key={task.taskId} style={{ transition: 'background 120ms' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(194,212,212,0.18)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      <tr
+                        key={task.taskId}
+                        style={{
+                          transition: 'background 120ms',
+                          background: assignMode && selectedTaskIds.has(task.taskId) ? 'rgba(199,70,52,0.06)' : 'transparent',
+                          cursor: assignMode ? 'pointer' : 'default',
+                        }}
+                        onClick={assignMode ? () => toggleSelectTask(task.taskId) : undefined}
+                        onMouseEnter={e => { if (!assignMode) e.currentTarget.style.background = 'rgba(194,212,212,0.18)'; }}
+                        onMouseLeave={e => { if (!assignMode) e.currentTarget.style.background = assignMode && selectedTaskIds.has(task.taskId) ? 'rgba(199,70,52,0.06)' : 'transparent'; }}
                       >
+                        {assignMode && (
+                          <td style={{ textAlign: 'center', width: 36 }} onClick={e => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selectedTaskIds.has(task.taskId)}
+                              onChange={() => toggleSelectTask(task.taskId)}
+                              style={{ cursor: 'pointer', accentColor: '#C74634' }}
+                            />
+                          </td>
+                        )}
                         <td>
                           <div style={{ fontWeight: 700 }}>{task.taskName}</div>
                           {task.description && (
@@ -360,42 +511,42 @@ function MainApp() {
                         <td style={{ textAlign: 'right', fontWeight: 700 }}>
                           {task.storyPoints != null ? task.storyPoints : '—'}
                         </td>
-                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
-                            {/* Edit button */}
-                            <button
-                              onClick={() => setEditingTask(task)}
-                              title="Edit task"
-                              style={{
-                                appearance: 'none', border: '1px solid rgba(30,50,36,0.16)',
-                                background: '#fff', borderRadius: 8, padding: '5px 7px',
-                                cursor: 'pointer', color: '#1E3224',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'background 120ms, color 120ms',
-                              }}
-                              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(194,212,212,0.35)'; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
-                            >
-                              <FaEdit size={14} />
-                            </button>
-                            {/* Delete button */}
-                            <button
-                              onClick={() => setEditingTask({ ...task, _confirmDelete: true })}
-                              title="Delete task"
-                              style={{
-                                appearance: 'none', border: '1px solid rgba(199,70,52,0.25)',
-                                background: '#fff', borderRadius: 8, padding: '5px 7px',
-                                cursor: 'pointer', color: '#C74634',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'background 120ms',
-                              }}
-                              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(199,70,52,0.08)'; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
-                            >
-                              <BsTrash3 size={14} />
-                            </button>
-                          </div>
-                        </td>
+                        {!assignMode && (
+                          <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+                              <button
+                                onClick={() => setEditingTask(task)}
+                                title="Edit task"
+                                style={{
+                                  appearance: 'none', border: '1px solid rgba(30,50,36,0.16)',
+                                  background: '#fff', borderRadius: 8, padding: '5px 7px',
+                                  cursor: 'pointer', color: '#1E3224',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  transition: 'background 120ms',
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(194,212,212,0.35)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                              >
+                                <FaEdit size={14} />
+                              </button>
+                              <button
+                                onClick={() => setEditingTask({ ...task, _confirmDelete: true })}
+                                title="Delete task"
+                                style={{
+                                  appearance: 'none', border: '1px solid rgba(199,70,52,0.25)',
+                                  background: '#fff', borderRadius: 8, padding: '5px 7px',
+                                  cursor: 'pointer', color: '#C74634',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  transition: 'background 120ms',
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(199,70,52,0.08)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                              >
+                                <BsTrash3 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
