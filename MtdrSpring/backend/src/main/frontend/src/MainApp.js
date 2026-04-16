@@ -27,8 +27,19 @@ function MainApp() {
   const [items, setItems] = useState([]);
   const [error, setError] = useState();
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [backlogTasks, setBacklogTasks] = useState([]);
+  const [backlogLoading, setBacklogLoading] = useState(false);
 
   const isManager = user?.role === 'MANAGER';
+
+  const fetchBacklogTasks = () => {
+    if (!user) return;
+    setBacklogLoading(true);
+    fetch("/tasks")
+      .then(r => r.ok ? r.json() : [])
+      .then(data => { setBacklogTasks(data); setBacklogLoading(false); })
+      .catch(() => setBacklogLoading(false));
+  };
 
   useEffect(() => {
     if (user) setActivePage('overview');
@@ -48,6 +59,10 @@ function MainApp() {
         (result) => { setLoading(false); setItems(result); },
         (error) => { setLoading(false); setError(error); }
       );
+  }, [user, activePage]);
+
+  useEffect(() => {
+    if (user && activePage === "backlog") fetchBacklogTasks();
   }, [user, activePage]);
 
   // Si no hay usuario loggeado, mostrar AuthLanding (login/register con animación)
@@ -206,34 +221,32 @@ function MainApp() {
     );
   }
 
-    function BacklogPage() {
+  function BacklogPage() {
+    const STATUS_COLORS = {
+      'TODO':        { background: 'rgba(30,50,36,0.08)', color: '#1E3224' },
+      'IN_PROGRESS': { background: 'rgba(241,177,63,0.18)', color: '#9a6c00' },
+      'DONE':        { background: 'rgba(76,130,92,0.18)', color: '#2d6b3f' },
+      'BLOCKED':     { background: 'rgba(199,70,52,0.15)', color: '#C74634' },
+    };
+
     return (
       <div className="VantagePage">
-        <PlaceholderHeader
-          title="Backlog"
-          subtitle="Placeholder backlog table (no CRUD yet)."
-        />
+        <div className="VantagePageHeader">
+          <h1 className="VantageH1">Backlog</h1>
+          <div className="VantageMuted">Project: {activeProjectName} • Sprint: {activeSprintLabel}</div>
+        </div>
         <div className="VantageCard">
           <div className="VantageCardTitle" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>Backlog items</span>
+            <span>Backlog items {backlogTasks.length > 0 && <span style={{ fontWeight: 500, color: 'rgba(30,50,36,0.5)', fontSize: 13 }}>({backlogTasks.length})</span>}</span>
             {isManager && (
               <button
                 type="button"
                 onClick={() => setIsCreateTaskOpen(true)}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  appearance: 'none',
-                  border: 'none',
-                  background: '#C74634',
-                  color: '#fff',
-                  borderRadius: 10,
-                  padding: '7px 16px',
-                  fontSize: 12,
-                  fontWeight: 900,
-                  letterSpacing: '0.5px',
-                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  appearance: 'none', border: 'none', background: '#C74634',
+                  color: '#fff', borderRadius: 10, padding: '7px 16px',
+                  fontSize: 12, fontWeight: 900, letterSpacing: '0.5px', cursor: 'pointer',
                 }}
               >
                 + Create Task
@@ -241,36 +254,52 @@ function MainApp() {
             )}
           </div>
           <div className="VantageCardBody">
-            <table className="VantageTable">
-              <thead>
-                <tr>
-                  <th style={{ width: '55%' }}>Title</th>
-                  <th>Owner</th>
-                  <th>Status</th>
-                  <th style={{ textAlign: 'right' }}>Points</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Placeholder: Define release scope</td>
-                  <td>—</td>
-                  <td>TODO</td>
-                  <td style={{ textAlign: 'right' }}>—</td>
-                </tr>
-                <tr>
-                  <td>Placeholder: UX review</td>
-                  <td>—</td>
-                  <td>TODO</td>
-                  <td style={{ textAlign: 'right' }}>—</td>
-                </tr>
-                <tr>
-                  <td>Placeholder: API contract</td>
-                  <td>—</td>
-                  <td>TODO</td>
-                  <td style={{ textAlign: 'right' }}>—</td>
-                </tr>
-              </tbody>
-            </table>
+            {backlogLoading ? (
+              <div style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}>Loading tasks…</div>
+            ) : backlogTasks.length === 0 ? (
+              <div style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}>No tasks yet. {isManager ? 'Click "+ Create Task" to add one.' : ''}</div>
+            ) : (
+              <table className="VantageTable">
+                <thead>
+                  <tr>
+                    <th style={{ width: '45%' }}>Title</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Due Date</th>
+                    <th style={{ textAlign: 'right' }}>Points</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {backlogTasks.map(task => {
+                    const sc = STATUS_COLORS[task.status] || STATUS_COLORS['TODO'];
+                    return (
+                      <tr key={task.taskId}>
+                        <td>
+                          <div style={{ fontWeight: 700 }}>{task.taskName}</div>
+                          {task.description && <div style={{ fontSize: 12, color: 'rgba(30,50,36,0.55)', marginTop: 2 }}>{task.description}</div>}
+                        </td>
+                        <td>
+                          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.4px', color: 'rgba(30,50,36,0.65)' }}>
+                            {task.category || '—'}
+                          </span>
+                        </td>
+                        <td>
+                          <span style={{ ...sc, borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 900, letterSpacing: '0.4px' }}>
+                            {task.status}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: 12, color: 'rgba(30,50,36,0.65)' }}>
+                          {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                        </td>
+                        <td style={{ textAlign: 'right', fontWeight: 700 }}>
+                          {task.storyPoints ?? '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>
@@ -572,21 +601,18 @@ function MainApp() {
           {activePage === 'chatbot' && <ChatbotPage />}
           {activePage === 'tasks' && <TasksLegacyPage />}
         </main>
-
-        <CreateTaskModal
-          open={isCreateTaskOpen}
-          onClose={() => setIsCreateTaskOpen(false)}
-          onTaskCreated={(task) => {
-            console.log('Task created:', task);
-            setIsCreateTaskOpen(false);
-          }}
-          sprintId={activeSprintId !== 'all' ? activeSprintId : null}
-          createdBy={user?.oracle_id}
-        />
-
-
       </div>
 
+      <CreateTaskModal
+        open={isCreateTaskOpen}
+        onClose={() => setIsCreateTaskOpen(false)}
+        onTaskCreated={(task) => {
+          setIsCreateTaskOpen(false);
+          fetchBacklogTasks();
+        }}
+        sprintId={activeSprintId !== 'all' ? activeSprintId : null}
+        createdBy={user?.oracle_id}
+      />
     </div>
   );
 }
