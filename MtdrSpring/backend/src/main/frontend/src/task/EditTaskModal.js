@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { FaEdit } from 'react-icons/fa';
+import { BsTrash3 } from 'react-icons/bs';
 import './task.css';
 
 function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, sprints }) {
@@ -11,7 +13,7 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
   useEffect(() => {
     if (!open || !task) return;
     setError('');
-    setConfirmDelete(false);
+    setConfirmDelete(task._confirmDelete === true);
     setForm({
       taskName:    task.taskName    || '',
       description: task.description || '',
@@ -101,9 +103,9 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
                 className="TM-close"
                 onClick={() => setConfirmDelete(true)}
                 title="Delete task"
-                style={{ color: '#C74634', borderColor: 'rgba(199,70,52,0.30)' }}
+                style={{ color: '#C74634', borderColor: 'rgba(199,70,52,0.30)', display:'flex', alignItems:'center', justifyContent:'center' }}
               >
-                🗑
+                <BsTrash3 size={15} />
               </button>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -125,7 +127,7 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
                 </button>
               </div>
             )}
-            <button className="TM-close" onClick={onClose} aria-label="Close">✕</button>
+            <button className="TM-close" onClick={onClose} aria-label="Close" style={{ display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
           </div>
         </div>
 

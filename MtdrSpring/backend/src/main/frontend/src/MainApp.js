@@ -8,6 +8,8 @@ import { Button, TableBody, CircularProgress } from '@mui/material';
 
 import './vantage.css';
 
+import { FaEdit } from 'react-icons/fa';
+import { BsTrash3 } from 'react-icons/bs';
 import { useAuth } from './authenticator/AuthContext';
 import AuthLanding from './authenticator/AuthLanding';
 import CreateTaskModal from './task/CreateTaskModal';
@@ -359,20 +361,40 @@ function MainApp() {
                           {task.storyPoints != null ? task.storyPoints : '—'}
                         </td>
                         <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                          <button
-                            onClick={() => setEditingTask(task)}
-                            style={{
-                              appearance: 'none', border: '1px solid rgba(30,50,36,0.16)',
-                              background: '#fff', borderRadius: 8, padding: '4px 10px',
-                              fontSize: 11, fontWeight: 800, cursor: 'pointer',
-                              color: '#1E3224', letterSpacing: '0.3px',
-                              transition: 'background 120ms',
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(194,212,212,0.35)'}
-                            onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-                          >
-                            ✏ Edit
-                          </button>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+                            {/* Edit button */}
+                            <button
+                              onClick={() => setEditingTask(task)}
+                              title="Edit task"
+                              style={{
+                                appearance: 'none', border: '1px solid rgba(30,50,36,0.16)',
+                                background: '#fff', borderRadius: 8, padding: '5px 7px',
+                                cursor: 'pointer', color: '#1E3224',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'background 120ms, color 120ms',
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(194,212,212,0.35)'; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                            >
+                              <FaEdit size={14} />
+                            </button>
+                            {/* Delete button */}
+                            <button
+                              onClick={() => setEditingTask({ ...task, _confirmDelete: true })}
+                              title="Delete task"
+                              style={{
+                                appearance: 'none', border: '1px solid rgba(199,70,52,0.25)',
+                                background: '#fff', borderRadius: 8, padding: '5px 7px',
+                                cursor: 'pointer', color: '#C74634',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'background 120ms',
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(199,70,52,0.08)'; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                            >
+                              <BsTrash3 size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
