@@ -10,6 +10,7 @@ import './vantage.css';
 
 import { FaEdit } from 'react-icons/fa';
 import { BsTrash3 } from 'react-icons/bs';
+import { IoMdAddCircle } from 'react-icons/io';
 import { useAuth } from './authenticator/AuthContext';
 import AuthLanding from './authenticator/AuthLanding';
 import CreateTaskModal from './task/CreateTaskModal';
@@ -20,7 +21,7 @@ function MainApp() {
   const { user, logout } = useAuth();
   const [page, setPage] = useState('login'); // 'login' o 'register'
   const [activePage, setActivePage] = useState('overview'); // overview | backlog | board | calendar | chatbot | tasks
-  const [activeSprintId, setActiveSprintId] = useState('sprint2');
+  const [activeSprintId, setActiveSprintId] = useState('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isProjectsOpen, setIsProjectsOpen] = useState(true);
   const [isProjectOpen, setIsProjectOpen] = useState(true);
@@ -84,8 +85,11 @@ function MainApp() {
   }, [user, activePage]);
 
   useEffect(() => {
-    if (user && activePage === 'backlog') fetchBacklogTasks();
-  }, [user, activePage, fetchBacklogTasks]);
+    if (user && activePage === 'backlog') {
+      fetchSprints();       // ensure sprints are fresh before rendering
+      fetchBacklogTasks();
+    }
+  }, [user, activePage, fetchBacklogTasks, fetchSprints]);
 
   // Si no hay usuario loggeado, mostrar AuthLanding (login/register con animación)
   if (!user) {
@@ -398,7 +402,7 @@ function MainApp() {
                       alignItems: 'center', gap: 6,
                     }}
                   >
-                    ⊕ Assign to Sprint
+                    <IoMdAddCircle size={16} /> Assign to Sprint
                   </button>
                 )
               )}
