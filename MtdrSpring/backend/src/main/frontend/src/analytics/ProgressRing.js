@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 
-// Color stops based on progress percentage — matches reference image style
+// Color stops based on progress percentage — updated to cold-to-warm gradient
 function getGradientColors(percent) {
-  if (percent <= 25)  return { start: '#3b82f6', end: '#6366f1' }; // blue → indigo
-  if (percent <= 50)  return { start: '#22d3ee', end: '#a855f7' }; // cyan → purple
-  if (percent <= 75)  return { start: '#22c55e', end: '#ec4899' }; // green → pink
-  return               { start: '#C74634',  end: '#F1B13F' };      // red → amber (100%)
+  if (percent <= 25) return { start: '#3B82F6', end: '#6366F1' }; // azul → índigo
+  if (percent <= 50) return { start: '#4F46E5', end: '#A855F7' }; // índigo → morado
+  if (percent <= 75) return { start: '#7C3AED', end: '#D946EF' }; // morado → magenta
+  return               { start: '#C026D3', end: '#EF4444' };      // magenta → rojo
 }
 
 function ProgressRing({ percent = 0, size = 160, stroke = 14 }) {
@@ -17,15 +17,14 @@ function ProgressRing({ percent = 0, size = 160, stroke = 14 }) {
     return () => clearTimeout(t);
   }, [percent]);
 
-  const radius      = (size - stroke) / 2;
+  const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
-  const offset      = circumference - (animatedPercent / 100) * circumference;
+  const offset = circumference - (animatedPercent / 100) * circumference;
   const { start, end } = getGradientColors(percent);
 
-  // Dot position at the tip of the arc
   const angle = (2 * Math.PI * animatedPercent) / 100 - Math.PI / 2;
-  const dotX  = size / 2 + radius * Math.cos(angle);
-  const dotY  = size / 2 + radius * Math.sin(angle);
+  const dotX = size / 2 + radius * Math.cos(angle);
+  const dotY = size / 2 + radius * Math.sin(angle);
   const gradId = `ring-grad-${Math.round(percent)}`;
 
   return (
@@ -34,12 +33,11 @@ function ProgressRing({ percent = 0, size = 160, stroke = 14 }) {
         <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
           <defs>
             <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stopColor={start} />
-              <stop offset="100%" stopColor={end}   />
+              <stop offset="0%" stopColor={start} />
+              <stop offset="100%" stopColor={end} />
             </linearGradient>
           </defs>
 
-          {/* Background track */}
           <circle
             cx={size / 2} cy={size / 2} r={radius}
             fill="none"
@@ -47,7 +45,6 @@ function ProgressRing({ percent = 0, size = 160, stroke = 14 }) {
             strokeWidth={stroke}
           />
 
-          {/* Progress arc with gradient */}
           <circle
             cx={size / 2} cy={size / 2} r={radius}
             fill="none"
@@ -59,20 +56,27 @@ function ProgressRing({ percent = 0, size = 160, stroke = 14 }) {
             style={{ transition: 'stroke-dashoffset 1.3s cubic-bezier(0.4, 0, 0.2, 1)' }}
           />
 
-          {/* Glowing dot at the tip */}
           {animatedPercent > 2 && animatedPercent < 100 && (
             <>
-              {/* Glow */}
-              <circle cx={dotX} cy={dotY} r={stroke * 0.85} fill={end} opacity="0.25"
-                style={{ transition: 'all 1.3s cubic-bezier(0.4,0,0.2,1)' }} />
-              {/* Dot */}
-              <circle cx={dotX} cy={dotY} r={stroke * 0.55} fill={end}
-                style={{ transition: 'all 1.3s cubic-bezier(0.4,0,0.2,1)' }} />
+              <circle
+                cx={dotX}
+                cy={dotY}
+                r={stroke * 0.85}
+                fill={end}
+                opacity="0.25"
+                style={{ transition: 'all 1.3s cubic-bezier(0.4,0,0.2,1)' }}
+              />
+              <circle
+                cx={dotX}
+                cy={dotY}
+                r={stroke * 0.55}
+                fill={end}
+                style={{ transition: 'all 1.3s cubic-bezier(0.4,0,0.2,1)' }}
+              />
             </>
           )}
         </svg>
 
-        {/* Center text */}
         <div style={{
           position: 'absolute', inset: 0,
           display: 'flex', flexDirection: 'column',
