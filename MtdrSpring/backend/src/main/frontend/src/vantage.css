@@ -707,3 +707,42 @@
   pointer-events: none;
   font-weight: 900;
 }
+
+/* ── Inline dropdowns for developer role ───────────── */
+.VantageInlineSelect {
+  appearance: none;
+  border: 1px solid rgba(30, 50, 36, 0.16);
+  border-radius: 6px;
+  background: #fff;
+  color: rgba(30, 50, 36, 0.75);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 20px 3px 7px;
+  cursor: pointer;
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%231E3224'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  transition: border-color 120ms;
+}
+.VantageInlineSelect:hover { border-color: rgba(30, 50, 36, 0.35); }
+.VantageInlineSelect:focus { outline: none; border-color: rgba(199, 70, 52, 0.40); }
+
+.VantageStatusSelect {
+  appearance: none;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 3px 20px 3px 8px;
+  cursor: pointer;
+  outline: none;
+  background-repeat: no-repeat;
+  background-position: right 5px center;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%231E3224'/%3E%3C/svg%3E");
+}
+
+.VantageStatus--TODO        { background-color: rgba(30,50,36,0.08);   color: #1E3224; }
+.VantageStatus--IN_PROGRESS { background-color: rgba(241,177,63,0.18); color: #9a6c00; }
+.VantageStatus--DONE        { background-color: rgba(76,130,92,0.18);  color: #2d6b3f; }
+.VantageStatus--BLOCKED     { background-color: rgba(199,70,52,0.15);  color: #C74634; }

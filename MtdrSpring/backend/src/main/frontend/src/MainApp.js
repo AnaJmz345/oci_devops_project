@@ -490,6 +490,7 @@ function MainApp() {
                         <td>
                           {!isManager ? (
                             <select
+                              className="VantageInlineSelect"
                               value={task.category || 'FEATURE'}
                               onChange={async e => {
                                 const newCat = e.target.value;
@@ -507,14 +508,6 @@ function MainApp() {
                                   t.taskId === task.taskId ? { ...t, category: newCat } : t
                                 ));
                               }}
-                              style={{
-                                appearance: 'none', border: '1px solid rgba(30,50,36,0.16)',
-                                borderRadius: 6, background: '#fff', color: 'rgba(30,50,36,0.75)',
-                                fontSize: 11, fontWeight: 800, padding: '3px 22px 3px 7px',
-                                cursor: 'pointer', outline: 'none',
-                                backgroundImage: "url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%231E3224'/%3E%3C/svg%3E")",
-                                backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center',
-                              }}
                             >
                               <option value="FEATURE">FEATURE</option>
                               <option value="BUG">BUG</option>
@@ -531,6 +524,7 @@ function MainApp() {
                         <td>
                           {!isManager ? (
                             <select
+                              className={'VantageStatusSelect VantageStatus--' + (task.status || 'TODO')}
                               value={task.status || 'TODO'}
                               onChange={async e => {
                                 const newStatus = e.target.value;
@@ -547,14 +541,6 @@ function MainApp() {
                                 setBacklogTasks(prev => prev.map(t =>
                                   t.taskId === task.taskId ? { ...t, status: newStatus } : t
                                 ));
-                              }}
-                              style={{
-                                appearance: 'none', border: 'none',
-                                borderRadius: 6, fontWeight: 900, fontSize: 11,
-                                padding: '3px 22px 3px 8px', cursor: 'pointer', outline: 'none',
-                                backgroundImage: "url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='currentColor'/%3E%3C/svg%3E")",
-                                backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center',
-                                ...sc,
                               }}
                             >
                               <option value="TODO">TODO</option>
