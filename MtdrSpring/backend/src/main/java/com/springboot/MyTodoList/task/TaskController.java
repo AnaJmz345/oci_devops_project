@@ -87,6 +87,18 @@ public class TaskController {
         return taskService.getAllAssignees();
     }
 
+    // DELETE /tasks/assignees/{taskId}/{oracleId} — elimina un assignee específico
+    @DeleteMapping("/assignees/{taskId}/{oracleId}")
+    public ResponseEntity<Boolean> removeAssignee(
+            @PathVariable Long taskId, @PathVariable Long oracleId) {
+        try {
+            taskService.removeAssignee(taskId, oracleId);
+            return new ResponseEntity<>(true, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(false, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // PUT /tasks/assignees/{taskId}/{oracleId}/hours — actualiza horas reales y/o estimadas
     @PutMapping("/assignees/{taskId}/{oracleId}/hours")
     public ResponseEntity<TaskAssignee> updateHours(

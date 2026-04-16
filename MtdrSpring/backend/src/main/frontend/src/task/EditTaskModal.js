@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { BsTrash3 } from 'react-icons/bs';
 import './task.css';
 
-function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, sprints }) {
+function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, sprints, users = [] }) {
   const [form, setForm] = useState({});
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState('');
   const [assignee, setAssignee] = useState(null);
+
+  const developers = users.filter(u => u.role === 'DEVELOPER');
 
   useEffect(() => {
     if (!open || !task) return;
@@ -23,10 +25,11 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
       storyPoints: task.storyPoints ?? 1,
       dueDate:     task.dueDate ? String(task.dueDate).split('T')[0] : '',
       sprintId:    task.sprintId != null ? String(task.sprintId) : '',
+      newAssigneeOracleId: '',
       estimatedCompletionTime: '',
     });
 
-    // Fetch assignee info to get current estimatedCompletionTime
+    // Fetch current assignee
     fetch(`/tasks/${task.taskId}/assignees`)
       .then(r => r.ok ? r.json() : [])
       .then(list => {
@@ -34,6 +37,7 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
           setAssignee(list[0]);
           setForm(prev => ({
             ...prev,
+            newAssigneeOracleId: String(list[0].oracleId),
             estimatedCompletionTime: list[0].estimatedCompletionTime ?? '',
           }));
         }
@@ -53,7 +57,7 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
 
     setLoading(true);
     try {
-      // 1. Update task — NO mandamos createdBy
+      // 1. Update task fields
       const body = {
         taskName:    form.taskName.trim(),
         description: form.description.trim(),
@@ -74,17 +78,39 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
         const msg = await res.text().catch(() => '');
         throw new Error(msg || `Server error ${res.status}`);
       }
-
       const updated = await res.json();
 
-      // 2. Update estimatedCompletionTime in task_assignees if there's an assignee
-      if (assignee && form.estimatedCompletionTime !== '') {
+      // 2. Handle assignee change
+      const newOracleId = form.newAssigneeOracleId ? Number(form.newAssigneeOracleId) : null;
+      const currentOracleId = assignee ? assignee.oracleId : null;
+
+      if (newOracleId && newOracleId !== currentOracleId) {
+        // Delete old assignee if exists
+        if (currentOracleId) {
+          await fetch(`/tasks/assignees/${task.taskId}/${currentOracleId}`, {
+            method: 'DELETE',
+          }).catch(() => {});
+        }
+        // Create new assignee
         const est = parseFloat(form.estimatedCompletionTime);
-        if (!isNaN(est) && est >= 0) {
-          await fetch(`/tasks/assignees/${task.taskId}/${assignee.oracleId}/hours`, {
+        await fetch('/tasks/assignees', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            taskId: task.taskId,
+            oracleId: newOracleId,
+            estimatedCompletionTime: isNaN(est) ? null : est,
+            realTimeSpent: 0,
+          }),
+        }).catch(() => {});
+      } else if (assignee && form.estimatedCompletionTime !== '') {
+        // Same assignee, just update estimated time
+        const est = parseFloat(form.estimatedCompletionTime);
+        if (!isNaN(est)) {
+          await fetch(`/tasks/assignees/${task.taskId}/${currentOracleId}/hours`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ realTimeSpent: assignee.realTimeSpent ?? 0, estimatedCompletionTime: est }),
+            body: JSON.stringify({ estimatedCompletionTime: est }),
           }).catch(() => {});
         }
       }
@@ -126,12 +152,8 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {!confirmDelete ? (
-              <button
-                className="TM-close"
-                onClick={() => setConfirmDelete(true)}
-                title="Delete task"
-                style={{ color: '#C74634', borderColor: 'rgba(199,70,52,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
+              <button className="TM-close" onClick={() => setConfirmDelete(true)} title="Delete task"
+                style={{ color: '#C74634', borderColor: 'rgba(199,70,52,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <BsTrash3 size={15} />
               </button>
             ) : (
@@ -145,7 +167,8 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
                 </button>
               </div>
             )}
-            <button className="TM-close" onClick={onClose} aria-label="Close" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            <button className="TM-close" onClick={onClose} aria-label="Close"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
           </div>
         </div>
 
@@ -158,6 +181,17 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
             <div className="TM-field">
               <label className="TM-label">Description</label>
               <textarea className="TM-textarea" name="description" value={form.description || ''} onChange={handleChange} rows={4} />
+            </div>
+            <div className="TM-field">
+              <label className="TM-label">Assignee</label>
+              <select className="TM-select" name="newAssigneeOracleId" value={form.newAssigneeOracleId || ''} onChange={handleChange}>
+                <option value="">— Unassigned —</option>
+                {developers.map(dev => (
+                  <option key={dev.oracleId} value={String(dev.oracleId)}>
+                    {dev.name} ({dev.mail})
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -194,26 +228,15 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
                 <input className="TM-input" type="number" name="storyPoints" min={1} max={100} value={form.storyPoints ?? 1} onChange={handleChange} />
               </div>
               <div className="TM-field">
-                <label className="TM-label">Due Date <span className="TM-required">*</span></label>
-                <input className="TM-input" type="date" name="dueDate" value={form.dueDate || ''} onChange={handleChange} />
+                <label className="TM-label">Est. Time (h)</label>
+                <input className="TM-input" type="number" name="estimatedCompletionTime" min={0} step={0.5}
+                  placeholder="—" value={form.estimatedCompletionTime} onChange={handleChange} />
               </div>
             </div>
-            {/* Est. time — only shown if task has an assignee */}
-            {assignee && (
-              <div className="TM-field">
-                <label className="TM-label">Est. Time (h)</label>
-                <input
-                  className="TM-input"
-                  type="number"
-                  name="estimatedCompletionTime"
-                  min={0}
-                  step={0.5}
-                  placeholder="e.g. 3.5"
-                  value={form.estimatedCompletionTime}
-                  onChange={handleChange}
-                />
-              </div>
-            )}
+            <div className="TM-field">
+              <label className="TM-label">Due Date <span className="TM-required">*</span></label>
+              <input className="TM-input" type="date" name="dueDate" value={form.dueDate || ''} onChange={handleChange} />
+            </div>
           </div>
         </div>
 

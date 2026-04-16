@@ -43,6 +43,8 @@ function MainApp() {
   const [backlogTasks, setBacklogTasks] = useState([]);
   const [backlogLoading, setBacklogLoading] = useState(false);
   const [sprints, setSprints] = useState([]);
+  const [users, setUsers] = useState([]);            // all vantage_user records
+  const [taskAssignees, setTaskAssignees] = useState({}); // { taskId: assignee }
 
   const isManager = user?.role === 'MANAGER';
 
@@ -66,7 +68,12 @@ function MainApp() {
   useEffect(() => {
     if (user) {
       setActivePage('overview');
-      fetchSprints(); // load sprints for dropdown on login
+      fetchSprints();
+      // Load all users for assignee display
+      fetch('/users')
+        .then(r => r.ok ? r.json() : [])
+        .then(setUsers)
+        .catch(() => {});
     }
   }, [user, fetchSprints]);
 
@@ -88,8 +95,17 @@ function MainApp() {
 
   useEffect(() => {
     if (user && activePage === 'backlog') {
-      fetchSprints();       // ensure sprints are fresh before rendering
+      fetchSprints();
       fetchBacklogTasks();
+      // Load all assignees to show per task
+      fetch('/tasks/assignees/all')
+        .then(r => r.ok ? r.json() : [])
+        .then(list => {
+          const map = {};
+          list.forEach(a => { map[a.taskId] = a; });
+          setTaskAssignees(map);
+        })
+        .catch(() => {});
     }
   }, [user, activePage, fetchBacklogTasks, fetchSprints]);
 
@@ -274,6 +290,13 @@ function MainApp() {
       return found ? found.sprintName : `Sprint #${sprintId}`;
     };
 
+    const getAssigneeName = (taskId) => {
+      const assignee = taskAssignees[taskId];
+      if (!assignee) return null;
+      const u = users.find(u => String(u.oracleId) === String(assignee.oracleId));
+      return u ? u.name.split(' ')[0] : null;
+    };
+
     const toggleSelectTask = (taskId) => {
       setSelectedTaskIds(prev => {
         const next = new Set(prev);
@@ -447,11 +470,12 @@ function MainApp() {
                         />
                       </th>
                     )}
-                    <th style={{ width: showAllSprints ? '34%' : '40%' }}>Title</th>
+                    <th style={{ width: showAllSprints ? '30%' : '36%' }}>Title</th>
                     <th>Category</th>
                     <th>Status</th>
                     <th>Due Date</th>
                     {showAllSprints && <th>Sprint #</th>}
+                    <th>Assignee</th>
                     <th style={{ textAlign: 'right' }}>Points</th>
                     {!assignMode && isManager && <th style={{ textAlign: 'right' }}></th>}
                   </tr>
@@ -573,6 +597,31 @@ function MainApp() {
                             </span>
                           </td>
                         )}
+                        <td>
+                          {(() => {
+                            const name = getAssigneeName(task.taskId);
+                            return name ? (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 5,
+                                fontSize: 12, fontWeight: 700, color: '#1E3224',
+                              }}>
+                                <span style={{
+                                  width: 22, height: 22, borderRadius: '50%',
+                                  background: '#C74634', color: '#fff',
+                                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: 10, fontWeight: 900, flexShrink: 0,
+                                }}>
+                                  {name[0].toUpperCase()}
+                                </span>
+                                {name}
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: 11, color: 'rgba(30,50,36,0.35)', fontStyle: 'italic' }}>
+                                Unassigned
+                              </span>
+                            );
+                          })()}
+                        </td>
                         <td style={{ textAlign: 'right', fontWeight: 700 }}>
                           {task.storyPoints != null ? task.storyPoints : '—'}
                         </td>
@@ -963,6 +1012,7 @@ function MainApp() {
         open={editingTask !== null}
         task={editingTask}
         sprints={sprints}
+        users={users}
         onClose={() => setEditingTask(null)}
         onTaskUpdated={(updated) => {
           setBacklogTasks(prev => prev.map(t => t.taskId === updated.taskId ? updated : t));

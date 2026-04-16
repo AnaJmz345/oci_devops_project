@@ -92,6 +92,11 @@ public class TaskService {
         return taskAssigneeRepository.findAll();
     }
 
+    public void removeAssignee(Long taskId, Long oracleId) {
+        TaskAssignee.TaskAssigneeId pk = new TaskAssignee.TaskAssigneeId(taskId, oracleId);
+        taskAssigneeRepository.deleteById(pk);
+    }
+
     public TaskAssignee updateAssigneeHours(Long taskId, Long oracleId, Double realTimeSpent, Double estimatedCompletionTime) {
         TaskAssignee.TaskAssigneeId pk = new TaskAssignee.TaskAssigneeId(taskId, oracleId);
         return taskAssigneeRepository.findById(pk).map(assignee -> {
