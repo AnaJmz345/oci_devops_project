@@ -994,6 +994,15 @@ function MainApp() {
         onTaskCreated={(task) => {
           setIsCreateTaskOpen(false);
           fetchBacklogTasks();
+          // Refresh assignees so new task shows assignee immediately
+          fetch('/tasks/assignees/all')
+            .then(r => r.ok ? r.json() : [])
+            .then(list => {
+              const map = {};
+              list.forEach(a => { map[a.taskId] = a; });
+              setTaskAssignees(map);
+            })
+            .catch(() => {});
         }}
         sprintId={activeSprintId !== 'all' ? activeSprintId : null}
         createdBy={user?.oracle_id}
