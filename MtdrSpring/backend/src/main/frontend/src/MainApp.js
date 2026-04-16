@@ -1001,6 +1001,10 @@ function MainApp() {
           setBacklogTasks(prev => prev.filter(t => t.taskId !== taskId));
           setEditingTask(null);
         }}
+        onTaskDone={(updatedTask) => {
+          // Manager marcó como DONE desde el modal — pedir log de horas
+          setLogHoursData({ task: updatedTask, oracleId: user?.oracle_id });
+        }}
       />
     </div>
   );
