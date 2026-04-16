@@ -31,21 +31,33 @@ function MainApp() {
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
   const [backlogTasks, setBacklogTasks] = useState([]);
   const [backlogLoading, setBacklogLoading] = useState(false);
+  const [sprints, setSprints] = useState([]);
 
   const isManager = user?.role === 'MANAGER';
 
-  // Función estable con useCallback para poder usarla en useEffect y en onTaskCreated
+  // Fetch tasks
   const fetchBacklogTasks = React.useCallback(() => {
     setBacklogLoading(true);
     fetch('/tasks')
       .then(r => r.ok ? r.json() : [])
       .then(data => { setBacklogTasks(data); setBacklogLoading(false); })
       .catch(() => setBacklogLoading(false));
-  }, []); // sin dependencias: fetch y setters son estables
+  }, []);
+
+  // Fetch sprints from DB for the topbar dropdown
+  const fetchSprints = React.useCallback(() => {
+    fetch('/sprints')
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setSprints(data))
+      .catch(() => setSprints([]));
+  }, []);
 
   useEffect(() => {
-    if (user) setActivePage('overview');
-  }, [user]);
+    if (user) {
+      setActivePage('overview');
+      fetchSprints(); // load sprints for dropdown on login
+    }
+  }, [user, fetchSprints]);
 
   useEffect(() => {
     if (!user) return;
@@ -163,10 +175,13 @@ function MainApp() {
   const activeProjectName = 'SIXTH SEMESTER';
   const activeTeamName = 'PLACEHOLDER TEAM';
 
+  // Opciones dinámicas: "All" + sprints de la BD
   const sprintOptions = [
     { id: 'all', label: 'All sprints' },
-    { id: 'sprint2', label: 'Sprint 2' },
-    { id: 'sprint1', label: 'Sprint 1' },
+    ...sprints.map(s => ({
+      id: String(s.sprintId),
+      label: s.sprintName,
+    })),
   ];
 
   const activeSprintLabel = (
@@ -312,7 +327,8 @@ function MainApp() {
             className="SM-create-sprint-btn"
             onClick={() => setIsCreateSprintOpen(true)}
           >
-            <span style={{ fontSize: 16 }}>⊕</span> CREATE NEW SPRINT
+            <span className="SM-create-sprint-icon">+</span>
+            CREATE NEW SPRINT
           </button>
         )}
       </div>
@@ -592,17 +608,20 @@ function MainApp() {
           </div>
 
           <div className="VantageTopbarRight">
-            <label className="VantageSprintLabel" htmlFor="vantage-sprint-select">Sprint</label>
-            <select
-              id="vantage-sprint-select"
-              className="VantageSprintSelect"
-              value={activeSprintId}
-              onChange={(e) => setActiveSprintId(e.target.value)}
-            >
-              {sprintOptions.map(s => (
-                <option key={s.id} value={s.id}>{s.label}</option>
-              ))}
-            </select>
+            <div className="VantageSprintDropdown">
+              <span className="VantageSprintBadge">SPRINT</span>
+              <select
+                id="vantage-sprint-select"
+                className="VantageSprintSelect2"
+                value={activeSprintId}
+                onChange={(e) => setActiveSprintId(e.target.value)}
+              >
+                {sprintOptions.map(s => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
+              <span className="VantageSprintChevron">▾</span>
+            </div>
           </div>
         </header>
 
@@ -632,6 +651,7 @@ function MainApp() {
         onClose={() => setIsCreateSprintOpen(false)}
         onSprintCreated={() => {
           setIsCreateSprintOpen(false);
+          fetchSprints(); // refresh dropdown after creating sprint
         }}
       />
     </div>
