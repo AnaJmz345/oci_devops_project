@@ -88,4 +88,27 @@ public class TaskController {
     public List<TaskAssignee> getAllAssignees() {
         return taskService.getAllAssignees();
     }
+
+     // PUT /tasks/assignees/{taskId}/{oracleId}/hours — actualiza horas reales trabajadas
+    @PutMapping("/assignees/{taskId}/{oracleId}/hours")
+    public ResponseEntity<TaskAssignee> updateHours(
+            @PathVariable Long taskId,
+            @PathVariable Long oracleId,
+            @RequestBody java.util.Map<String, Double> body) {
+        try {
+            Double hours = body.get("realTimeSpent");
+            if (hours == null || hours < 0) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            TaskAssignee updated = taskService.updateRealTimeSpent(taskId, oracleId, hours);
+            if (updated != null) {
+                return new ResponseEntity<>(updated, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            System.err.println("Error updating hours: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

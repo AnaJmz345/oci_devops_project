@@ -5,6 +5,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { Button, TableBody, CircularProgress } from '@mui/material';
+import LogHoursModal from './analytics/LogHoursModal';
+
 
 import './vantage.css';
 
@@ -38,6 +40,7 @@ function MainApp() {
   const [editingTask, setEditingTask] = useState(null); // task object being edited
   const [assignMode, setAssignMode] = useState(false);   // checkbox selection mode
   const [selectedTaskIds, setSelectedTaskIds] = useState(new Set());
+  const [logHoursData, setLogHoursData] = useState(null); // { task, oracleId } when modal is open
   const [assignSprintId, setAssignSprintId] = useState('');
   const [assigning, setAssigning] = useState(false);
   const [backlogTasks, setBacklogTasks] = useState([]);
@@ -544,6 +547,10 @@ function MainApp() {
                                 setBacklogTasks(prev => prev.map(t =>
                                   t.taskId === task.taskId ? { ...t, status: newStatus } : t
                                 ));
+                                                                // If marked as DONE, prompt developer to log hours
+                                if (newStatus === 'DONE') {
+                                  setLogHoursData({ task, oracleId: user?.oracle_id });
+                                }
                               }}
                             >
                               <option value="TODO">TODO</option>
@@ -958,6 +965,28 @@ function MainApp() {
           fetchSprints();
         }}
       />
+
+      <LogHoursModal
+        open={logHoursData !== null}
+        taskName={logHoursData?.task?.taskName || ''}
+        onClose={() => setLogHoursData(null)}
+        onConfirm={async (hours) => {
+          if (!logHoursData) return;
+          const { task, oracleId } = logHoursData;
+          if (!oracleId) return;
+          try {
+            await fetch(`/tasks/assignees/${task.taskId}/${oracleId}/hours`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ realTimeSpent: hours }),
+            });
+          } catch (e) {
+            console.error('Error logging hours:', e);
+          }
+        }}
+      />
+
+
 
       <EditTaskModal
         open={editingTask !== null}
