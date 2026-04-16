@@ -42,13 +42,25 @@ public class TaskService {
         Optional<Task> existing = taskRepository.findById(id);
         if (existing.isPresent()) {
             Task task = existing.get();
-            task.setTaskName(updated.getTaskName());
-            task.setStatus(updated.getStatus());
+            // Solo actualiza campos editables — createdBy y timestamps se preservan
+            // de la entidad existente en BD, nunca se sobreescriben
+            if (updated.getTaskName() != null && !updated.getTaskName().isBlank()) {
+                task.setTaskName(updated.getTaskName());
+            }
+            if (updated.getStatus() != null) {
+                task.setStatus(updated.getStatus());
+            }
             task.setDescription(updated.getDescription());
-            task.setDueDate(updated.getDueDate());
-            task.setCategory(updated.getCategory());
-            task.setStoryPoints(updated.getStoryPoints());
-            task.setSprintId(updated.getSprintId());
+            if (updated.getDueDate() != null) {
+                task.setDueDate(updated.getDueDate());
+            }
+            if (updated.getCategory() != null) {
+                task.setCategory(updated.getCategory());
+            }
+            if (updated.getStoryPoints() != null) {
+                task.setStoryPoints(updated.getStoryPoints());
+            }
+            task.setSprintId(updated.getSprintId()); // null = quitar sprint, permitido
             return taskRepository.save(task);
         }
         return null;
@@ -56,7 +68,6 @@ public class TaskService {
 
     public boolean deleteTask(Long id) {
         try {
-            // Borrar assignees primero para no violar FK constraint
             List<TaskAssignee> assignees = taskAssigneeRepository.findByTaskId(id);
             if (!assignees.isEmpty()) {
                 taskAssigneeRepository.deleteAll(assignees);
@@ -64,6 +75,7 @@ public class TaskService {
             taskRepository.deleteById(id);
             return true;
         } catch (Exception e) {
+            System.err.println("Error deleting task " + id + ": " + e.getMessage());
             return false;
         }
     }
@@ -74,5 +86,9 @@ public class TaskService {
 
     public List<TaskAssignee> getAssigneesByTaskId(Long taskId) {
         return taskAssigneeRepository.findByTaskId(taskId);
+    }
+
+    public List<TaskAssignee> getAllAssignees() {
+        return taskAssigneeRepository.findAll();
     }
 }

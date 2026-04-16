@@ -62,8 +62,7 @@ public class TaskController {
             taskService.deleteTask(id);
             return new ResponseEntity<>(true, HttpStatus.OK);
         } catch (Exception e) {
-            System.err.println("Error deleting task " + id + ": " + e.getMessage());
-            e.printStackTrace();
+           
             return new ResponseEntity<>(false, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -74,8 +73,7 @@ public class TaskController {
             TaskAssignee saved = taskService.assignTask(assignee);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         } catch (Exception e) {
-            System.err.println("Error assigning task: " + e.getMessage());
-            e.printStackTrace();
+           
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -83,5 +81,11 @@ public class TaskController {
     @GetMapping("/{id}/assignees")
     public List<TaskAssignee> getAssignees(@PathVariable Long id) {
         return taskService.getAssigneesByTaskId(id);
+    }
+
+     // GET /tasks/assignees/all — todos los assignees (para analytics)
+    @GetMapping("/assignees/all")
+    public List<TaskAssignee> getAllAssignees() {
+        return taskService.getAllAssignees();
     }
 }

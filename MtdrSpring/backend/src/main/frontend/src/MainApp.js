@@ -16,6 +16,8 @@ import AuthLanding from './authenticator/AuthLanding';
 import CreateTaskModal from './task/CreateTaskModal';
 import EditTaskModal from './task/EditTaskModal';
 import CreateSprintModal from './sprint/CreateSprintModal';
+import AnalyticsPage from './analytics/AnalyticsPage';
+
 
 function MainApp() {
   const { user, logout } = useAuth();
@@ -179,6 +181,7 @@ function MainApp() {
     { id: 'overview', label: 'OVERVIEW' },
     { id: 'backlog', label: 'BACKLOG' },
     { id: 'board', label: 'BOARD' },
+     ...(isManager ? [{ id: 'analytics', label: 'ANALYTICS' }] : []),
     { id: 'calendar', label: 'CALENDAR' },
     { id: 'chatbot', label: 'CHATBOT' },
     { id: 'tasks', label: 'TASKS (LEGACY)' },
@@ -205,6 +208,7 @@ function MainApp() {
       overview: 'Overview',
       backlog: 'Backlog',
       board: 'Board',
+      analytics: 'Analytics',
       calendar: 'Calendar',
       chatbot: 'Chatbot',
       tasks: 'Tasks (legacy)',
@@ -926,6 +930,9 @@ function MainApp() {
           {activePage === 'overview' && <OverviewPage />}
           {activePage === 'backlog' && <BacklogPage />}
           {activePage === 'board' && <BoardPage />}
+          {activePage === 'analytics' && isManager && (
+          <AnalyticsPage sprints={sprints} activeSprintId={activeSprintId} />
+          )}
           {activePage === 'calendar' && <CalendarPage />}
           {activePage === 'chatbot' && <ChatbotPage />}
           {activePage === 'tasks' && <TasksLegacyPage />}
