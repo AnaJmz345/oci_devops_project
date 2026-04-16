@@ -11,6 +11,8 @@ import './vantage.css';
 import { useAuth } from './authenticator/AuthContext';
 import AuthLanding from './authenticator/AuthLanding';
 import CreateTaskModal from './task/CreateTaskModal';
+import CreateSprintModal from './sprint/CreateSprintModal';
+import './sprint/sprint.css';
 
 function MainApp() {
   const { user, logout } = useAuth();
@@ -27,6 +29,7 @@ function MainApp() {
   const [items, setItems] = useState([]);
   const [error, setError] = useState();
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
   const [backlogTasks, setBacklogTasks] = useState([]);
   const [backlogLoading, setBacklogLoading] = useState(false);
 
@@ -612,6 +615,14 @@ function MainApp() {
         }}
         sprintId={activeSprintId !== 'all' ? activeSprintId : null}
         createdBy={user?.oracle_id}
+      />
+
+      <CreateSprintModal
+        open={isCreateSprintOpen}
+        onClose={() => setIsCreateSprintOpen(false)}
+        onSprintCreated={() => {
+          setIsCreateSprintOpen(false);
+        }}
       />
     </div>
   );
