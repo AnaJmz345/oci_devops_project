@@ -1,700 +1,290 @@
-/* Vantage placeholder manager shell (scoped styles)
- * Keep this file separate so the legacy todo app styling remains untouched.
- * Palette:
- * - Red:    #C74634
- * - DkGreen:#1E3224
- * - Green:  #33553C
- * - LtGreen:#4C825C
- * - Amber:  #F1B13F
- * - Gray:   #C2D4D4
- * - White:  #FFFFFF
+/* sprint/sprint.css — CreateSprintModal styles
+ * Vantage palette: Red #C74634 · DkGreen #1E3224 · Gray #C2D4D4 · White #FFFFFF
  */
 
-.VantageShell {
-  --v-red: #C74634;
-  --v-dk: #1E3224;
-  --v-green: #33553C;
-  --v-ltgreen: #4C825C;
-  --v-amber: #F1B13F;
-  --v-gray: #C2D4D4;
-  --v-white: #FFFFFF;
-
+.SM-overlay {
   position: fixed;
   inset: 0;
-  display: flex;
-  background: var(--v-white);
-  color: var(--v-dk);
-}
-
-.VantageSidebar {
-  width: 290px;
-  padding: 14px 14px 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: var(--v-white);
-  border-right: 2px solid rgba(194, 212, 212, 0.9);
-}
-
-.VantageSidebarHeader {
+  z-index: 1000;
+  background: rgba(30, 50, 36, 0.38);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: SM-fadeIn 180ms ease;
+}
+
+@keyframes SM-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.SM-modal {
+  background: #fff;
+  border-radius: 18px;
+  border: 2px solid rgba(194, 212, 212, 0.85);
+  box-shadow: 0 24px 64px rgba(30, 50, 36, 0.18);
+  width: min(680px, 96vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: SM-slideUp 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes SM-slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Header */
+.SM-header {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
+  padding: 22px 24px 14px;
+  border-bottom: 2px solid rgba(194, 212, 212, 0.7);
 }
 
-.VantageBrandName {
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  font-size: 20px;
-  color: var(--v-red);
-}
-
-.VantageIconButton {
-  appearance: none;
-  border: 1px solid rgba(30, 50, 36, 0.20);
-  background: var(--v-white);
-  color: var(--v-dk);
-  border-radius: 10px;
-  padding: 6px 10px;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.VantageIconButton:hover {
-  background: rgba(194, 212, 212, 0.35);
-}
-
-.VantageIconButton.is-disabled,
-.VantageIconButton:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.VantageSearchWrap {
-  padding: 2px 0;
-}
-
-.VantageSearch {
-  width: 100%;
-  height: 34px;
-  border-radius: 999px;
-  border: 1px solid rgba(30, 50, 36, 0.18);
-  padding: 0 12px;
-  outline: none;
-  background: var(--v-white);
-  color: var(--v-dk);
-}
-
-.VantageSearch::placeholder {
-  color: rgba(30, 50, 36, 0.45);
-}
-
-.VantageSection {
-  border-left: 2px solid rgba(194, 212, 212, 0.7);
-  padding-left: 10px;
-}
-
-.VantageSectionHeader {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 6px 0;
-  cursor: pointer;
-}
-
-.VantageSectionTitle {
-  font-weight: 800;
-  letter-spacing: 0.7px;
-  font-size: 13px;
-}
-
-.VantageChevron {
-  margin-left: auto;
-  color: rgba(30, 50, 36, 0.7);
-}
-
-.VantageSectionBody {
-  margin-top: 6px;
+.SM-header-left {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
-.VantageRowButton {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 6px 6px;
-  cursor: pointer;
-  border-radius: 10px;
-}
-
-.VantageRowButton:hover {
-  background: rgba(194, 212, 212, 0.35);
-}
-
-.VantageRowText {
-  font-weight: 800;
-  letter-spacing: 0.3px;
-  font-size: 12px;
-}
-
-.VantageBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 6px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--v-white);
-}
-
-.VantageBadgeMini {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 18px;
-  padding: 0 6px;
-  border-radius: 6px;
+.SM-tag {
   font-size: 11px;
   font-weight: 900;
-  color: var(--v-white);
+  letter-spacing: 1.2px;
+  color: #C74634;
 }
 
-.VantageBadgeRed {
-  background: var(--v-red);
-}
-
-.VantageBadgeGreen {
-  background: var(--v-ltgreen);
-}
-
-.VantageBadgeAmber {
-  background: var(--v-amber);
+.SM-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
   color: #1E3224;
 }
 
-.VantageBadgePurple {
-  background: #2b2dbf;
-}
-
-.VantageNested {
-  margin-left: 30px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-left: 8px;
-  border-left: 1px dashed rgba(30, 50, 36, 0.22);
-}
-
-.VantagePageLink {
-  width: 100%;
-  text-align: left;
+.SM-close {
   appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 6px 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 800;
-  letter-spacing: 0.3px;
-  font-size: 12px;
-  color: rgba(30, 50, 36, 0.75);
-}
-
-.VantagePageLink:hover {
-  background: rgba(194, 212, 212, 0.35);
-}
-
-.VantagePageLink.is-active {
-  background: var(--v-red);
-  color: var(--v-white);
-}
-
-.VantageTeamHint {
-  margin-left: 30px;
-  font-size: 12px;
-  color: rgba(30, 50, 36, 0.55);
-}
-
-.VantageSidebarBottom {
-  margin-top: auto;
-  padding-top: 10px;
-  border-top: 2px solid rgba(194, 212, 212, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.VantageLogout {
-  background: var(--v-red) !important;
-}
-
-.VantageMain {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--v-white);
-}
-
-.VantageTopbar {
-  height: 54px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 0 14px;
-  background: var(--v-white);
-  color: var(--v-dk);
-  border-bottom: 2px solid rgba(199, 70, 52, 0.35);
-}
-
-.VantageTopbarLeft {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.VantageTopbarRight {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.VantageSprintLabel {
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: rgba(30, 50, 36, 0.65);
-}
-
-.VantageSprintSelect {
-  height: 34px;
-  border-radius: 10px;
-  border: 1px solid rgba(30, 50, 36, 0.20);
-  background: var(--v-white);
-  color: var(--v-dk);
-  padding: 0 10px;
-  font-weight: 800;
-  letter-spacing: 0.2px;
-}
-
-.VantageSprintSelect:focus {
-  outline: 2px solid rgba(199, 70, 52, 0.35);
-  outline-offset: 2px;
-}
-
-.VantageTopbar .VantageIconButton {
-  border-color: rgba(30, 50, 36, 0.20);
-  background: var(--v-white);
-  color: var(--v-dk);
-}
-
-.VantageTopbar .VantageIconButton:hover {
-  background: rgba(194, 212, 212, 0.35);
-}
-
-.VantageTopbarTitle {
-  font-weight: 900;
-  letter-spacing: 0.3px;
-}
-
-.VantageTopbarMeta {
-  margin-top: 2px;
-  font-size: 12px;
-  color: rgba(30, 50, 36, 0.62);
-}
-
-.VantageContent {
-  flex: 1;
-  overflow: auto;
-  padding: 18px;
-  background: var(--v-white);
-}
-
-.VantagePage {
-  max-width: 1100px;
-}
-
-.VantagePageHeader {
-  margin-bottom: 14px;
-}
-
-.VantageH1 {
-  margin: 0;
-  padding: 0;
-  font-size: 22px;
-  color: var(--v-dk);
-}
-
-.VantageMuted {
-  color: rgba(30, 50, 36, 0.62);
-  font-size: 13px;
-}
-
-.VantageGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.VantageCard {
-  background: var(--v-white);
-  border: 2px solid rgba(194, 212, 212, 0.9);
-  border-radius: 14px;
-  padding: 14px;
-}
-
-.VantageCardTitle {
-  font-weight: 900;
-  margin-bottom: 6px;
-  color: var(--v-dk);
-}
-
-.VantageCardBody {
-  color: rgba(30, 50, 36, 0.82);
-  font-size: 14px;
-}
-
-.VantageTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.VantageTable th,
-.VantageTable td {
-  padding: 10px 8px;
-  border-bottom: 1px solid rgba(30, 50, 36, 0.14);
-}
-
-.VantageTable th {
-  color: rgba(30, 50, 36, 0.60);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-size: 12px;
-}
-
-.VantageBoard {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.VantageBoardCol {
-  background: rgba(255, 255, 255, 0.65);
-  border: 2px solid rgba(194, 212, 212, 0.9);
-  border-radius: 14px;
-  padding: 12px;
-  min-height: 300px;
-}
-
-.VantageBoardColTitle {
-  font-weight: 900;
-  margin-bottom: 10px;
-  color: rgba(30, 50, 36, 0.78);
-  font-size: 12px;
-  letter-spacing: 0.6px;
-}
-
-.VantageBoardCard {
-  background: var(--v-white);
-  border: 1px solid rgba(30, 50, 36, 0.12);
-  border-radius: 12px;
-  padding: 10px;
-  margin-bottom: 10px;
-}
-
-@media (max-width: 900px) {
-  .VantageSidebar {
-    width: 240px;
-  }
-  .VantageGrid {
-    grid-template-columns: 1fr;
-  }
-  .VantageBoard {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Auth (Sign in / Sign up) */
-.AuthRoot {
-  --v-red: #C74634;
-  --v-dk: #1E3224;
-  --v-gray: #C2D4D4;
-  --v-white: #FFFFFF;
-
-  position: fixed;
-  inset: 0;
-  background: var(--v-white);
-  color: var(--v-dk);
-  overflow: hidden;
-}
-
-.AuthCard {
-  position: absolute;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  background: var(--v-white);
-  border: none;
-  border-radius: 0;
-  overflow: hidden;
-  display: flex;
-  box-shadow: none;
-}
-
-.AuthPane {
-  flex: 1;
-  padding: 44px 42px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.AuthKicker {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 1.2px;
-  color: rgba(30, 50, 36, 0.72);
-}
-
-.AuthBrand {
-  margin: 6px 0 10px;
-  font-size: 16px;
-  font-weight: 900;
-  letter-spacing: 0.6px;
-  color: var(--v-red);
-}
-
-.AuthTitle {
-  margin: 0 0 22px;
-  font-size: 64px;
-  font-weight: 900;
-  letter-spacing: 0.6px;
-  color: var(--v-red);
-}
-
-.AuthForm {
-  width: min(420px, 82%);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.AuthLabel {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.AuthLabelText {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.AuthInput {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid rgba(30, 50, 36, 0.10);
-  background: #E9E9E9;
-  outline: none;
-  font-size: 14px;
-}
-
-.AuthInput::placeholder {
-  color: rgba(30, 50, 36, 0.40);
-  font-style: italic;
-  font-weight: 800;
-  letter-spacing: 0.3px;
-}
-
-.AuthInput:focus {
-  border-color: rgba(30, 50, 36, 0.18);
-  box-shadow: 0 0 0 4px rgba(194, 212, 212, 0.45);
-}
-
-.AuthPrimaryButton {
-  margin-top: 10px;
-  width: 100%;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 6px;
-  background: var(--v-red);
-  color: var(--v-white);
-  font-weight: 900;
-  letter-spacing: 0.6px;
-  cursor: pointer;
-}
-
-.AuthPrimaryButton:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.AuthError {
-  margin: 12px 0 0;
-  font-size: 13px;
-  color: var(--v-red);
-  font-weight: 800;
-}
-
-.AuthOverlay {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 50%;
-  height: 100%;
-  background: var(--v-red);
-  color: var(--v-white);
-  z-index: 2;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  transform: translateX(0);
-  transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.AuthRoot.is-register .AuthOverlay {
-  transform: translateX(-100%);
-}
-
-.AuthOverlayInner {
-  pointer-events: auto;
-  text-align: center;
-  padding: 24px;
-  max-width: 360px;
-}
-
-.AuthOverlayTitle {
-  margin: 0 0 12px;
-  font-size: 46px;
-  font-weight: 900;
-  line-height: 1.02;
-  letter-spacing: 0.4px;
-}
-
-.AuthOverlayEm {
-  color: var(--v-white);
-}
-
-.AuthOverlaySubtitle {
-  margin: 0 0 22px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.AuthOverlayButton {
-  padding: 12px 28px;
-  border-radius: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.95);
-  background: transparent;
-  color: var(--v-white);
-  font-weight: 900;
-  letter-spacing: 0.6px;
-  cursor: pointer;
-}
-
-.AuthOverlayButton:disabled {
-  opacity: 0.75;
-  cursor: not-allowed;
-}
-
-@media (max-width: 900px) {
-  .AuthCard {
-    flex-direction: column;
-  }
-
-  .AuthPane {
-    padding: 28px 20px;
-  }
-
-  .AuthOverlay {
-    left: 0;
-    top: 50%;
-    width: 100%;
-    height: 50%;
-    transform: translateY(0);
-  }
-
-  .AuthRoot.is-register .AuthOverlay {
-    transform: translateY(-100%);
-  }
-}
-
-/* ── Sprint dropdown (topbar) ───────────────────────── */
-.VantageSprintDropdown {
-  display: flex;
-  align-items: center;
+  border: 1px solid rgba(30, 50, 36, 0.18);
   background: #fff;
-  border: 1.5px solid rgba(199, 70, 52, 0.30);
+  color: #1E3224;
   border-radius: 10px;
-  overflow: hidden;
-  position: relative;
-}
-
-.VantageSprintBadge {
-  padding: 0 10px;
+  width: 34px;
   height: 34px;
   display: flex;
   align-items: center;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.7px;
-  color: #C74634;
-  background: rgba(199, 70, 52, 0.06);
-  border-right: 1.5px solid rgba(199, 70, 52, 0.20);
-  white-space: nowrap;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 140ms;
   flex-shrink: 0;
 }
 
-.VantageSprintSelect2 {
-  height: 34px;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: #1E3224;
-  font-weight: 800;
-  font-size: 13px;
-  padding: 0 28px 0 10px;
-  cursor: pointer;
-  appearance: none;
-  min-width: 110px;
+.SM-close:hover {
+  background: rgba(199, 70, 52, 0.08);
+  border-color: rgba(199, 70, 52, 0.35);
+  color: #C74634;
 }
 
-.VantageSprintChevron {
-  position: absolute;
-  right: 8px;
+/* Body */
+.SM-body {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  flex: 1;
+}
+
+.SM-col {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.SM-col--meta {
+  border-left: 2px solid rgba(194, 212, 212, 0.7);
+  background: rgba(194, 212, 212, 0.08);
+}
+
+/* Fields */
+.SM-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.SM-label {
   font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: rgba(30, 50, 36, 0.60);
+}
+
+.SM-required {
   color: #C74634;
-  pointer-events: none;
+}
+
+.SM-input,
+.SM-select,
+.SM-textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid rgba(30, 50, 36, 0.16);
+  border-radius: 10px;
+  background: #fff;
+  color: #1E3224;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 150ms, box-shadow 150ms;
+  box-sizing: border-box;
+}
+
+.SM-input::placeholder,
+.SM-textarea::placeholder {
+  color: rgba(30, 50, 36, 0.35);
+  font-weight: 500;
+}
+
+.SM-input:focus,
+.SM-select:focus,
+.SM-textarea:focus {
+  border-color: rgba(199, 70, 52, 0.45);
+  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.10);
+}
+
+.SM-textarea {
+  resize: vertical;
+  min-height: 90px;
+  font-family: inherit;
+}
+
+.SM-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231E3224' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+/* Duration pill */
+.SM-duration-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(76, 130, 92, 0.12);
+  border: 1px solid rgba(76, 130, 92, 0.30);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #2d6b3f;
+  font-weight: 700;
+}
+
+.SM-duration-icon {
+  font-size: 15px;
+}
+
+/* Error */
+.SM-error {
+  margin: 0 24px;
+  padding: 10px 14px;
+  background: rgba(199, 70, 52, 0.08);
+  border: 1px solid rgba(199, 70, 52, 0.30);
+  border-radius: 10px;
+  color: #C74634;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Footer */
+.SM-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 2px solid rgba(194, 212, 212, 0.7);
+}
+
+.SM-btn {
+  appearance: none;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: opacity 140ms, transform 100ms;
+}
+
+.SM-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.SM-btn:active:not(:disabled) { transform: scale(0.97); }
+
+.SM-btn--cancel {
+  background: rgba(194, 212, 212, 0.35);
+  color: rgba(30, 50, 36, 0.80);
+  border: 1px solid rgba(30, 50, 36, 0.14);
+}
+.SM-btn--cancel:hover:not(:disabled) { background: rgba(194, 212, 212, 0.55); }
+
+.SM-btn--submit {
+  background: #C74634;
+  color: #fff;
+}
+.SM-btn--submit:hover:not(:disabled) { background: #b03d2d; }
+
+@media (max-width: 600px) {
+  .SM-body { grid-template-columns: 1fr; }
+  .SM-col--meta {
+    border-left: none;
+    border-top: 2px solid rgba(194, 212, 212, 0.7);
+  }
+}
+
+/* CREATE NEW SPRINT button (shown below backlog table) */
+.SM-create-sprint-btn {
+  margin-top: 10px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  appearance: none;
+  border: 1.5px solid rgba(199, 70, 52, 0.35);
+  background: transparent;
+  color: rgba(199, 70, 52, 0.80);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms, color 150ms;
+}
+
+.SM-create-sprint-btn:hover {
+  background: rgba(199, 70, 52, 0.06);
+  border-color: #C74634;
+  color: #C74634;
+}
+
+.SM-create-sprint-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
 }
