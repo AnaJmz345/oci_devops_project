@@ -1017,9 +1017,19 @@ function MainApp() {
         onTaskUpdated={(updated) => {
           setBacklogTasks(prev => prev.map(t => t.taskId === updated.taskId ? updated : t));
           setEditingTask(null);
+          // Refresh assignees map so the Assignee column updates immediately
+          fetch('/tasks/assignees/all')
+            .then(r => r.ok ? r.json() : [])
+            .then(list => {
+              const map = {};
+              list.forEach(a => { map[a.taskId] = a; });
+              setTaskAssignees(map);
+            })
+            .catch(() => {});
         }}
         onTaskDeleted={(taskId) => {
           setBacklogTasks(prev => prev.filter(t => t.taskId !== taskId));
+          setTaskAssignees(prev => { const n = {...prev}; delete n[taskId]; return n; });
           setEditingTask(null);
         }}
       />
