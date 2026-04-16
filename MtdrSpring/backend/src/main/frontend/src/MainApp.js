@@ -13,7 +13,6 @@ import AuthLanding from './authenticator/AuthLanding';
 import CreateTaskModal from './task/CreateTaskModal';
 import CreateSprintModal from './sprint/CreateSprintModal';
 
-
 function MainApp() {
   const { user, logout } = useAuth();
   const [page, setPage] = useState('login'); // 'login' o 'register'
@@ -305,6 +304,17 @@ function MainApp() {
             )}
           </div>
         </div>
+
+        {/* Botón CREATE NEW SPRINT — solo manager */}
+        {isManager && (
+          <button
+            type="button"
+            className="SM-create-sprint-btn"
+            onClick={() => setIsCreateSprintOpen(true)}
+          >
+            <span style={{ fontSize: 16 }}>⊕</span> CREATE NEW SPRINT
+          </button>
+        )}
       </div>
     );
   }
