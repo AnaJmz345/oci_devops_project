@@ -7,8 +7,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import jakarta.transaction.Transactional;
 
+// Alias de TaskRepository para compatibilidad con ToDoItemService y el bot de Telegram.
+// Ambos apuntan a la misma entidad Task con el mismo tipo Long.
 @Repository
 @Transactional
 @EnableTransactionManagement
-public interface ToDoItemRepository extends JpaRepository<Task, Integer> {
+public interface ToDoItemRepository extends JpaRepository<Task, Long> {
 }

@@ -18,10 +18,9 @@ public class ToDoItemService {
     @Autowired
     private ToDoItemRepository toDoItemRepository;
 
-    // Convierte Task (entidad JPA) a ToDoItem (modelo legacy usado por el bot)
     private ToDoItem toDto(Task t) {
         ToDoItem item = new ToDoItem();
-        item.setID((int) (long) t.getTaskId());
+        item.setID(t.getTaskId().intValue());
         item.setDescription(t.getTaskName());
         item.setDone(t.getStatus());
         item.setName(t.getDescription());
@@ -29,15 +28,13 @@ public class ToDoItemService {
         return item;
     }
 
-    // Convierte ToDoItem legacy a Task para guardar en BD
     private Task toEntity(ToDoItem item) {
         Task t = new Task();
-        item.setDone(item.getDone() != null ? item.getDone() : "TODO");
-        t.setTaskName(item.getDescription());
-        t.setStatus(item.getDone());
+        t.setTaskName(item.getDescription() != null ? item.getDescription() : "");
+        t.setStatus(item.getDone() != null ? item.getDone() : "TODO");
         t.setDescription(item.getName());
         t.setStoryPoints(item.getStoryPoints());
-        t.setCreatedBy(1L); // valor por defecto para compatibilidad legacy
+        t.setCreatedBy(1L);
         return t;
     }
 
@@ -49,7 +46,7 @@ public class ToDoItemService {
     }
 
     public ResponseEntity<ToDoItem> getItemById(int id) {
-        Optional<Task> data = toDoItemRepository.findById(id);
+        Optional<Task> data = toDoItemRepository.findById((long) id);
         if (data.isPresent()) {
             return new ResponseEntity<>(toDto(data.get()), HttpStatus.OK);
         } else {
@@ -58,7 +55,7 @@ public class ToDoItemService {
     }
 
     public ToDoItem getToDoItemById(int id) {
-        Optional<Task> data = toDoItemRepository.findById(id);
+        Optional<Task> data = toDoItemRepository.findById((long) id);
         return data.map(this::toDto).orElse(null);
     }
 
@@ -69,7 +66,7 @@ public class ToDoItemService {
 
     public boolean deleteToDoItem(int id) {
         try {
-            toDoItemRepository.deleteById(id);
+            toDoItemRepository.deleteById((long) id);
             return true;
         } catch (Exception e) {
             return false;
@@ -77,7 +74,7 @@ public class ToDoItemService {
     }
 
     public ToDoItem updateToDoItem(int id, ToDoItem td) {
-        Optional<Task> data = toDoItemRepository.findById(id);
+        Optional<Task> data = toDoItemRepository.findById((long) id);
         if (data.isPresent()) {
             Task task = data.get();
             task.setTaskName(td.getDescription());
