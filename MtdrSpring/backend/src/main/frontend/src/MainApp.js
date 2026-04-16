@@ -265,7 +265,7 @@ function MainApp() {
     return (
       <div className="VantagePage">
         <div className="VantagePageHeader">
-          <h1 className="VantageH1">Backlog</h1>
+          <h1 className="VantageH1">Backlog LUBUBUUU</h1>
           <div className="VantageMuted">Project: {activeProjectName} • Sprint: {activeSprintLabel}</div>
         </div>
         <div className="VantageCard">
