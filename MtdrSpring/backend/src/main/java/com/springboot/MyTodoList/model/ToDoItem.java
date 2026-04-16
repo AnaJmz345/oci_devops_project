@@ -8,8 +8,8 @@ import java.time.OffsetDateTime;
     representation of the TODOITEM table that exists already
     in the autonomous database
  */
-@Entity
-@Table(name = "TASK", schema = "VANTAGE")
+// @Entity removido: la tabla TASK ahora la mapea com.springboot.MyTodoList.task.Task
+// ToDoItem se conserva solo para compatibilidad con ToDoItemService y el bot de Telegram
 public class ToDoItem {
     /*@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,26 +20,14 @@ public class ToDoItem {
     OffsetDateTime creation_ts;
     @Column(name = "done")
     boolean done;*/
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "task_seq_gen")
-    @SequenceGenerator(
-        name = "task_seq_gen",
-        sequenceName = "VANTAGE.TASK_SEQ",
-        allocationSize = 1
-    )
-    @Column(name = "TASK_ID")
     int ID;
 
-    @Column(name = "TASK_NAME")
     String description;
 
-    @Column(name = "STATUS")
     String done="TODO";
 
-    @Column(name = "DESCRIPTION")
     String name;
- 
-    @Column(name = "STORY_POINTS")
+
     Integer storyPoints;
 
 
