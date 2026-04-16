@@ -62,7 +62,6 @@ public class TaskController {
             taskService.deleteTask(id);
             return new ResponseEntity<>(true, HttpStatus.OK);
         } catch (Exception e) {
-           
             return new ResponseEntity<>(false, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -73,7 +72,6 @@ public class TaskController {
             TaskAssignee saved = taskService.assignTask(assignee);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         } catch (Exception e) {
-           
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -83,9 +81,30 @@ public class TaskController {
         return taskService.getAssigneesByTaskId(id);
     }
 
-     // GET /tasks/assignees/all — todos los assignees (para analytics)
+    // GET /tasks/assignees/all — todos los assignees (para analytics)
     @GetMapping("/assignees/all")
     public List<TaskAssignee> getAllAssignees() {
         return taskService.getAllAssignees();
+    }
+
+    // PUT /tasks/assignees/{taskId}/{oracleId}/hours — actualiza horas reales y/o estimadas
+    @PutMapping("/assignees/{taskId}/{oracleId}/hours")
+    public ResponseEntity<TaskAssignee> updateHours(
+            @PathVariable Long taskId,
+            @PathVariable Long oracleId,
+            @RequestBody java.util.Map<String, Double> body) {
+        try {
+            Double realTimeSpent = body.get("realTimeSpent");
+            Double estimatedCompletionTime = body.get("estimatedCompletionTime");
+            TaskAssignee updated = taskService.updateAssigneeHours(taskId, oracleId, realTimeSpent, estimatedCompletionTime);
+            if (updated != null) {
+                return new ResponseEntity<>(updated, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            System.err.println("Error updating hours: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

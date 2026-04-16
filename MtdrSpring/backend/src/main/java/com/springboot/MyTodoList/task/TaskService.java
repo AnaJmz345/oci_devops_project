@@ -91,4 +91,13 @@ public class TaskService {
     public List<TaskAssignee> getAllAssignees() {
         return taskAssigneeRepository.findAll();
     }
+
+    public TaskAssignee updateAssigneeHours(Long taskId, Long oracleId, Double realTimeSpent, Double estimatedCompletionTime) {
+        TaskAssignee.TaskAssigneeId pk = new TaskAssignee.TaskAssigneeId(taskId, oracleId);
+        return taskAssigneeRepository.findById(pk).map(assignee -> {
+            if (realTimeSpent != null) assignee.setRealTimeSpent(realTimeSpent);
+            if (estimatedCompletionTime != null) assignee.setEstimatedCompletionTime(estimatedCompletionTime);
+            return taskAssigneeRepository.save(assignee);
+        }).orElse(null);
+    }
 }
