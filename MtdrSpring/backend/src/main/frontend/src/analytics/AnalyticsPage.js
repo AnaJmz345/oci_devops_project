@@ -82,7 +82,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
       {/* Header */}
       <div className="AN-header">
         <div>
-          <div className="AN-kicker">MANAGER VIEW</div>
+          <div className="AN-kicker">MANAGER VIEW ARIAANAAA NOOOO</div>
           <h1 className="AN-title">Analytics</h1>
           <p className="AN-subtitle">Sprint KPI dashboard — track team performance and progress</p>
         </div>
