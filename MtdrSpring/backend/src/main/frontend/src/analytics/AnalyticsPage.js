@@ -13,55 +13,69 @@ function StatPill({ label, value, color }) {
 }
 
 function AnalyticsPage({ sprints, activeSprintId }) {
-  // Use activeSprintId from topbar directly — no local sprint picker
-  const [tasks, setTasks] = useState([]);
-  const [assignees, setAssignees] = useState([]);
+  const [allTasks, setAllTasks] = useState([]);
+  const [allAssignees, setAllAssignees] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Derive the sprint to show: if 'all' is selected use first sprint, otherwise use the selected one
-  const selectedSprintId = activeSprintId !== 'all' ? activeSprintId : (sprints[0]?.sprintId ? String(sprints[0].sprintId) : '');
+  const isAllSprints = activeSprintId === 'all';
 
+  // Fetch data whenever activeSprintId changes
   useEffect(() => {
-    if (!selectedSprintId) return;
     setLoading(true);
 
     Promise.all([
       fetch('/tasks').then(r => r.ok ? r.json() : []),
       fetch('/tasks/assignees/all').then(r => r.ok ? r.json() : []).catch(() => []),
       fetch('/users').then(r => r.ok ? r.json() : []),
-    ]).then(([allTasks, allAssignees, allUsers]) => {
-      const sprintTasks = allTasks.filter(t => String(t.sprintId) === String(selectedSprintId));
-      setTasks(sprintTasks);
-      const sprintTaskIds = new Set(sprintTasks.map(t => t.taskId));
-      setAssignees(allAssignees.filter(a => sprintTaskIds.has(a.taskId)));
-      setUsers(allUsers);
+    ]).then(([fetchedTasks, fetchedAssignees, fetchedUsers]) => {
+      setAllTasks(fetchedTasks);
+      setAllAssignees(fetchedAssignees);
+      setUsers(fetchedUsers);
     }).finally(() => setLoading(false));
-  }, [selectedSprintId, activeSprintId]);
+  }, [activeSprintId]);
+
+  // ── Filter tasks based on sprint selection ────────────────
+  // "All sprints" → ALL tasks that belong to ANY sprint (sprintId != null)
+  // Specific sprint → only tasks for that sprint
+  const tasks = isAllSprints
+    ? allTasks.filter(t => t.sprintId != null)
+    : allTasks.filter(t => String(t.sprintId) === String(activeSprintId));
+
+  // Filter assignees to match the filtered tasks
+  const sprintTaskIds = new Set(tasks.map(t => t.taskId));
+  const assignees = allAssignees.filter(a => sprintTaskIds.has(a.taskId));
 
   // ── KPI calculations ─────────────────────────────────────
-  const totalTasks  = tasks.length;
-  const doneTasks   = tasks.filter(t => t.status === 'DONE').length;
-  const inProgress  = tasks.filter(t => t.status === 'IN_PROGRESS').length;
-  const todoTasks   = tasks.filter(t => t.status === 'TODO').length;
+  const totalTasks   = tasks.length;
+  const doneTasks    = tasks.filter(t => t.status === 'DONE').length;
+  const inProgress   = tasks.filter(t => t.status === 'IN_PROGRESS').length;
+  const todoTasks    = tasks.filter(t => t.status === 'TODO').length;
   const blockedTasks = tasks.filter(t => t.status === 'BLOCKED').length;
-  const progressPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+  const progressPct  = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
-  const selectedSprint = sprints.find(s => String(s.sprintId) === String(selectedSprintId));
+  // For header display
+  const selectedSprint = !isAllSprints
+    ? sprints.find(s => String(s.sprintId) === String(activeSprintId))
+    : null;
+
+  // Ring label: sprint name or "All Sprints"
+  const ringLabel = isAllSprints ? 'All Sprints' : (selectedSprint?.sprintName || 'Sprint');
+  const ringGoal  = isAllSprints ? null : selectedSprint?.goal;
 
   // Tasks completed per member
   const tasksByMember = users
     .filter(u => u.role === 'DEVELOPER')
     .map(u => {
-      const userAssignees = assignees.filter(a => a.oracleId === u.oracleId);
+      const userAssignees = assignees.filter(a =>
+        String(a.oracleId) === String(u.oracleId)
+      );
       const userTaskIds = new Set(userAssignees.map(a => a.taskId));
       const doneCnt = tasks.filter(t => userTaskIds.has(t.taskId) && t.status === 'DONE').length;
-      return { label: u.name.split(' ')[0], value: doneCnt };
+      const totalCnt = tasks.filter(t => userTaskIds.has(t.taskId)).length;
+      return { label: u.name.split(' ')[0], value: doneCnt, total: totalCnt };
     })
-    .filter(d => d.value > 0 || assignees.some(a => {
-      const u = users.find(u => u.oracleId === a.oracleId);
-      return u && u.name.split(' ')[0] === d.label;
-    }));
+    .filter(d => d.total > 0);
 
   // Hours per member (estimated_completion_time sum per developer)
   const hoursByMember = users
@@ -72,10 +86,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
         .reduce((sum, a) => sum + (a.estimatedCompletionTime || 0), 0);
       return { label: u.name.split(' ')[0], value: Math.round(estimated * 10) / 10 };
     })
-    .filter(d => assignees.some(a => {
-      const u = users.find(u => u.name.split(' ')[0] === d.label);
-      return u && String(a.oracleId) === String(u.oracleId);
-    }));
+    .filter(d => d.value > 0);
 
   return (
     <div className="AN-root">
@@ -86,13 +97,10 @@ function AnalyticsPage({ sprints, activeSprintId }) {
           <h1 className="AN-title">Analytics</h1>
           <p className="AN-subtitle">Sprint KPI dashboard — track team performance and progress</p>
         </div>
-
       </div>
 
       {loading ? (
         <div className="AN-loading">Loading analytics…</div>
-      ) : !selectedSprintId ? (
-        <div className="AN-loading">Select a sprint to view analytics.</div>
       ) : (
         <>
           {/* Stat pills row */}
@@ -110,9 +118,9 @@ function AnalyticsPage({ sprints, activeSprintId }) {
             {/* Progress ring card */}
             <div className="AN-card AN-card--ring">
               <div className="AN-card-label">SPRINT PROGRESS</div>
-              <div className="AN-card-title">{selectedSprint?.sprintName || 'Sprint'}</div>
-              {selectedSprint?.goal && (
-                <p className="AN-goal">"{selectedSprint.goal}"</p>
+              <div className="AN-card-title">{ringLabel}</div>
+              {ringGoal && (
+                <p className="AN-goal">"{ringGoal}"</p>
               )}
               <div className="AN-ring-wrap">
                 <ProgressRing
@@ -165,10 +173,10 @@ function AnalyticsPage({ sprints, activeSprintId }) {
             <div className="AN-card-title">TASK BY STATUS</div>
             <div className="AN-breakdown-bars">
               {[
-                { label: 'Done',        value: doneTasks,    color: '#4C825C', bg: 'rgba(76,130,92,0.12)' },
-                { label: 'In Progress', value: inProgress,   color: '#F1B13F', bg: 'rgba(241,177,63,0.15)' },
-                { label: 'To Do',       value: todoTasks,    color: '#2b2dbf', bg: 'rgba(43,45,191,0.10)' },
-                { label: 'Blocked',     value: blockedTasks, color: '#C74634', bg: 'rgba(199,70,52,0.10)' },
+                { label: 'Done',        value: doneTasks,    color: '#4C825C' },
+                { label: 'In Progress', value: inProgress,   color: '#F1B13F' },
+                { label: 'To Do',       value: todoTasks,    color: '#2b2dbf' },
+                { label: 'Blocked',     value: blockedTasks, color: '#C74634' },
               ].map(item => (
                 <div key={item.label} className="AN-breakdown-row">
                   <span className="AN-breakdown-label" style={{ color: item.color }}>{item.label}</span>
