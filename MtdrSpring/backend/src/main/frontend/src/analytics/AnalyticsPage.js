@@ -152,7 +152,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
 
             {/* Hours per member bar chart */}
             <div className="AN-card">
-              <div className="AN-card-label">ESTIMATED TIME</div>
+              <div className="AN-card-label">TIME WORKED</div>
               <div className="AN-card-title">HOURS PER MEMBER</div>
               {hoursByMember.length === 0 ? (
                 <div className="AN-empty">No time logged yet for this sprint.</div>
