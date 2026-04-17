@@ -83,7 +83,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
       <div className="AN-header">
         <div>
           <div className="AN-kicker">MANAGER VIEW</div>
-          <h1 className="AN-title">Analytics corporation</h1>
+          <h1 className="AN-title">Analytics</h1>
           <p className="AN-subtitle">Sprint KPI dashboard — track team performance and progress</p>
         </div>
 
@@ -130,7 +130,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
             {/* Tasks per member bar chart */}
             <div className="AN-card">
               <div className="AN-card-label">TASKS COMPLETED</div>
-              <div className="AN-card-title">Tasks per Member</div>
+              <div className="AN-card-title">TASK PER MEMBER</div>
               {tasksByMember.length === 0 ? (
                 <div className="AN-empty">No completed tasks yet for this sprint.</div>
               ) : (
@@ -145,7 +145,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
             {/* Hours per member bar chart */}
             <div className="AN-card">
               <div className="AN-card-label">ESTIMATED TIME</div>
-              <div className="AN-card-title">Est. Hours per Member</div>
+              <div className="AN-card-title">HOURS PER MEMBER</div>
               {hoursByMember.length === 0 ? (
                 <div className="AN-empty">No time logged yet for this sprint.</div>
               ) : (
@@ -162,7 +162,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
           {/* Status breakdown */}
           <div className="AN-card AN-card--breakdown">
             <div className="AN-card-label">STATUS BREAKDOWN</div>
-            <div className="AN-card-title">Tasks by Status</div>
+            <div className="AN-card-title">TASK BY STATUS</div>
             <div className="AN-breakdown-bars">
               {[
                 { label: 'Done',        value: doneTasks,    color: '#4C825C', bg: 'rgba(76,130,92,0.12)' },
