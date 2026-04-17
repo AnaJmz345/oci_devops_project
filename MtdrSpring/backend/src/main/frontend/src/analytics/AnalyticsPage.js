@@ -13,17 +13,14 @@ function StatPill({ label, value, color }) {
 }
 
 function AnalyticsPage({ sprints, activeSprintId }) {
+  // Use activeSprintId from topbar directly — no local sprint picker
   const [tasks, setTasks] = useState([]);
-  const [assignees, setAssignees] = useState([]); // { taskId, oracleId, realTimeSpent }
+  const [assignees, setAssignees] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSprintId, setSelectedSprintId] = useState(activeSprintId !== 'all' ? activeSprintId : (sprints[0]?.sprintId ?? ''));
 
-  useEffect(() => {
-    if (sprints.length > 0 && !selectedSprintId) {
-      setSelectedSprintId(String(sprints[0].sprintId));
-    }
-  }, [sprints, selectedSprintId]);
+  // Derive the sprint to show: if 'all' is selected use first sprint, otherwise use the selected one
+  const selectedSprintId = activeSprintId !== 'all' ? activeSprintId : (sprints[0]?.sprintId ? String(sprints[0].sprintId) : '');
 
   useEffect(() => {
     if (!selectedSprintId) return;
@@ -40,7 +37,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
       setAssignees(allAssignees.filter(a => sprintTaskIds.has(a.taskId)));
       setUsers(allUsers);
     }).finally(() => setLoading(false));
-  }, [selectedSprintId]);
+  }, [selectedSprintId, activeSprintId]);
 
   // ── KPI calculations ─────────────────────────────────────
   const totalTasks  = tasks.length;
@@ -80,8 +77,6 @@ function AnalyticsPage({ sprints, activeSprintId }) {
       return u && String(a.oracleId) === String(u.oracleId);
     }));
 
-  const sprintOptions = sprints.map(s => ({ id: String(s.sprintId), label: s.sprintName }));
-
   return (
     <div className="AN-root">
       {/* Header */}
@@ -91,19 +86,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
           <h1 className="AN-title">Analytics</h1>
           <p className="AN-subtitle">Sprint KPI dashboard — track team performance and progress</p>
         </div>
-        <div className="AN-sprint-picker">
-          <label className="AN-sprint-label">Sprint</label>
-          <select
-            className="AN-sprint-select"
-            value={selectedSprintId}
-            onChange={e => setSelectedSprintId(e.target.value)}
-          >
-            <option value="">— Select sprint —</option>
-            {sprintOptions.map(s => (
-              <option key={s.id} value={s.id}>{s.label}</option>
-            ))}
-          </select>
-        </div>
+
       </div>
 
       {loading ? (
