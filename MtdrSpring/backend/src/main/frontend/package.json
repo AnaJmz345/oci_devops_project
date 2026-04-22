@@ -18,7 +18,8 @@
     },
     "scripts": {
         "start": "react-scripts start",
-        "build": "react-scripts build"
+        "build": "react-scripts build",
+        "test": "vitest"
     },
     "eslintConfig": {
         "extends": "react-app"
@@ -26,5 +27,8 @@
     "browserslist": [
         "last 5 versions"
     ],
-    "homepage": "."
+    "homepage": ".",
+    "devDependencies": {
+        "vitest": "^4.1.4"
+    }
 }
