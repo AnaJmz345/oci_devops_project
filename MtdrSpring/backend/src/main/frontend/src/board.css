@@ -1,0 +1,268 @@
+
+/* ── Board layout ───────────────────────────────────── */
+.KB-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  min-height: 500px;
+  align-items: flex-start;
+}
+
+/* ── Column ─────────────────────────────────────────── */
+.KB-column {
+  background: rgba(194, 212, 212, 0.12);
+  border: 2px solid rgba(194, 212, 212, 0.5);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 400px;
+  transition: border-color 200ms, background 200ms, box-shadow 200ms;
+}
+
+.KB-column--over {
+  border-color: #C74634;
+  background: rgba(199, 70, 52, 0.04);
+  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.10);
+}
+
+/* ── Column header ──────────────────────────────────── */
+.KB-column-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(194, 212, 212, 0.4);
+}
+
+.KB-column-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.KB-column-title {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  flex: 1;
+}
+
+.KB-column-count {
+  background: rgba(30, 50, 36, 0.08);
+  color: rgba(30, 50, 36, 0.55);
+  font-size: 11px;
+  font-weight: 900;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+/* ── Column body ────────────────────────────────────── */
+.KB-column-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.KB-empty {
+  font-size: 12px;
+  color: rgba(30, 50, 36, 0.30);
+  font-style: italic;
+  text-align: center;
+  padding: 30px 10px;
+}
+
+/* ── Card ───────────────────────────────────────────── */
+.KB-card {
+  background: #fff;
+  border: 1.5px solid rgba(194, 212, 212, 0.7);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: grab;
+  position: relative;
+  transition: box-shadow 200ms, border-color 200ms, opacity 200ms, transform 200ms;
+}
+
+.KB-card:hover {
+  border-color: rgba(199, 70, 52, 0.35);
+  box-shadow: 0 4px 16px rgba(30, 50, 36, 0.08);
+  transform: translateY(-1px);
+}
+
+.KB-card:active {
+  cursor: grabbing;
+}
+
+.KB-card--dragging {
+  opacity: 0.35;
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+.KB-card--updating {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+/* ── Card loader (thin bar at bottom) ───────────────── */
+.KB-card-loader {
+  position: absolute;
+  bottom: 0;
+  left: 12px;
+  right: 12px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #C74634, #F1B13F, #C74634);
+  background-size: 200% 100%;
+  animation: kb-loader 1s ease infinite;
+}
+
+@keyframes kb-loader {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* ── Tags ───────────────────────────────────────────── */
+.KB-card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.KB-tag {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.KB-tag--feature {
+  background: rgba(76, 130, 92, 0.15);
+  color: #2d6b3f;
+}
+
+.KB-tag--bug {
+  background: rgba(199, 70, 52, 0.12);
+  color: #C74634;
+}
+
+.KB-tag--issue {
+  background: rgba(241, 177, 63, 0.18);
+  color: #9a6c00;
+}
+
+.KB-tag--sprint {
+  background: rgba(43, 45, 191, 0.08);
+  color: #2b2dbf;
+}
+
+/* ── Card content ───────────────────────────────────── */
+.KB-card-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1E3224;
+  line-height: 1.4;
+}
+
+.KB-card-desc {
+  font-size: 11px;
+  color: rgba(30, 50, 36, 0.50);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Card footer ────────────────────────────────────── */
+.KB-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.KB-card-assignee {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(30, 50, 36, 0.65);
+}
+
+.KB-card-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #C74634;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.KB-card-unassigned {
+  font-size: 11px;
+  font-style: italic;
+  color: rgba(30, 50, 36, 0.30);
+}
+
+.KB-card-points {
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(30, 50, 36, 0.45);
+  background: rgba(30, 50, 36, 0.06);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* ── Drop hint ──────────────────────────────────────── */
+.KB-drop-hint {
+  border: 2px dashed #C74634;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #C74634;
+  letter-spacing: 0.5px;
+  background: rgba(199, 70, 52, 0.04);
+  animation: kb-pulse 1.2s ease infinite;
+}
+
+@keyframes kb-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 900px) {
+  .KB-board {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 550px) {
+  .KB-board {
+    grid-template-columns: 1fr;
+  }
+}
