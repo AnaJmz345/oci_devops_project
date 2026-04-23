@@ -1014,7 +1014,7 @@ function MainApp() {
               onClick={() => setIsProjectsOpen(v => !v)}
               aria-expanded={isProjectsOpen}
             >
-              <span className="VantageSectionTitle">PROJECTS</span>
+              <span className="VantageSectionTitle">tutaaancomot</span>
               <span className="VantageBadge VantageBadgeRed">1</span>
               <span className="VantageChevron">{isProjectsOpen ? '▾' : '▸'}</span>
             </button>
