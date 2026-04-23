@@ -1,0 +1,12 @@
+reacttodogxdmp_high = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.mx-queretaro-1.oraclecloud.com))(connect_data=(service_name=g856f8d7df0e1f7_reacttodogxdmp_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+reacttodogxdmp_medium = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.mx-queretaro-1.oraclecloud.com))(connect_data=(service_name=g856f8d7df0e1f7_reacttodogxdmp_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+reacttodogxdmp_low = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.mx-queretaro-1.oraclecloud.com))(connect_data=(service_name=g856f8d7df0e1f7_reacttodogxdmp_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+reacttodogxdmp_tp = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.mx-queretaro-1.oraclecloud.com))(connect_data=(service_name=g856f8d7df0e1f7_reacttodogxdmp_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+reacttodogxdmp_tpurgent = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.mx-queretaro-1.oraclecloud.com))(connect_data=(service_name=g856f8d7df0e1f7_reacttodogxdmp_tpurgent.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+
+

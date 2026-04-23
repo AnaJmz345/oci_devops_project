@@ -1,0 +1,248 @@
+/* analytics/analytics.css
+ * Vantage Analytics — Manager KPI Dashboard
+ * Palette: Red #C74634 · DkGreen #1E3224 · LtGreen #4C825C
+ *          Amber #F1B13F · Gray #C2D4D4 · White #FFFFFF
+ */
+
+.AN-root {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1100px;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.AN-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+
+.AN-kicker {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  color: #C74634;
+  margin-bottom: 4px;
+}
+
+.AN-title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 900;
+  color: #1E3224;
+  letter-spacing: 0.2px;
+}
+
+.AN-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(30, 50, 36, 0.55);
+}
+
+.AN-sprint-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.AN-sprint-label {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  color: rgba(30, 50, 36, 0.55);
+  text-transform: uppercase;
+}
+
+.AN-sprint-select {
+  height: 36px;
+  border: 1.5px solid #C74634;
+  border-radius: 999px;
+  padding: 0 28px 0 14px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #C74634;
+  background: #fff;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23C74634' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+/* ── Stat pills ─────────────────────────────────────── */
+.AN-pills-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.AN-stat-pill {
+  flex: 1;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 10px;
+  background: #fff;
+  border: 2px solid rgba(194, 212, 212, 0.9);
+  border-radius: 14px;
+}
+
+.AN-stat-value {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.AN-stat-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: rgba(30, 50, 36, 0.50);
+}
+
+/* ── Main grid ──────────────────────────────────────── */
+.AN-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr 1fr;
+  gap: 14px;
+}
+
+/* ── Cards ──────────────────────────────────────────── */
+.AN-card {
+  background: #fff;
+  border: 2px solid rgba(194, 212, 212, 0.9);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.AN-card--ring {
+  align-items: center;
+  text-align: center;
+}
+
+.AN-card--breakdown {
+  grid-column: 1 / -1;
+}
+
+.AN-card-label {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #C74634;
+  text-transform: uppercase;
+}
+
+.AN-card-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: #1E3224;
+  letter-spacing: 0.2px;
+}
+
+.AN-goal {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(30, 50, 36, 0.55);
+  font-style: italic;
+  max-width: 220px;
+  line-height: 1.5;
+}
+
+.AN-ring-wrap {
+  margin: 10px 0 6px;
+}
+
+.AN-ring-meta {
+  font-size: 12px;
+  color: rgba(30, 50, 36, 0.60);
+  font-weight: 600;
+}
+
+.AN-empty {
+  font-size: 13px;
+  color: rgba(30, 50, 36, 0.40);
+  font-style: italic;
+  padding: 20px 0;
+  text-align: center;
+}
+
+/* ── Breakdown bars ─────────────────────────────────── */
+.AN-breakdown-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.AN-breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.AN-breakdown-label {
+  width: 90px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.AN-breakdown-track {
+  flex: 1;
+  height: 10px;
+  background: rgba(194, 212, 212, 0.35);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.AN-breakdown-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.AN-breakdown-count {
+  width: 28px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(30, 50, 36, 0.70);
+  flex-shrink: 0;
+}
+
+/* ── Loading ────────────────────────────────────────── */
+.AN-loading {
+  padding: 40px;
+  text-align: center;
+  color: rgba(30, 50, 36, 0.45);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 800px) {
+  .AN-grid {
+    grid-template-columns: 1fr;
+  }
+  .AN-card--breakdown {
+    grid-column: 1;
+  }
+  .AN-pills-row {
+    gap: 8px;
+  }
+}
