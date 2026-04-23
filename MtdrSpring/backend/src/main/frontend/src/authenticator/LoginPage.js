@@ -37,7 +37,7 @@ function LoginPage({ onGoRegister }) {
     <div style={styles.container}>
       {/* Panel izquierdo - Login */}
       <div style={styles.leftPanel}>
-        <p style={styles.welcomeSmall}>WELCOME BACK TO</p>
+        <p style={styles.welcomeSmall}>WELCOME BACK TO TU PERDICIOOOONNN</p>
         <p style={styles.brandRed}>VANTAGE</p>
         <h1 style={styles.title}>SIGN IN</h1>
         <input style={styles.input} name="mail" placeholder="MAIL..."
