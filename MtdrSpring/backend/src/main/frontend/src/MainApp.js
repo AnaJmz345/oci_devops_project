@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import { Button } from '@mui/material';
 
 import './vantage.css';
 import './board.css';
@@ -13,13 +10,15 @@ import EditTaskModal from './task/EditTaskModal';
 import CreateSprintModal from './sprint/CreateSprintModal';
 import AnalyticsPage from './analytics/AnalyticsPage';
 
+import VantageSidebar from './VantageSidebar';
+import VantageTopbar from './VantageTopbar';
 import OverviewTab from './task/OverviewTab';
 import BacklogMainTab from './task/BacklogMainTab';
 import DashboardMainTab from './task/DashboardMainTab';
 import CalendarMainTab from './task/CalendarMainTab';
 
 function MainApp() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [page, setPage] = useState('login');
   const [activePage, setActivePage] = useState('overview');
   const [activeSprintId, setActiveSprintId] = useState('all');
@@ -92,6 +91,9 @@ function MainApp() {
     return <AuthLanding mode={page} onModeChange={setPage} />;
   }
 
+  const activeProjectName = 'SIXTH SEMESTER';
+  const activeTeamName = 'PLACEHOLDER TEAM';
+
   const projectPages = [
     { id: 'overview',  label: 'OVERVIEW' },
     { id: 'backlog',   label: 'BACKLOG' },
@@ -99,9 +101,6 @@ function MainApp() {
     ...(isManager ? [{ id: 'analytics', label: 'ANALYTICS' }] : []),
     { id: 'calendar',  label: 'CALENDAR' },
   ];
-
-  const activeProjectName = 'SIXTH SEMESTER';
-  const activeTeamName = 'PLACEHOLDER TEAM';
 
   const sprintOptions = [
     { id: 'all', label: 'All sprints' },
@@ -121,7 +120,6 @@ function MainApp() {
     }[activePage] || 'Overview'
   );
 
-  // Shared props for tabs that need task/sprint data
   const sharedTaskProps = {
     activeProjectName,
     activeSprintLabel,
@@ -137,163 +135,37 @@ function MainApp() {
   return (
     <div className="VantageShell">
       {isSidebarOpen && (
-        <aside className="VantageSidebar">
-          <div className="VantageSidebarHeader">
-            <div className="VantageBrandName">VANTAGE</div>
-            <button
-              type="button"
-              className="VantageIconButton"
-              onClick={() => setIsSidebarOpen(false)}
-              aria-label="Hide sidebar"
-              title="Hide sidebar"
-            >
-              ⟨
-            </button>
-          </div>
-
-          <div className="VantageSearchWrap">
-            <input
-              className="VantageSearch"
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for projects or teams…"
-              aria-label="Search for projects or teams"
-            />
-          </div>
-
-          <div className="VantageSection">
-            <button
-              type="button"
-              className="VantageSectionHeader"
-              onClick={() => setIsProjectsOpen(v => !v)}
-              aria-expanded={isProjectsOpen}
-            >
-              <span className="VantageSectionTitle">PROJECTS</span>
-              <span className="VantageBadge VantageBadgeRed">1</span>
-              <span className="VantageChevron">{isProjectsOpen ? '▾' : '▸'}</span>
-            </button>
-
-            {isProjectsOpen && (
-              <div className="VantageSectionBody">
-                <button
-                  type="button"
-                  className="VantageRowButton"
-                  onClick={() => setIsProjectOpen(v => !v)}
-                  aria-expanded={isProjectOpen}
-                >
-                  <span className="VantageBadgeMini VantageBadgePurple">01</span>
-                  <span className="VantageRowText">{activeProjectName}</span>
-                  <span className="VantageChevron">{isProjectOpen ? '▾' : '▸'}</span>
-                </button>
-
-                {isProjectOpen && (
-                  <div className="VantageNested">
-                    {projectPages.map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        className={`VantagePageLink ${activePage === p.id ? 'is-active' : ''}`}
-                        onClick={() => setActivePage(p.id)}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="VantageSection">
-            <button
-              type="button"
-              className="VantageSectionHeader"
-              onClick={() => setIsTeamsOpen(v => !v)}
-              aria-expanded={isTeamsOpen}
-            >
-              <span className="VantageSectionTitle">TEAMS</span>
-              <span className="VantageBadge VantageBadgeGreen">1</span>
-              <span className="VantageChevron">{isTeamsOpen ? '▾' : '▸'}</span>
-            </button>
-
-            {isTeamsOpen && (
-              <div className="VantageSectionBody">
-                <button type="button" className="VantageRowButton" onClick={() => setActivePage('overview')}>
-                  <span className="VantageBadgeMini VantageBadgeAmber">01</span>
-                  <span className="VantageRowText">{activeTeamName}</span>
-                </button>
-                <div className="VantageTeamHint">Team screens coming later (placeholder).</div>
-              </div>
-            )}
-          </div>
-
-          <div className="VantageSidebarBottom">
-            <button
-              type="button"
-              className="VantageIconButton"
-              title={user?.name || 'Profile'}
-              aria-label="Profile"
-            >
-              <AccountCircleOutlinedIcon fontSize="small" />
-            </button>
-
-            <Button variant="contained" size="small" className="VantageLogout" onClick={logout}>
-              Logout
-            </Button>
-
-            <button
-              type="button"
-              className="VantageIconButton is-disabled"
-              title="Settings (coming soon)"
-              aria-label="Settings"
-              disabled
-            >
-              <SettingsOutlinedIcon fontSize="small" />
-            </button>
-          </div>
-        </aside>
+        <VantageSidebar
+          activePage={activePage}
+          setActivePage={setActivePage}
+          setIsSidebarOpen={setIsSidebarOpen}
+          isProjectsOpen={isProjectsOpen}
+          setIsProjectsOpen={setIsProjectsOpen}
+          isProjectOpen={isProjectOpen}
+          setIsProjectOpen={setIsProjectOpen}
+          isTeamsOpen={isTeamsOpen}
+          setIsTeamsOpen={setIsTeamsOpen}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          projectPages={projectPages}
+          activeProjectName={activeProjectName}
+          activeTeamName={activeTeamName}
+        />
       )}
 
       <div className="VantageMain">
-        <header className="VantageTopbar">
-          <div className="VantageTopbarLeft">
-            <button
-              type="button"
-              className="VantageIconButton"
-              onClick={() => setIsSidebarOpen(v => !v)}
-              aria-label={isSidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
-              title={isSidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
-            >
-              ☰
-            </button>
-
-            <div>
-              <div className="VantageTopbarTitle">{pageTitle}</div>
-              <div className="VantageTopbarMeta">
-                Project: {activeProjectName} • Team: {activeTeamName} • Sprint: {activeSprintLabel}
-                {user?.name && <span> • 👤 {user.name}</span>}
-              </div>
-            </div>
-          </div>
-
-          <div className="VantageTopbarRight">
-            <div className="VantageSprintDropdown">
-              <span className="VantageSprintBadge">SPRINT</span>
-              <select
-                id="vantage-sprint-select"
-                className="VantageSprintSelect2"
-                value={activeSprintId}
-                onChange={(e) => setActiveSprintId(e.target.value)}
-              >
-                {sprintOptions.map(s => (
-                  <option key={s.id} value={s.id}>{s.label}</option>
-                ))}
-              </select>
-              <span className="VantageSprintChevron">▾</span>
-            </div>
-          </div>
-        </header>
+        <VantageTopbar
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
+          pageTitle={pageTitle}
+          activeProjectName={activeProjectName}
+          activeTeamName={activeTeamName}
+          activeSprintLabel={activeSprintLabel}
+          activeSprintId={activeSprintId}
+          setActiveSprintId={setActiveSprintId}
+          sprintOptions={sprintOptions}
+          userName={user?.name}
+        />
 
         <main className="VantageContent">
           {activePage === 'overview' && (
