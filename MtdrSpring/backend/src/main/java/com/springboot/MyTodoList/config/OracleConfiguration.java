@@ -20,7 +20,8 @@ import java.sql.SQLException;
 // */
 //
 //
-@Configuration
+
+ @Configuration
 public class OracleConfiguration {
     Logger logger = LoggerFactory.getLogger(DbSettings.class);
     @Autowired
@@ -31,6 +32,7 @@ public class OracleConfiguration {
     public DataSource dataSource() throws SQLException{
         OracleDataSource ds = new OracleDataSource();
         /*   For cloud/kubernetes deployment         */
+        /*
             ds.setDriverType(env.getProperty("driver_class_name"));
             logger.info("Using Driver " + env.getProperty("driver_class_name"));
             ds.setURL(env.getProperty("db_url"));
@@ -38,10 +40,10 @@ public class OracleConfiguration {
             ds.setUser(env.getProperty("db_user"));
             logger.info("Using Username " + env.getProperty("db_user"));
             ds.setPassword(env.getProperty("dbpassword"));
+        */
 
 
-
-        /* 
+        /*   For local */
         ds.setDriverType(dbSettings.getDriver_class_name());
         logger.info("Using Driver " + dbSettings.getDriver_class_name());
         ds.setURL(dbSettings.getUrl());
@@ -50,7 +52,7 @@ public class OracleConfiguration {
         logger.info("Using Username: " + dbSettings.getUsername());
         ds.setPassword(dbSettings.getPassword());
         
-        */
+        
 
         return ds;
     }
