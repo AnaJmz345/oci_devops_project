@@ -2,6 +2,7 @@ package com.springboot.MyTodoList.util;
 
 import com.springboot.MyTodoList.model.ToDoItem;
 import com.springboot.MyTodoList.service.DeepSeekService;
+import com.springboot.MyTodoList.service.NaturalLanguageIntentService;
 import com.springboot.MyTodoList.service.ToDoItemService;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -24,11 +25,14 @@ public class BotActions{
 
     ToDoItemService todoService;
     DeepSeekService deepSeekService;
+    NaturalLanguageIntentService naturalLanguageIntentService;
 
-    public BotActions(TelegramClient tc,ToDoItemService ts, DeepSeekService ds){
+    public BotActions(TelegramClient tc, ToDoItemService ts, DeepSeekService ds,
+            NaturalLanguageIntentService nlIntentService){
         telegramClient = tc;
         todoService = ts;
         deepSeekService = ds;
+        naturalLanguageIntentService = nlIntentService;
         exit  = false;
     }
 
@@ -60,8 +64,20 @@ public class BotActions{
         return deepSeekService;
     }
 
+    public void setNaturalLanguageIntentService(NaturalLanguageIntentService nlIntentService){
+        naturalLanguageIntentService = nlIntentService;
+    }
 
-    
+    public void translateNaturalLanguageIntent(){
+        if (requestText == null || requestText.startsWith("/") || naturalLanguageIntentService == null || exit) {
+            return;
+        }
+
+        String intent = naturalLanguageIntentService.detectIntent(requestText);
+        if ("LIST_TASKS".equals(intent)) {
+            requestText = BotCommands.TODO_LIST.getCommand();
+        }
+    }
 
     public void fnStart() {
         if (!(requestText.equals(BotCommands.START_COMMAND.getCommand()) || requestText.equals(BotLabels.SHOW_MAIN_SCREEN.getLabel())) || exit) 
@@ -146,11 +162,13 @@ public class BotActions{
 
     public void fnListAll(){
         if (!(requestText.equals(BotCommands.TODO_LIST.getCommand())
-				|| requestText.equals(BotLabels.LIST_ALL_ITEMS.getLabel())
-				|| requestText.equals(BotLabels.MY_TODO_LIST.getLabel())) || exit)
+                || requestText.equals(BotLabels.LIST_ALL_ITEMS.getLabel())
+                || requestText.equals(BotLabels.MY_TODO_LIST.getLabel())) || exit)
             return;
+
         logger.info("todoSvc: "+todoService);
         List<ToDoItem> allItems = todoService.findAll();
+
         ReplyKeyboardMarkup keyboardMarkup = ReplyKeyboardMarkup.builder()
             .resizeKeyboard(true)
             .oneTimeKeyboard(false)
@@ -159,7 +177,6 @@ public class BotActions{
 
         List<KeyboardRow> keyboard = new ArrayList<>();
 
-        // command back to main screen
         KeyboardRow mainScreenRowTop = new KeyboardRow();
         mainScreenRowTop.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
         keyboard.add(mainScreenRowTop);
@@ -172,20 +189,44 @@ public class BotActions{
         myTodoListTitleRow.add(BotLabels.MY_TODO_LIST.getLabel());
         keyboard.add(myTodoListTitleRow);
 
-        List<ToDoItem> activeItems = allItems.stream().filter(item -> "TODO".equalsIgnoreCase(item.getDone()))
+        List<ToDoItem> activeItems = allItems.stream()
+                .filter(item -> "TODO".equalsIgnoreCase(item.getDone()))
                 .collect(Collectors.toList());
 
+        List<ToDoItem> doneItems = allItems.stream()
+                .filter(item -> "DONE".equalsIgnoreCase(item.getDone()))
+                .collect(Collectors.toList());
+
+        StringBuilder responseText = new StringBuilder("Aqui estan todas tus tareas:");
+
+        if (activeItems.isEmpty() && doneItems.isEmpty()) {
+            responseText.append("\n\nNo tienes tareas registradas.");
+        }
+
+        if (!activeItems.isEmpty()) {
+            responseText.append("\n\nPendientes:");
+        }
+
         for (ToDoItem item : activeItems) {
+            responseText.append("\n- ")
+                    .append(item.getDescription())
+                    .append(" [TODO]");
+
             KeyboardRow currentRow = new KeyboardRow();
             currentRow.add(item.getDescription());
             currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.DONE.getLabel());
             keyboard.add(currentRow);
         }
 
-        List<ToDoItem> doneItems = allItems.stream().filter(item -> "DONE".equalsIgnoreCase(item.getDone()))
-                .collect(Collectors.toList());
+        if (!doneItems.isEmpty()) {
+            responseText.append("\n\nCompletadas:");
+        }
 
         for (ToDoItem item : doneItems) {
+            responseText.append("\n- ")
+                    .append(item.getDescription())
+                    .append(" [DONE]");
+
             KeyboardRow currentRow = new KeyboardRow();
             currentRow.add(item.getDescription());
             currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.UNDO.getLabel());
@@ -193,17 +234,16 @@ public class BotActions{
             keyboard.add(currentRow);
         }
 
-        // command back to main screen
         KeyboardRow mainScreenRowBottom = new KeyboardRow();
         mainScreenRowBottom.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
         keyboard.add(mainScreenRowBottom);
 
         keyboardMarkup.setKeyboard(keyboard);
 
-        //
-        BotHelper.sendMessageToTelegram(chatId, BotLabels.MY_TODO_LIST.getLabel(), telegramClient,  keyboardMarkup);//
+        BotHelper.sendMessageToTelegram(chatId, responseText.toString(), telegramClient, keyboardMarkup);
         exit = true;
     }
+
 
     public void fnAddItem(){
         logger.info("Adding item");
@@ -242,6 +282,5 @@ public class BotActions{
         BotHelper.sendMessageToTelegram(chatId, "LLM: "+out, telegramClient, null);
 
     }
-
 
 }
