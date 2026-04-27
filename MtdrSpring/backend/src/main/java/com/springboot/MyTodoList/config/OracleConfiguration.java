@@ -30,7 +30,8 @@ public class OracleConfiguration {
     @Bean
     public DataSource dataSource() throws SQLException{
         OracleDataSource ds = new OracleDataSource();
-        /*   For cloud/kubernetes deployment         */
+        // For cloud/kubernetes deployment 
+        /*         
             ds.setDriverType(env.getProperty("driver_class_name"));
             logger.info("Using Driver " + env.getProperty("driver_class_name"));
             ds.setURL(env.getProperty("db_url"));
@@ -39,9 +40,9 @@ public class OracleConfiguration {
             logger.info("Using Username " + env.getProperty("db_user"));
             ds.setPassword(env.getProperty("dbpassword"));
 
+        */
 
-
-        /* 
+        // Uncomment for local deployment
         ds.setDriverType(dbSettings.getDriver_class_name());
         logger.info("Using Driver " + dbSettings.getDriver_class_name());
         ds.setURL(dbSettings.getUrl());
@@ -50,7 +51,7 @@ public class OracleConfiguration {
         logger.info("Using Username: " + dbSettings.getUsername());
         ds.setPassword(dbSettings.getPassword());
         
-        */
+        
 
         return ds;
     }
