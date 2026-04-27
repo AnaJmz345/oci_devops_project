@@ -1,12 +1,21 @@
 package com.springboot.MyTodoList.util;
 
+import com.springboot.MyTodoList.model.User;
 import com.springboot.MyTodoList.model.ToDoItem;
 import com.springboot.MyTodoList.service.DeepSeekService;
 import com.springboot.MyTodoList.service.NaturalLanguageIntentService;
+import com.springboot.MyTodoList.service.TaskNaturalLanguageService;
+import com.springboot.MyTodoList.service.TaskNaturalLanguageService.TaskDraft;
+import com.springboot.MyTodoList.service.TelegramTaskDraftService;
 import com.springboot.MyTodoList.service.ToDoItemService;
+import com.springboot.MyTodoList.service.UserService;
+import com.springboot.MyTodoList.task.Task;
+import com.springboot.MyTodoList.task.TaskAssignee;
+import com.springboot.MyTodoList.task.TaskService;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,13 +35,24 @@ public class BotActions{
     ToDoItemService todoService;
     DeepSeekService deepSeekService;
     NaturalLanguageIntentService naturalLanguageIntentService;
+    TaskService taskService;
+    TaskNaturalLanguageService taskNaturalLanguageService;
+    TelegramTaskDraftService telegramTaskDraftService;
+    UserService userService;
+    String detectedIntent;
 
     public BotActions(TelegramClient tc, ToDoItemService ts, DeepSeekService ds,
-            NaturalLanguageIntentService nlIntentService){
+            NaturalLanguageIntentService nlIntentService, TaskService taskSvc,
+            TaskNaturalLanguageService taskNlService, TelegramTaskDraftService taskDraftService,
+            UserService usrService){
         telegramClient = tc;
         todoService = ts;
         deepSeekService = ds;
         naturalLanguageIntentService = nlIntentService;
+        taskService = taskSvc;
+        taskNaturalLanguageService = taskNlService;
+        telegramTaskDraftService = taskDraftService;
+        userService = usrService;
         exit  = false;
     }
 
@@ -73,10 +93,18 @@ public class BotActions{
             return;
         }
 
-        String intent = naturalLanguageIntentService.detectIntent(requestText);
+        String intent = getDetectedIntent();
         if ("LIST_TASKS".equals(intent)) {
             requestText = BotCommands.TODO_LIST.getCommand();
         }
+    }
+
+    private String getDetectedIntent() {
+        if (detectedIntent == null && naturalLanguageIntentService != null) {
+            detectedIntent = naturalLanguageIntentService.detectIntent(requestText);
+        }
+
+        return detectedIntent;
     }
 
     public void fnStart() {
@@ -100,12 +128,10 @@ public class BotActions{
         Integer id = Integer.valueOf(done);
 
         try {
-
             ToDoItem item = todoService.getToDoItemById(id);
             item.setDone("DONE");
             todoService.updateToDoItem(id, item);
             BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DONE.getMessage(), telegramClient);
-
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
         }
@@ -121,12 +147,10 @@ public class BotActions{
         Integer id = Integer.valueOf(undo);
 
         try {
-
             ToDoItem item = todoService.getToDoItemById(id);
             item.setDone("TODO");
             todoService.updateToDoItem(id, item);
             BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_UNDONE.getMessage(), telegramClient);
-
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
         }
@@ -144,7 +168,6 @@ public class BotActions{
         try {
             todoService.deleteToDoItem(id);
             BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DELETED.getMessage(), telegramClient);
-
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
         }
@@ -162,13 +185,11 @@ public class BotActions{
 
     public void fnListAll(){
         if (!(requestText.equals(BotCommands.TODO_LIST.getCommand())
-                || requestText.equals(BotLabels.LIST_ALL_ITEMS.getLabel())
-                || requestText.equals(BotLabels.MY_TODO_LIST.getLabel())) || exit)
+				|| requestText.equals(BotLabels.LIST_ALL_ITEMS.getLabel())
+				|| requestText.equals(BotLabels.MY_TODO_LIST.getLabel())) || exit)
             return;
 
-        logger.info("todoSvc: "+todoService);
         List<ToDoItem> allItems = todoService.findAll();
-
         ReplyKeyboardMarkup keyboardMarkup = ReplyKeyboardMarkup.builder()
             .resizeKeyboard(true)
             .oneTimeKeyboard(false)
@@ -189,17 +210,12 @@ public class BotActions{
         myTodoListTitleRow.add(BotLabels.MY_TODO_LIST.getLabel());
         keyboard.add(myTodoListTitleRow);
 
-        List<ToDoItem> activeItems = allItems.stream()
-                .filter(item -> "TODO".equalsIgnoreCase(item.getDone()))
-                .collect(Collectors.toList());
-
-        List<ToDoItem> doneItems = allItems.stream()
-                .filter(item -> "DONE".equalsIgnoreCase(item.getDone()))
+        List<ToDoItem> activeItems = allItems.stream().filter(item -> "TODO".equalsIgnoreCase(item.getDone()))
                 .collect(Collectors.toList());
 
         StringBuilder responseText = new StringBuilder("Aqui estan todas tus tareas:");
 
-        if (activeItems.isEmpty() && doneItems.isEmpty()) {
+        if (activeItems.isEmpty() && allItems.stream().noneMatch(item -> "DONE".equalsIgnoreCase(item.getDone()))) {
             responseText.append("\n\nNo tienes tareas registradas.");
         }
 
@@ -217,6 +233,9 @@ public class BotActions{
             currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.DONE.getLabel());
             keyboard.add(currentRow);
         }
+
+        List<ToDoItem> doneItems = allItems.stream().filter(item -> "DONE".equalsIgnoreCase(item.getDone()))
+                .collect(Collectors.toList());
 
         if (!doneItems.isEmpty()) {
             responseText.append("\n\nCompletadas:");
@@ -240,17 +259,15 @@ public class BotActions{
 
         keyboardMarkup.setKeyboard(keyboard);
 
-        BotHelper.sendMessageToTelegram(chatId, responseText.toString(), telegramClient, keyboardMarkup);
+        BotHelper.sendMessageToTelegram(chatId, responseText.toString(), telegramClient,  keyboardMarkup);
         exit = true;
     }
 
-
     public void fnAddItem(){
-        logger.info("Adding item");
-		if (!(requestText.contains(BotCommands.ADD_ITEM.getCommand())
+        if (!(requestText.contains(BotCommands.ADD_ITEM.getCommand())
 				|| requestText.contains(BotLabels.ADD_NEW_ITEM.getLabel())) || exit )
             return;
-        logger.info("Adding item by BotHelper");
+
         BotHelper.sendMessageToTelegram(chatId, BotMessages.TYPE_NEW_TODO_ITEM.getMessage(), telegramClient);
         exit = true;
     }
@@ -258,6 +275,7 @@ public class BotActions{
     public void fnElse(){
         if(exit)
             return;
+
         ToDoItem newItem = new ToDoItem();
         newItem.setDescription(requestText);
         newItem.setDone("TODO");
@@ -267,7 +285,6 @@ public class BotActions{
     }
 
     public void fnLLM(){
-        logger.info("Calling LLM");
         if (!(requestText.contains(BotCommands.LLM_REQ.getCommand())) || exit)
             return;
         
@@ -280,7 +297,103 @@ public class BotActions{
         }
 
         BotHelper.sendMessageToTelegram(chatId, "LLM: "+out, telegramClient, null);
+    }
 
+    public void fnCreateTaskFromNaturalLanguage(){
+        if (exit || requestText == null || taskService == null || taskNaturalLanguageService == null
+                || telegramTaskDraftService == null || userService == null) {
+            return;
+        }
+
+        Long chatKey = chatId;
+
+        try {
+            if (telegramTaskDraftService.hasDraft(chatKey)) {
+                telegramTaskDraftService.fillNextMissing(chatKey, requestText);
+                TaskDraft draft = telegramTaskDraftService.getDraft(chatKey);
+                handleTaskDraft(chatKey, draft);
+                exit = true;
+                return;
+            }
+
+            String intent = getDetectedIntent();
+            if (!"CREATE_TASK".equals(intent)) {
+                return;
+            }
+
+            TaskDraft draft = taskNaturalLanguageService.extractTaskDraft(requestText);
+            handleTaskDraft(chatKey, draft);
+            exit = true;
+        } catch (Exception exc) {
+            logger.error("No se pudo crear la tarea desde lenguaje natural", exc);
+            BotHelper.sendMessageToTelegram(chatId,
+                    "No pude crear la tarea. Revisa los datos e intenta otra vez.",
+                    telegramClient, null);
+            exit = true;
+        }
+    }
+
+    private void handleTaskDraft(Long chatKey, TaskDraft draft) {
+        if (draft == null) {
+            BotHelper.sendMessageToTelegram(chatId,
+                    "No pude entender los datos de la tarea. Intentemos de nuevo: como se llama la tarea?",
+                    telegramClient, null);
+            return;
+        }
+
+        if (!draft.isComplete()) {
+            telegramTaskDraftService.saveDraft(chatKey, draft);
+            BotHelper.sendMessageToTelegram(chatId, draft.nextMissingQuestion(), telegramClient, null);
+            return;
+        }
+
+        Optional<User> assignee = userService.findByMail(draft.getAssigneeEmail());
+        if (assignee.isEmpty()) {
+            draft.setAssigneeEmail(null);
+            telegramTaskDraftService.saveDraft(chatKey, draft);
+            BotHelper.sendMessageToTelegram(chatId,
+                    "No encontre un developer con ese correo. Enviame otro correo de developer.",
+                    telegramClient, null);
+            return;
+        }
+
+        createTask(draft, assignee.get());
+        telegramTaskDraftService.clearDraft(chatKey);
+    }
+
+    private void createTask(TaskDraft draft, User assignee) {
+        Task task = new Task();
+        task.setTaskName(draft.getTaskName());
+        task.setDescription(draft.getDescription());
+        task.setDueDate(draft.getDueDate());
+        task.setSprintId(draft.getSprintId());
+        task.setStatus("TODO");
+        task.setCategory("FEATURE");
+        task.setStoryPoints(1);
+        task.setCreatedBy(1L);
+
+        Task savedTask = taskService.addTask(task);
+
+        TaskAssignee taskAssignee = new TaskAssignee();
+        taskAssignee.setTaskId(savedTask.getTaskId());
+        taskAssignee.setOracleId(assignee.getOracleId());
+        taskAssignee.setRealTimeSpent(0.0);
+        taskService.assignTask(taskAssignee);
+
+        BotHelper.sendMessageToTelegram(
+                chatId,
+                "Tarea creada:\n- " + savedTask.getTaskName()
+                        + "\nDescripcion: " + valueOrEmpty(savedTask.getDescription())
+                        + "\nFecha de entrega: " + savedTask.getDueDate()
+                        + "\nSprint: " + valueOrEmpty(savedTask.getSprintId())
+                        + "\nAsignada a: " + assignee.getName() + " (" + assignee.getMail() + ")",
+                telegramClient,
+                null
+        );
+    }
+
+    private String valueOrEmpty(Object value) {
+        return value == null ? "Sin dato" : value.toString();
     }
 
 }

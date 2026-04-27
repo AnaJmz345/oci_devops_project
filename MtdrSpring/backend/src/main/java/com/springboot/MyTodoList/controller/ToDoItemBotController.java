@@ -3,7 +3,11 @@ package com.springboot.MyTodoList.controller;
 import com.springboot.MyTodoList.config.BotProps;
 import com.springboot.MyTodoList.service.DeepSeekService;
 import com.springboot.MyTodoList.service.NaturalLanguageIntentService;
+import com.springboot.MyTodoList.service.TaskNaturalLanguageService;
+import com.springboot.MyTodoList.service.TelegramTaskDraftService;
 import com.springboot.MyTodoList.service.ToDoItemService;
+import com.springboot.MyTodoList.service.UserService;
+import com.springboot.MyTodoList.task.TaskService;
 import com.springboot.MyTodoList.util.BotActions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +29,10 @@ public class ToDoItemBotController  implements SpringLongPollingBot, LongPolling
 	private ToDoItemService toDoItemService;
 	private DeepSeekService deepSeekService;
 	private NaturalLanguageIntentService naturalLanguageIntentService;
+	private TaskService taskService;
+	private TaskNaturalLanguageService taskNaturalLanguageService;
+	private TelegramTaskDraftService telegramTaskDraftService;
+	private UserService userService;
 	private final TelegramClient telegramClient;
 	
 	private final BotProps botProps;
@@ -42,12 +50,18 @@ public class ToDoItemBotController  implements SpringLongPollingBot, LongPolling
     }
 
 	public ToDoItemBotController( BotProps bp, ToDoItemService tsvc, DeepSeekService ds,
-			NaturalLanguageIntentService nlIntentService) {
+			NaturalLanguageIntentService nlIntentService, TaskService taskSvc,
+			TaskNaturalLanguageService taskNlService, TelegramTaskDraftService taskDraftService,
+			UserService usrService) {
 		this.botProps = bp;
 		telegramClient = new OkHttpTelegramClient(getBotToken());
 		toDoItemService = tsvc;
 		deepSeekService = ds;
 		naturalLanguageIntentService = nlIntentService;
+		taskService = taskSvc;
+		taskNaturalLanguageService = taskNlService;
+		telegramTaskDraftService = taskDraftService;
+		userService = usrService;
 	}
 
 	@Override
@@ -64,7 +78,8 @@ public class ToDoItemBotController  implements SpringLongPollingBot, LongPolling
 		long chatId = update.getMessage().getChatId();
 
 		BotActions actions =  new BotActions(telegramClient, toDoItemService, deepSeekService,
-				naturalLanguageIntentService);
+				naturalLanguageIntentService, taskService, taskNaturalLanguageService,
+				telegramTaskDraftService, userService);
 		actions.setRequestText(messageTextFromTelegram);
 		actions.setChatId(chatId);
 		if(actions.getTodoService()==null){
@@ -81,6 +96,7 @@ public class ToDoItemBotController  implements SpringLongPollingBot, LongPolling
 		actions.fnListAll();
 		actions.fnAddItem();
 		actions.fnLLM();
+		actions.fnCreateTaskFromNaturalLanguage();
 		actions.fnElse();
 
 	}
