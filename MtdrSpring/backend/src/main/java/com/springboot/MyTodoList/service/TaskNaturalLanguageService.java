@@ -2,7 +2,13 @@ package com.springboot.MyTodoList.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,6 +19,8 @@ public class TaskNaturalLanguageService {
 
     private final DeepSeekService deepSeekService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final Path DEBUG_FILE = Paths.get("task-ia-debug.log");
     private static final Pattern ISO_DATE_PATTERN = Pattern.compile("\\b(\\d{4}-\\d{2}-\\d{2})\\b");
     private static final Pattern SLASH_DATE_PATTERN = Pattern.compile("\\b(\\d{1,2})/(\\d{1,2})/(\\d{4})\\b");
     private static final Pattern SPANISH_DATE_PATTERN = Pattern.compile(
@@ -26,6 +34,10 @@ public class TaskNaturalLanguageService {
     }
 
     public TaskDraft extractTaskDraft(String userMessage) {
+        debug("========== TASK EXTRACTION ==========");
+        debug("Mensaje recibido para crear task:");
+        debug(userMessage);
+
         String prompt = "Extrae datos para crear una tarea. "
                 + "Responde SOLO JSON valido, sin markdown ni explicaciones. "
                 + "Campos esperados: taskName, description, dueDate, sprintId, assigneeEmail. "
@@ -36,9 +48,21 @@ public class TaskNaturalLanguageService {
                 + "Mensaje: " + userMessage;
 
         try {
+            debug("Prompt enviado al modelo para extraer task:");
+            debug(prompt);
+
             String response = deepSeekService.generateText(prompt);
+            debug("Respuesta cruda de la API para task:");
+            debug(response);
+
             String assistantContent = extractAssistantContent(response);
+            debug("Contenido del assistant para task:");
+            debug(assistantContent);
+
             String json = extractJson(assistantContent);
+            debug("JSON extraido para task:");
+            debug(json);
+
             JsonNode root = objectMapper.readTree(json);
 
             TaskDraft draft = new TaskDraft();
@@ -48,22 +72,43 @@ public class TaskNaturalLanguageService {
             draft.setDueDate(readDate(root, "dueDate"));
             draft.setSprintId(readLong(root, "sprintId"));
             draft.setAssigneeEmail(readText(root, "assigneeEmail"));
+
+            debug("Draft antes de fallback:");
+            debug(draft.toDebugString());
+
             applyFallbacks(draft, userMessage);
+
+            debug("Draft despues de fallback:");
+            debug(draft.toDebugString());
+
             return draft;
         } catch (Exception exc) {
+            debug("Fallo la extraccion con IA. Se usaran fallbacks locales.");
+            debug("Error: " + exc.getClass().getName() + " - " + exc.getMessage());
+
             TaskDraft draft = new TaskDraft();
             draft.setOriginalMessage(userMessage);
             applyFallbacks(draft, userMessage);
+
+            debug("Draft construido solo con fallback:");
+            debug(draft.toDebugString());
+
             return draft;
         }
     }
 
     public LocalDate extractDueDate(String userMessage) {
+        debug("========== DATE EXTRACTION ==========");
+        debug("Mensaje recibido para extraer fecha:");
+        debug(userMessage);
+
         LocalDate localDate = parseDateLocally(userMessage);
         if (localDate != null) {
+            debug("Fecha extraida localmente: " + localDate);
             return localDate;
         }
 
+        debug("No se pudo extraer fecha localmente. Se intentara con IA.");
         return extractTaskDraft("fecha de entrega: " + userMessage).getDueDate();
     }
 
@@ -81,6 +126,7 @@ public class TaskNaturalLanguageService {
                 return geminiContent.asText();
             }
         } catch (Exception exc) {
+            debug("No se pudo parsear response como JSON wrapper. Se usara response cruda.");
             return response;
         }
 
@@ -93,6 +139,7 @@ public class TaskNaturalLanguageService {
         if (start >= 0 && end > start) {
             return response.substring(start, end + 1);
         }
+
         return response;
     }
 
@@ -219,6 +266,20 @@ public class TaskNaturalLanguageService {
                 .trim();
     }
 
+    private void debug(String message) {
+        try {
+            Files.writeString(
+                    DEBUG_FILE,
+                    "[" + LocalDateTime.now() + "] " + message + System.lineSeparator(),
+                    StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.APPEND
+            );
+        } catch (Exception exc) {
+            // No hacemos nada para no romper el bot por un fallo de debug.
+        }
+    }
+
     public static class TaskDraft {
         private String originalMessage;
         private String taskName;
@@ -260,6 +321,16 @@ public class TaskNaturalLanguageService {
                 return "A que correo de developer se la asigno?";
             }
             return null;
+        }
+
+        public String toDebugString() {
+            return "TaskDraft{"
+                    + "taskName='" + taskName + '\''
+                    + ", description='" + description + '\''
+                    + ", dueDate=" + dueDate
+                    + ", sprintId=" + sprintId
+                    + ", assigneeEmail='" + assigneeEmail + '\''
+                    + '}';
         }
     }
 }
