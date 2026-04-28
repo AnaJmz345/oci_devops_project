@@ -1,11 +1,25 @@
 package com.springboot.MyTodoList.util;
 
+import com.springboot.MyTodoList.model.User;
 import com.springboot.MyTodoList.model.ToDoItem;
 import com.springboot.MyTodoList.service.DeepSeekService;
+import com.springboot.MyTodoList.service.NaturalLanguageIntentService;
+import com.springboot.MyTodoList.service.TaskNaturalLanguageService;
+import com.springboot.MyTodoList.service.TaskNaturalLanguageService.TaskDraft;
+import com.springboot.MyTodoList.service.TelegramTaskDraftService;
 import com.springboot.MyTodoList.service.ToDoItemService;
+import com.springboot.MyTodoList.service.UserService;
+import com.springboot.MyTodoList.task.Task;
+import com.springboot.MyTodoList.task.TaskAssignee;
+import com.springboot.MyTodoList.task.TaskService;
+import com.springboot.MyTodoList.sprint.Sprint;
+import com.springboot.MyTodoList.sprint.SprintService;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +38,27 @@ public class BotActions{
 
     ToDoItemService todoService;
     DeepSeekService deepSeekService;
+    NaturalLanguageIntentService naturalLanguageIntentService;
+    TaskService taskService;
+    TaskNaturalLanguageService taskNaturalLanguageService;
+    TelegramTaskDraftService telegramTaskDraftService;
+    UserService userService;
+    SprintService sprintService;
+    String detectedIntent;
 
-    public BotActions(TelegramClient tc,ToDoItemService ts, DeepSeekService ds){
+    public BotActions(TelegramClient tc, ToDoItemService ts, DeepSeekService ds,
+            NaturalLanguageIntentService nlIntentService, TaskService taskSvc,
+            TaskNaturalLanguageService taskNlService, TelegramTaskDraftService taskDraftService,
+            UserService usrService, SprintService sprService){
         telegramClient = tc;
         todoService = ts;
         deepSeekService = ds;
+        naturalLanguageIntentService = nlIntentService;
+        taskService = taskSvc;
+        taskNaturalLanguageService = taskNlService;
+        telegramTaskDraftService = taskDraftService;
+        userService = usrService;
+        sprintService = sprService;
         exit  = false;
     }
 
@@ -58,6 +88,29 @@ public class BotActions{
 
     public DeepSeekService getDeepSeekService(){
         return deepSeekService;
+    }
+
+    public void setNaturalLanguageIntentService(NaturalLanguageIntentService nlIntentService){
+        naturalLanguageIntentService = nlIntentService;
+    }
+
+    public void translateNaturalLanguageIntent(){
+        if (requestText == null || requestText.startsWith("/") || naturalLanguageIntentService == null || exit) {
+            return;
+        }
+
+        String intent = getDetectedIntent();
+        if ("LIST_TASKS".equals(intent)) {
+            requestText = BotCommands.TODO_LIST.getCommand();
+        }
+    }
+
+    private String getDetectedIntent() {
+        if (detectedIntent == null && naturalLanguageIntentService != null) {
+            detectedIntent = naturalLanguageIntentService.detectIntent(requestText);
+        }
+
+        return detectedIntent;
     }
 
 
@@ -159,7 +212,6 @@ public class BotActions{
 
         List<KeyboardRow> keyboard = new ArrayList<>();
 
-        // command back to main screen
         KeyboardRow mainScreenRowTop = new KeyboardRow();
         mainScreenRowTop.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
         keyboard.add(mainScreenRowTop);
@@ -175,7 +227,21 @@ public class BotActions{
         List<ToDoItem> activeItems = allItems.stream().filter(item -> "TODO".equalsIgnoreCase(item.getDone()))
                 .collect(Collectors.toList());
 
+        StringBuilder responseText = new StringBuilder("Here are all your tasks:");
+
+        if (activeItems.isEmpty() && allItems.stream().noneMatch(item -> "DONE".equalsIgnoreCase(item.getDone()))) {
+            responseText.append("\n\nYou do not have any tasks yet.");
+        }
+
+        if (!activeItems.isEmpty()) {
+            responseText.append("\n\nPending:");
+        }
+
         for (ToDoItem item : activeItems) {
+            responseText.append("\n- ")
+                    .append(item.getDescription())
+                    .append(" [TODO]");
+
             KeyboardRow currentRow = new KeyboardRow();
             currentRow.add(item.getDescription());
             currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.DONE.getLabel());
@@ -185,7 +251,15 @@ public class BotActions{
         List<ToDoItem> doneItems = allItems.stream().filter(item -> "DONE".equalsIgnoreCase(item.getDone()))
                 .collect(Collectors.toList());
 
+        if (!doneItems.isEmpty()) {
+            responseText.append("\n\nCompleted:");
+        }
+
         for (ToDoItem item : doneItems) {
+            responseText.append("\n- ")
+                    .append(item.getDescription())
+                    .append(" [DONE]");
+
             KeyboardRow currentRow = new KeyboardRow();
             currentRow.add(item.getDescription());
             currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.UNDO.getLabel());
@@ -193,15 +267,13 @@ public class BotActions{
             keyboard.add(currentRow);
         }
 
-        // command back to main screen
         KeyboardRow mainScreenRowBottom = new KeyboardRow();
         mainScreenRowBottom.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
         keyboard.add(mainScreenRowBottom);
 
         keyboardMarkup.setKeyboard(keyboard);
 
-        //
-        BotHelper.sendMessageToTelegram(chatId, BotLabels.MY_TODO_LIST.getLabel(), telegramClient,  keyboardMarkup);//
+        BotHelper.sendMessageToTelegram(chatId, responseText.toString(), telegramClient,  keyboardMarkup);
         exit = true;
     }
 
@@ -231,7 +303,7 @@ public class BotActions{
         if (!(requestText.contains(BotCommands.LLM_REQ.getCommand())) || exit)
             return;
         
-        String prompt = "Dame los datos del clima en mty";
+        String prompt = "Give me the weather in Monterrey";
         String out = "<empty>";
         try{
             out = deepSeekService.generateText(prompt);
@@ -243,5 +315,187 @@ public class BotActions{
 
     }
 
+    public void fnCreateTaskFromNaturalLanguage(){
+        if (exit || requestText == null || taskService == null || taskNaturalLanguageService == null
+                || telegramTaskDraftService == null || userService == null) {
+            return;
+        }
+
+        Long chatKey = chatId;
+
+        try {
+            if (telegramTaskDraftService.hasDraft(chatKey)) {
+                telegramTaskDraftService.fillNextMissing(chatKey, requestText);
+                TaskDraft draft = telegramTaskDraftService.getDraft(chatKey);
+                handleTaskDraft(chatKey, draft);
+                exit = true;
+                return;
+            }
+
+            String intent = getDetectedIntent();
+            if (!"CREATE_TASK".equals(intent)) {
+                return;
+            }
+
+            TaskDraft draft = taskNaturalLanguageService.extractTaskDraft(requestText);
+            handleTaskDraft(chatKey, draft);
+            exit = true;
+        } catch (Exception exc) {
+            logger.error("Could not create task from natural language", exc);
+            BotHelper.sendMessageToTelegram(chatId,
+                    "I could not create the task. Please check the data and try again.",
+                    telegramClient, null);
+            exit = true;
+        }
+    }
+
+    private void handleTaskDraft(Long chatKey, TaskDraft draft) {
+        if (draft == null) {
+            BotHelper.sendMessageToTelegram(chatId,
+                    "I could not understand the task details. Let's try again: what should the task be called?",
+                    telegramClient, null);
+            return;
+        }
+
+        String validationMessage = validateDraft(draft);
+        if (validationMessage != null) {
+            telegramTaskDraftService.saveDraft(chatKey, draft);
+            BotHelper.sendMessageToTelegram(chatId, validationMessage, telegramClient, null);
+            return;
+        }
+
+        Optional<User> assignee = userService.findByMail(draft.getAssigneeEmail());
+        if (assignee.isEmpty()) {
+            draft.setAssigneeEmail(null);
+            draft.setPendingField("ASSIGNEE_EMAIL");
+            telegramTaskDraftService.saveDraft(chatKey, draft);
+            BotHelper.sendMessageToTelegram(chatId,
+                    "I could not find a developer with that email. Send me a valid one.\n\n" + developerEmailsMessage(),
+                    telegramClient, null);
+            return;
+        }
+
+        Optional<Sprint> sprint = resolveSprint(draft);
+        if (draft.getSprintId() != null && sprint.isEmpty()) {
+            draft.setSprintId(null);
+            draft.setPendingField("SPRINT");
+            telegramTaskDraftService.saveDraft(chatKey, draft);
+            BotHelper.sendMessageToTelegram(chatId,
+                    "I could not find that sprint. The number must match the sprint name, for example: Sprint 3.\n\n"
+                            + sprintOptionsMessage(),
+                    telegramClient, null);
+            return;
+        }
+
+        createTask(draft, assignee.get(), sprint.orElse(null));
+        telegramTaskDraftService.clearDraft(chatKey);
+    }
+
+    private String validateDraft(TaskDraft draft) {
+        if (draft.getTaskName() == null || draft.getTaskName().isBlank()) {
+            draft.setTaskName(null);
+            draft.setPendingField("TASK_NAME");
+            return "What should the task be called?";
+        }
+
+        LocalDate today = LocalDate.now();
+        if (draft.getDueDate() == null) {
+            draft.setPendingField("DUE_DATE");
+            return "What is the due date? Today is " + today + ". It must be today or later.";
+        }
+
+        if (draft.getDueDate().isBefore(today)) {
+            draft.setDueDate(null);
+            draft.setPendingField("DUE_DATE");
+            return "The due date is invalid because it already passed. Today is " + today
+                    + ". Send me a date that is today or later.";
+        }
+
+        if (draft.getAssigneeEmail() == null || draft.getAssigneeEmail().isBlank()) {
+            draft.setAssigneeEmail(null);
+            draft.setPendingField("ASSIGNEE_EMAIL");
+            return "Which developer email should I assign it to?\n\n" + developerEmailsMessage();
+        }
+
+        draft.setPendingField(null);
+        return null;
+    }
+
+    private Optional<Sprint> resolveSprint(TaskDraft draft) {
+        if (draft.getSprintId() == null || sprintService == null) {
+            return Optional.empty();
+        }
+
+        return sprintService.findBySprintNumber(draft.getSprintId());
+    }
+
+    private String developerEmailsMessage() {
+        List<User> developers = userService.findByRole("DEVELOPER");
+        if (developers == null || developers.isEmpty()) {
+            return "There are no registered developers.";
+        }
+
+        StringBuilder message = new StringBuilder("Registered developers:");
+        developers.stream()
+                .sorted(Comparator.comparing(User::getMail))
+                .forEach(user -> message.append("\n- ").append(user.getMail()));
+        return message.toString();
+    }
+
+    private String sprintOptionsMessage() {
+        if (sprintService == null) {
+            return "I could not check the sprints.";
+        }
+
+        List<Sprint> sprints = sprintService.findAll();
+        if (sprints == null || sprints.isEmpty()) {
+            return "There are no registered sprints.";
+        }
+
+        StringBuilder message = new StringBuilder("Registered sprints:");
+        sprints.stream()
+                .sorted(Comparator.comparing(Sprint::getSprintName))
+                .forEach(sprint -> message.append("\n- ")
+                        .append(sprint.getSprintName())
+                        .append(" (internal ID: ")
+                        .append(sprint.getSprintId())
+                        .append(")"));
+        return message.toString();
+    }
+
+    private void createTask(TaskDraft draft, User assignee, Sprint sprint) {
+        Task task = new Task();
+        task.setTaskName(draft.getTaskName());
+        task.setDescription(draft.getDescription());
+        task.setDueDate(draft.getDueDate());
+        task.setSprintId(sprint == null ? null : sprint.getSprintId());
+        task.setStatus("TODO");
+        task.setCategory("FEATURE");
+        task.setStoryPoints(1);
+        task.setCreatedBy(1L);
+
+        Task savedTask = taskService.addTask(task);
+
+        TaskAssignee taskAssignee = new TaskAssignee();
+        taskAssignee.setTaskId(savedTask.getTaskId());
+        taskAssignee.setOracleId(assignee.getOracleId());
+        taskAssignee.setRealTimeSpent(0.0);
+        taskService.assignTask(taskAssignee);
+
+        BotHelper.sendMessageToTelegram(
+                chatId,
+                "Task created:\n- " + savedTask.getTaskName()
+                        + "\nDescription: " + valueOrEmpty(savedTask.getDescription())
+                        + "\nDue date: " + savedTask.getDueDate()
+                        + "\nSprint: " + (sprint == null ? "No data" : sprint.getSprintName())
+                        + "\nAssigned to: " + assignee.getName() + " (" + assignee.getMail() + ")",
+                telegramClient,
+                null
+        );
+    }
+
+    private String valueOrEmpty(Object value) {
+        return value == null ? "No data" : value.toString();
+    }
 
 }
