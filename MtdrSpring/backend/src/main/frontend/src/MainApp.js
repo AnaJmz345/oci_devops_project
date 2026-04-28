@@ -8,6 +8,8 @@ import AuthLanding from './authenticator/AuthLanding';
 import CreateTaskModal from './task/CreateTaskModal';
 import EditTaskModal from './task/EditTaskModal';
 import CreateSprintModal from './sprint/CreateSprintModal';
+import ReportBugModal from './bug/ReportBugModal';
+import ViewBugsModal from './bug/ViewBugsModal';
 import AnalyticsPage from './analytics/AnalyticsPage';
 
 import VantageSidebar from './VantageSidebar';
@@ -39,6 +41,9 @@ function MainApp() {
   const [sprints, setSprints] = useState([]);
   const [users, setUsers] = useState([]);
   const [taskAssignees, setTaskAssignees] = useState({});
+  const [reportBugTask, setReportBugTask] = useState(null);
+  const [viewBugsTask, setViewBugsTask] = useState(null);
+  const [taskBugCounts, setTaskBugCounts] = useState({});
 
   const isManager = user?.role === 'MANAGER';
 
@@ -68,6 +73,19 @@ function MainApp() {
       .catch(() => {});
   };
 
+  const fetchBugCounts = () => {
+    fetch('/bugs')
+      .then(r => r.ok ? r.json() : [])
+      .then(bugs => {
+        const counts = {};
+        bugs.forEach(b => {
+          counts[b.taskId] = (counts[b.taskId] || 0) + 1;
+        });
+        setTaskBugCounts(counts);
+      })
+      .catch(() => {});
+  };
+
   useEffect(() => {
     if (user) {
       setActivePage('overview');
@@ -84,6 +102,7 @@ function MainApp() {
       fetchSprints();
       fetchBacklogTasks();
       refreshAssignees();
+      fetchBugCounts();
     }
   }, [user, activePage, fetchBacklogTasks, fetchSprints]);
 
@@ -190,6 +209,9 @@ function MainApp() {
               setIsCreateTaskOpen={setIsCreateTaskOpen}
               setIsCreateSprintOpen={setIsCreateSprintOpen}
               setEditingTask={setEditingTask}
+              taskBugCounts={taskBugCounts}
+              onReportBug={task => setReportBugTask(task)}
+              onViewBugs={task => setViewBugsTask(task)}
             />
           )}
           {activePage === 'board' && (
@@ -251,6 +273,26 @@ function MainApp() {
           setTaskAssignees(prev => { const n = { ...prev }; delete n[taskId]; return n; });
           setEditingTask(null);
         }}
+      />
+
+      <ReportBugModal
+        open={reportBugTask !== null}
+        onClose={() => setReportBugTask(null)}
+        task={reportBugTask}
+        userId={user?.oracle_id}
+        onBugCreated={() => {
+          setReportBugTask(null);
+          fetchBugCounts();
+        }}
+      />
+
+      <ViewBugsModal
+        open={viewBugsTask !== null}
+        onClose={() => setViewBugsTask(null)}
+        task={viewBugsTask}
+        userId={user?.oracle_id}
+        isManager={isManager}
+        onBugsChanged={fetchBugCounts}
       />
     </div>
   );

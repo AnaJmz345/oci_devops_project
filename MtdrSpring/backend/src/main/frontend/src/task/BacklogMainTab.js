@@ -2,6 +2,7 @@ import React from 'react';
 import { IoMdAddCircle } from 'react-icons/io';
 import { FaEdit } from 'react-icons/fa';
 import { BsTrash3 } from 'react-icons/bs';
+import { FaBug } from 'react-icons/fa';
 
 function BacklogMainTab({
   activeProjectName,
@@ -27,6 +28,9 @@ function BacklogMainTab({
   setIsCreateTaskOpen,
   setIsCreateSprintOpen,
   setEditingTask,
+  taskBugCounts,
+  onReportBug,
+  onViewBugs,
 }) {
   const STATUS_COLORS = {
     'TODO':        { background: 'rgba(30,50,36,0.08)', color: '#1E3224' },
@@ -233,6 +237,7 @@ function BacklogMainTab({
                   {showAllSprints && <th>Sprint #</th>}
                   <th>Assignee</th>
                   <th style={{ textAlign: 'right' }}>Points</th>
+                  <th style={{ textAlign: 'center' }}>Defects</th>
                   {!assignMode && isManager && <th style={{ textAlign: 'right' }}></th>}
                 </tr>
               </thead>
@@ -377,6 +382,61 @@ function BacklogMainTab({
                       </td>
                       <td style={{ textAlign: 'right', fontWeight: 700 }}>
                         {task.storyPoints != null ? task.storyPoints : '—'}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {(() => {
+                          const bugCount = (taskBugCounts && taskBugCounts[task.taskId]) || 0;
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                              {bugCount > 0 && (
+                                <span
+                                  onClick={() => onViewBugs && onViewBugs(task)}
+                                  title="View bugs for this task"
+                                  style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                                    background: 'rgba(199,70,52,0.12)', color: '#C74634',
+                                    borderRadius: 6, padding: '2px 8px',
+                                    fontSize: 11, fontWeight: 900,
+                                    cursor: 'pointer',
+                                    transition: 'background 120ms',
+                                  }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(199,70,52,0.22)'; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(199,70,52,0.12)'; }}
+                                >
+                                  <FaBug size={10} /> {bugCount}
+                                </span>
+                              )}
+                              {!isManager && task.status === 'DONE' && (
+                                <button
+                                  onClick={() => onReportBug && onReportBug(task)}
+                                  title="Report a bug on this task"
+                                  style={{
+                                    appearance: 'none',
+                                    border: '1px solid rgba(199,70,52,0.25)',
+                                    background: '#fff',
+                                    borderRadius: 8,
+                                    padding: '4px 8px',
+                                    cursor: 'pointer',
+                                    color: '#C74634',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 4,
+                                    fontSize: 10,
+                                    fontWeight: 800,
+                                    transition: 'background 120ms',
+                                  }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(199,70,52,0.08)'; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                                >
+                                  <FaBug size={10} /> Report
+                                </button>
+                              )}
+                              {bugCount === 0 && (isManager || task.status !== 'DONE') && (
+                                <span style={{ fontSize: 11, color: 'rgba(30,50,36,0.30)' }}>—</span>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
                       {!assignMode && isManager && (
                         <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
