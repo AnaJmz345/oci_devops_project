@@ -9,6 +9,7 @@ import CreateTaskModal from './task/CreateTaskModal';
 import EditTaskModal from './task/EditTaskModal';
 import CreateSprintModal from './sprint/CreateSprintModal';
 import ReportBugModal from './bug/ReportBugModal';
+import ViewBugsModal from './bug/ViewBugsModal';
 import AnalyticsPage from './analytics/AnalyticsPage';
 
 import VantageSidebar from './VantageSidebar';
@@ -41,6 +42,7 @@ function MainApp() {
   const [users, setUsers] = useState([]);
   const [taskAssignees, setTaskAssignees] = useState({});
   const [reportBugTask, setReportBugTask] = useState(null);
+  const [viewBugsTask, setViewBugsTask] = useState(null);
   const [taskBugCounts, setTaskBugCounts] = useState({});
 
   const isManager = user?.role === 'MANAGER';
@@ -209,6 +211,7 @@ function MainApp() {
               setEditingTask={setEditingTask}
               taskBugCounts={taskBugCounts}
               onReportBug={task => setReportBugTask(task)}
+              onViewBugs={task => setViewBugsTask(task)}
             />
           )}
           {activePage === 'board' && (
@@ -281,6 +284,15 @@ function MainApp() {
           setReportBugTask(null);
           fetchBugCounts();
         }}
+      />
+
+      <ViewBugsModal
+        open={viewBugsTask !== null}
+        onClose={() => setViewBugsTask(null)}
+        task={viewBugsTask}
+        userId={user?.oracle_id}
+        isManager={isManager}
+        onBugsChanged={fetchBugCounts}
       />
     </div>
   );

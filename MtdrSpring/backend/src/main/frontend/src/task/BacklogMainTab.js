@@ -30,6 +30,7 @@ function BacklogMainTab({
   setEditingTask,
   taskBugCounts,
   onReportBug,
+  onViewBugs,
 }) {
   const STATUS_COLORS = {
     'TODO':        { background: 'rgba(30,50,36,0.08)', color: '#1E3224' },
@@ -388,12 +389,20 @@ function BacklogMainTab({
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                               {bugCount > 0 && (
-                                <span style={{
-                                  display: 'inline-flex', alignItems: 'center', gap: 3,
-                                  background: 'rgba(199,70,52,0.12)', color: '#C74634',
-                                  borderRadius: 6, padding: '2px 8px',
-                                  fontSize: 11, fontWeight: 900,
-                                }}>
+                                <span
+                                  onClick={() => onViewBugs && onViewBugs(task)}
+                                  title="View bugs for this task"
+                                  style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                                    background: 'rgba(199,70,52,0.12)', color: '#C74634',
+                                    borderRadius: 6, padding: '2px 8px',
+                                    fontSize: 11, fontWeight: 900,
+                                    cursor: 'pointer',
+                                    transition: 'background 120ms',
+                                  }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(199,70,52,0.22)'; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(199,70,52,0.12)'; }}
+                                >
                                   <FaBug size={10} /> {bugCount}
                                 </span>
                               )}
