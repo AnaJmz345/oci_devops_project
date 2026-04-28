@@ -3,3 +3,9 @@
 **/target/**
 .env
 *.env
+
+logs.log
+logs.log.*
+task-ia-debug.log
+*.log
+*.log.*

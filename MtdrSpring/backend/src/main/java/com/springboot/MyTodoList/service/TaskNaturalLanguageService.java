@@ -23,8 +23,11 @@ public class TaskNaturalLanguageService {
     private static final Path DEBUG_FILE = Paths.get("task-ia-debug.log");
     private static final Pattern ISO_DATE_PATTERN = Pattern.compile("\\b(\\d{4}-\\d{2}-\\d{2})\\b");
     private static final Pattern SLASH_DATE_PATTERN = Pattern.compile("\\b(\\d{1,2})/(\\d{1,2})/(\\d{4})\\b");
-    private static final Pattern SPANISH_DATE_PATTERN = Pattern.compile(
-            "\\b(\\d{1,2})\\s+(?:de\\s+)?([a-z]+)\\s+(?:de\\s+|del\\s+)?(\\d{4})\\b",
+    private static final Pattern ENGLISH_DATE_PATTERN = Pattern.compile(
+            "\\b(?:on\\s+|by\\s+|for\\s+|due\\s+)?([a-z]+)\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:,)?\\s+(\\d{4})\\b",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern ENGLISH_DATE_PATTERN_DAY_FIRST = Pattern.compile(
+            "\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?([a-z]+)\\s+(\\d{4})\\b",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern SPRINT_PATTERN = Pattern.compile("\\bsprint\\s+(\\d+)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern EMAIL_PATTERN = Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}");
@@ -35,32 +38,32 @@ public class TaskNaturalLanguageService {
 
     public TaskDraft extractTaskDraft(String userMessage) {
         debug("========== TASK EXTRACTION ==========");
-        debug("Mensaje recibido para crear task:");
+        debug("Received message for task creation:");
         debug(userMessage);
 
-        String prompt = "Extrae datos para crear una tarea. "
-                + "Responde SOLO JSON valido, sin markdown ni explicaciones. "
-                + "Campos esperados: taskName, description, dueDate, sprintId, assigneeEmail. "
-                + "dueDate debe ir en formato yyyy-MM-dd. "
-                + "sprintId debe ser numero si el usuario dice algo como sprint 2. "
-                + "assigneeEmail debe ser el correo de la persona asignada si aparece. "
-                + "Si falta un campo usa null. "
-                + "Mensaje: " + userMessage;
+        String prompt = "Extract data to create a task. "
+                + "Reply ONLY with valid JSON, no markdown and no explanations. "
+                + "Expected fields: taskName, description, dueDate, sprintId, assigneeEmail. "
+                + "dueDate must be formatted as yyyy-MM-dd. "
+                + "sprintId must be a number if the user says something like sprint 2. "
+                + "assigneeEmail must be the assignee email if one appears. "
+                + "Use null for missing fields. "
+                + "Message: " + userMessage;
 
         try {
-            debug("Prompt enviado al modelo para extraer task:");
+            debug("Prompt sent to extract task:");
             debug(prompt);
 
             String response = deepSeekService.generateText(prompt);
-            debug("Respuesta cruda de la API para task:");
+            debug("Raw API response for task:");
             debug(response);
 
             String assistantContent = extractAssistantContent(response);
-            debug("Contenido del assistant para task:");
+            debug("Assistant content for task:");
             debug(assistantContent);
 
             String json = extractJson(assistantContent);
-            debug("JSON extraido para task:");
+            debug("Extracted JSON for task:");
             debug(json);
 
             JsonNode root = objectMapper.readTree(json);
@@ -73,24 +76,24 @@ public class TaskNaturalLanguageService {
             draft.setSprintId(readLong(root, "sprintId"));
             draft.setAssigneeEmail(readText(root, "assigneeEmail"));
 
-            debug("Draft antes de fallback:");
+            debug("Draft before fallback:");
             debug(draft.toDebugString());
 
             applyFallbacks(draft, userMessage);
 
-            debug("Draft despues de fallback:");
+            debug("Draft after fallback:");
             debug(draft.toDebugString());
 
             return draft;
         } catch (Exception exc) {
-            debug("Fallo la extraccion con IA. Se usaran fallbacks locales.");
+            debug("AI extraction failed. Local fallbacks will be used.");
             debug("Error: " + exc.getClass().getName() + " - " + exc.getMessage());
 
             TaskDraft draft = new TaskDraft();
             draft.setOriginalMessage(userMessage);
             applyFallbacks(draft, userMessage);
 
-            debug("Draft construido solo con fallback:");
+            debug("Draft built only with fallback:");
             debug(draft.toDebugString());
 
             return draft;
@@ -99,17 +102,17 @@ public class TaskNaturalLanguageService {
 
     public LocalDate extractDueDate(String userMessage) {
         debug("========== DATE EXTRACTION ==========");
-        debug("Mensaje recibido para extraer fecha:");
+        debug("Received message to extract date:");
         debug(userMessage);
 
         LocalDate localDate = parseDateLocally(userMessage);
         if (localDate != null) {
-            debug("Fecha extraida localmente: " + localDate);
+            debug("Date extracted locally: " + localDate);
             return localDate;
         }
 
-        debug("No se pudo extraer fecha localmente. Se intentara con IA.");
-        return extractTaskDraft("fecha de entrega: " + userMessage).getDueDate();
+        debug("Could not extract date locally. Trying AI.");
+        return extractTaskDraft("due date: " + userMessage).getDueDate();
     }
 
     private String extractAssistantContent(String response) {
@@ -126,7 +129,7 @@ public class TaskNaturalLanguageService {
                 return geminiContent.asText();
             }
         } catch (Exception exc) {
-            debug("No se pudo parsear response como JSON wrapper. Se usara response cruda.");
+            debug("Could not parse response as JSON wrapper. Raw response will be used.");
             return response;
         }
 
@@ -174,14 +177,14 @@ public class TaskNaturalLanguageService {
     private void applyFallbacks(TaskDraft draft, String userMessage) {
         if (draft.getTaskName() == null) {
             draft.setTaskName(extractBetween(userMessage,
-                    "se llame\\s+",
-                    ",?\\s+con la descripci.n|,?\\s+con fecha|,?\\s+con la fecha|,?\\s+para el sprint|$"));
+                    "(?:called|named|titled)\\s+",
+                    ",?\\s+(?:with|and)\\s+(?:the\\s+)?description|,?\\s+(?:due|with\\s+due\\s+date|deadline|by)|,?\\s+(?:for|in|belongs\\s+to)\\s+sprint|$"));
         }
 
         if (draft.getDescription() == null) {
             draft.setDescription(extractBetween(userMessage,
-                    "con la descripci.n\\s+",
-                    ",?\\s+con fecha|,?\\s+con la fecha|,?\\s+para el sprint|$"));
+                    "(?:with|and)\\s+(?:the\\s+)?description\\s+(?:as\\s+|of\\s+|to\\s+)?",
+                    ",?\\s+(?:due|with\\s+due\\s+date|deadline|by)|,?\\s+(?:for|in|belongs\\s+to)\\s+sprint|$"));
         }
 
         if (draft.getDueDate() == null) {
@@ -228,11 +231,21 @@ public class TaskNaturalLanguageService {
             return LocalDate.of(year, month, day);
         }
 
-        Matcher spanishMatcher = SPANISH_DATE_PATTERN.matcher(normalize(text));
-        if (spanishMatcher.find()) {
-            int day = Integer.parseInt(spanishMatcher.group(1));
-            int month = monthNumber(spanishMatcher.group(2));
-            int year = Integer.parseInt(spanishMatcher.group(3));
+        Matcher englishMatcher = ENGLISH_DATE_PATTERN.matcher(normalize(text));
+        if (englishMatcher.find()) {
+            int month = monthNumber(englishMatcher.group(1));
+            int day = Integer.parseInt(englishMatcher.group(2));
+            int year = Integer.parseInt(englishMatcher.group(3));
+            if (month > 0) {
+                return LocalDate.of(year, month, day);
+            }
+        }
+
+        Matcher dayFirstMatcher = ENGLISH_DATE_PATTERN_DAY_FIRST.matcher(normalize(text));
+        if (dayFirstMatcher.find()) {
+            int day = Integer.parseInt(dayFirstMatcher.group(1));
+            int month = monthNumber(dayFirstMatcher.group(2));
+            int year = Integer.parseInt(dayFirstMatcher.group(3));
             if (month > 0) {
                 return LocalDate.of(year, month, day);
             }
@@ -243,19 +256,18 @@ public class TaskNaturalLanguageService {
 
     private int monthNumber(String month) {
         String normalizedMonth = normalize(month);
-        if (normalizedMonth.endsWith("enero")) return 1;
-        if (normalizedMonth.endsWith("febrero")) return 2;
-        if (normalizedMonth.endsWith("marzo")) return 3;
-        if (normalizedMonth.endsWith("abril")) return 4;
-        if (normalizedMonth.endsWith("mayo")) return 5;
-        if (normalizedMonth.endsWith("junio")) return 6;
-        if (normalizedMonth.endsWith("julio")) return 7;
-        if (normalizedMonth.endsWith("agosto")) return 8;
-        if (normalizedMonth.endsWith("septiembre")) return 9;
-        if (normalizedMonth.endsWith("setiembre")) return 9;
-        if (normalizedMonth.endsWith("octubre")) return 10;
-        if (normalizedMonth.endsWith("noviembre")) return 11;
-        if (normalizedMonth.endsWith("diciembre")) return 12;
+        if (normalizedMonth.endsWith("january")) return 1;
+        if (normalizedMonth.endsWith("february")) return 2;
+        if (normalizedMonth.endsWith("march")) return 3;
+        if (normalizedMonth.endsWith("april")) return 4;
+        if (normalizedMonth.endsWith("may")) return 5;
+        if (normalizedMonth.endsWith("june")) return 6;
+        if (normalizedMonth.endsWith("july")) return 7;
+        if (normalizedMonth.endsWith("august")) return 8;
+        if (normalizedMonth.endsWith("september")) return 9;
+        if (normalizedMonth.endsWith("october")) return 10;
+        if (normalizedMonth.endsWith("november")) return 11;
+        if (normalizedMonth.endsWith("december")) return 12;
         return -1;
     }
 
@@ -276,7 +288,7 @@ public class TaskNaturalLanguageService {
                     StandardOpenOption.APPEND
             );
         } catch (Exception exc) {
-            // No rompemos el bot por un fallo de debug.
+            // Do not break the bot if debug logging fails.
         }
     }
 
@@ -316,25 +328,25 @@ public class TaskNaturalLanguageService {
 
         public String nextMissingQuestion() {
             if ("TASK_NAME".equals(pendingField)) {
-                return "Como se llama la tarea?";
+                return "What should the task be called?";
             }
             if ("DUE_DATE".equals(pendingField)) {
-                return "Cual es la fecha de entrega? Debe ser hoy o despues de hoy.";
+                return "What is the due date? It must be today or later.";
             }
             if ("ASSIGNEE_EMAIL".equals(pendingField)) {
-                return "A que correo de developer se la asigno?";
+                return "Which developer email should I assign it to?";
             }
             if ("SPRINT".equals(pendingField)) {
-                return "A que sprint pertenece?";
+                return "Which sprint does it belong to?";
             }
             if (taskName == null) {
-                return "Como se llama la tarea?";
+                return "What should the task be called?";
             }
             if (dueDate == null) {
-                return "Cual es la fecha de entrega? Debe ser hoy o despues de hoy.";
+                return "What is the due date? It must be today or later.";
             }
             if (assigneeEmail == null) {
-                return "A que correo de developer se la asigno?";
+                return "Which developer email should I assign it to?";
             }
             return null;
         }

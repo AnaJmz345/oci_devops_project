@@ -32,57 +32,57 @@ public class NaturalLanguageIntentService {
 
     public String detectIntent(String userMessage) {
         debug("========== INTENT DETECTION ==========");
-        debug("Mensaje recibido: " + userMessage);
+        debug("Received message: " + userMessage);
 
         if (userMessage == null || userMessage.trim().isEmpty()) {
-            debug("Mensaje vacio. Intencion final: " + UNKNOWN);
+            debug("Empty message. Final intent: " + UNKNOWN);
             return UNKNOWN;
         }
 
         String modelIntent = detectIntentWithModel(userMessage);
-        debug("Intencion detectada por modelo: " + modelIntent);
+        debug("Intent detected by model: " + modelIntent);
 
         if (LIST_TASKS.equals(modelIntent)) {
-            debug("Intencion final: " + LIST_TASKS + " usando IA");
+            debug("Final intent: " + LIST_TASKS + " using AI");
             return LIST_TASKS;
         }
 
         if (CREATE_TASK.equals(modelIntent)) {
-            debug("Intencion final: " + CREATE_TASK + " usando IA");
+            debug("Final intent: " + CREATE_TASK + " using AI");
             return CREATE_TASK;
         }
 
         if (looksLikeListTasksRequest(userMessage)) {
-            debug("Intencion final: " + LIST_TASKS + " usando fallback local");
+            debug("Final intent: " + LIST_TASKS + " using local fallback");
             return LIST_TASKS;
         }
 
         if (looksLikeCreateTaskRequest(userMessage)) {
-            debug("Intencion final: " + CREATE_TASK + " usando fallback local");
+            debug("Final intent: " + CREATE_TASK + " using local fallback");
             return CREATE_TASK;
         }
 
-        debug("Intencion final: " + UNKNOWN);
+        debug("Final intent: " + UNKNOWN);
         return UNKNOWN;
     }
 
     private String detectIntentWithModel(String userMessage) {
-        String prompt = "Clasifica la intencion del usuario para un bot de tareas. "
-                + "Responde solo LIST_TASKS si quiere ver, listar, mostrar o consultar todas sus tareas. "
-                + "Responde solo CREATE_TASK si quiere crear, registrar, agregar o dar de alta una tarea. "
-                + "Responde solo UNKNOWN para cualquier otra intencion. "
-                + "Mensaje: " + userMessage;
+        String prompt = "Classify the user's intent for a task management bot. "
+                + "Reply only LIST_TASKS if the user wants to see, list, show, display, review, or check their tasks. "
+                + "Reply only CREATE_TASK if the user wants to create, add, register, open, or file a task. "
+                + "Reply only UNKNOWN for any other intent. "
+                + "Message: " + userMessage;
 
         try {
-            debug("Prompt enviado para detectar intencion:");
+            debug("Prompt sent to detect intent:");
             debug(prompt);
 
             String response = deepSeekService.generateText(prompt);
-            debug("Respuesta cruda de la API para intencion:");
+            debug("Raw API response for intent:");
             debug(response);
 
             String assistantText = extractAssistantText(response);
-            debug("Texto extraido del modelo para intencion:");
+            debug("Assistant text extracted for intent:");
             debug(assistantText);
 
             String normalizedResponse = assistantText.toUpperCase(Locale.ROOT);
@@ -95,8 +95,8 @@ public class NaturalLanguageIntentService {
                 return CREATE_TASK;
             }
         } catch (Exception exc) {
-            debug("Fallo la deteccion de intencion con IA: " + exc.getMessage());
-            logger.warn("No se pudo detectar la intencion con el modelo de IA: {}", exc.getMessage());
+            debug("AI intent detection failed: " + exc.getMessage());
+            logger.warn("Could not detect intent with the AI model: {}", exc.getMessage());
         }
 
         return UNKNOWN;
@@ -124,7 +124,15 @@ public class NaturalLanguageIntentService {
 
     private boolean looksLikeListTasksRequest(String userMessage) {
         String normalizedMessage = normalize(userMessage);
-        boolean hasListVerb = normalizedMessage.contains("muestra")
+        boolean hasListVerb = normalizedMessage.contains("show")
+                || normalizedMessage.contains("display")
+                || normalizedMessage.contains("list")
+                || normalizedMessage.contains("see")
+                || normalizedMessage.contains("review")
+                || normalizedMessage.contains("check")
+                || normalizedMessage.contains("tell me")
+                || normalizedMessage.contains("what do i have")
+                || normalizedMessage.contains("muestra")
                 || normalizedMessage.contains("mostrar")
                 || normalizedMessage.contains("ensena")
                 || normalizedMessage.contains("ver")
@@ -134,12 +142,15 @@ public class NaturalLanguageIntentService {
                 || normalizedMessage.contains("consultar")
                 || normalizedMessage.contains("dime");
 
-        boolean hasTaskNoun = normalizedMessage.contains("tarea")
+        boolean hasTaskNoun = normalizedMessage.contains("task")
+                || normalizedMessage.contains("tasks")
+                || normalizedMessage.contains("pending")
+                || normalizedMessage.contains("todo")
+                || normalizedMessage.contains("to do")
+                || normalizedMessage.contains("tarea")
                 || normalizedMessage.contains("tareas")
                 || normalizedMessage.contains("pendiente")
-                || normalizedMessage.contains("pendientes")
-                || normalizedMessage.contains("todo")
-                || normalizedMessage.contains("to do");
+                || normalizedMessage.contains("pendientes");
 
         debug("Fallback LIST_TASKS. normalizedMessage=" + normalizedMessage
                 + ", hasListVerb=" + hasListVerb
@@ -150,7 +161,13 @@ public class NaturalLanguageIntentService {
 
     private boolean looksLikeCreateTaskRequest(String userMessage) {
         String normalizedMessage = normalize(userMessage);
-        boolean hasCreateVerb = normalizedMessage.contains("crea")
+        boolean hasCreateVerb = normalizedMessage.contains("create")
+                || normalizedMessage.contains("add")
+                || normalizedMessage.contains("register")
+                || normalizedMessage.contains("open")
+                || normalizedMessage.contains("file")
+                || normalizedMessage.contains("make")
+                || normalizedMessage.contains("crea")
                 || normalizedMessage.contains("crear")
                 || normalizedMessage.contains("agrega")
                 || normalizedMessage.contains("agregar")
@@ -159,8 +176,11 @@ public class NaturalLanguageIntentService {
                 || normalizedMessage.contains("alta")
                 || normalizedMessage.contains("abre");
 
-        boolean hasTaskNoun = normalizedMessage.contains("tarea")
-                || normalizedMessage.contains("task")
+        boolean hasTaskNoun = normalizedMessage.contains("task")
+                || normalizedMessage.contains("pending")
+                || normalizedMessage.contains("todo")
+                || normalizedMessage.contains("to do")
+                || normalizedMessage.contains("tarea")
                 || normalizedMessage.contains("pendiente");
 
         debug("Fallback CREATE_TASK. normalizedMessage=" + normalizedMessage
@@ -187,7 +207,7 @@ public class NaturalLanguageIntentService {
                     StandardOpenOption.APPEND
             );
         } catch (Exception exc) {
-            logger.warn("No se pudo escribir debug IA: {}", exc.getMessage());
+            logger.warn("Could not write AI debug log: {}", exc.getMessage());
         }
     }
 }

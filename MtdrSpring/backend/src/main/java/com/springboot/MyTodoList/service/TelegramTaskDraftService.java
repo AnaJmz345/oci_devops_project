@@ -58,7 +58,7 @@ public class TelegramTaskDraftService {
         }
 
         if ("SPRINT".equals(draft.getPendingField())) {
-            TaskDraft sprintDraft = taskNaturalLanguageService.extractTaskDraft("pertenece al " + message);
+            TaskDraft sprintDraft = taskNaturalLanguageService.extractTaskDraft("belongs to " + message);
             draft.setSprintId(sprintDraft.getSprintId());
             draft.setPendingField(null);
         }

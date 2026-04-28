@@ -227,14 +227,14 @@ public class BotActions{
         List<ToDoItem> activeItems = allItems.stream().filter(item -> "TODO".equalsIgnoreCase(item.getDone()))
                 .collect(Collectors.toList());
 
-        StringBuilder responseText = new StringBuilder("Aqui estan todas tus tareas:");
+        StringBuilder responseText = new StringBuilder("Here are all your tasks:");
 
         if (activeItems.isEmpty() && allItems.stream().noneMatch(item -> "DONE".equalsIgnoreCase(item.getDone()))) {
-            responseText.append("\n\nNo tienes tareas registradas.");
+            responseText.append("\n\nYou do not have any tasks yet.");
         }
 
         if (!activeItems.isEmpty()) {
-            responseText.append("\n\nPendientes:");
+            responseText.append("\n\nPending:");
         }
 
         for (ToDoItem item : activeItems) {
@@ -252,7 +252,7 @@ public class BotActions{
                 .collect(Collectors.toList());
 
         if (!doneItems.isEmpty()) {
-            responseText.append("\n\nCompletadas:");
+            responseText.append("\n\nCompleted:");
         }
 
         for (ToDoItem item : doneItems) {
@@ -303,7 +303,7 @@ public class BotActions{
         if (!(requestText.contains(BotCommands.LLM_REQ.getCommand())) || exit)
             return;
         
-        String prompt = "Dame los datos del clima en mty";
+        String prompt = "Give me the weather in Monterrey";
         String out = "<empty>";
         try{
             out = deepSeekService.generateText(prompt);
@@ -341,9 +341,9 @@ public class BotActions{
             handleTaskDraft(chatKey, draft);
             exit = true;
         } catch (Exception exc) {
-            logger.error("No se pudo crear la tarea desde lenguaje natural", exc);
+            logger.error("Could not create task from natural language", exc);
             BotHelper.sendMessageToTelegram(chatId,
-                    "No pude crear la tarea. Revisa los datos e intenta otra vez.",
+                    "I could not create the task. Please check the data and try again.",
                     telegramClient, null);
             exit = true;
         }
@@ -352,7 +352,7 @@ public class BotActions{
     private void handleTaskDraft(Long chatKey, TaskDraft draft) {
         if (draft == null) {
             BotHelper.sendMessageToTelegram(chatId,
-                    "No pude entender los datos de la tarea. Intentemos de nuevo: como se llama la tarea?",
+                    "I could not understand the task details. Let's try again: what should the task be called?",
                     telegramClient, null);
             return;
         }
@@ -370,7 +370,7 @@ public class BotActions{
             draft.setPendingField("ASSIGNEE_EMAIL");
             telegramTaskDraftService.saveDraft(chatKey, draft);
             BotHelper.sendMessageToTelegram(chatId,
-                    "No encontre un developer con ese correo. Enviame uno valido.\n\n" + developerEmailsMessage(),
+                    "I could not find a developer with that email. Send me a valid one.\n\n" + developerEmailsMessage(),
                     telegramClient, null);
             return;
         }
@@ -381,7 +381,7 @@ public class BotActions{
             draft.setPendingField("SPRINT");
             telegramTaskDraftService.saveDraft(chatKey, draft);
             BotHelper.sendMessageToTelegram(chatId,
-                    "No encontre ese sprint. El numero debe coincidir con el nombre, por ejemplo: Sprint 3.\n\n"
+                    "I could not find that sprint. The number must match the sprint name, for example: Sprint 3.\n\n"
                             + sprintOptionsMessage(),
                     telegramClient, null);
             return;
@@ -395,26 +395,26 @@ public class BotActions{
         if (draft.getTaskName() == null || draft.getTaskName().isBlank()) {
             draft.setTaskName(null);
             draft.setPendingField("TASK_NAME");
-            return "Como se llama la tarea?";
+            return "What should the task be called?";
         }
 
         LocalDate today = LocalDate.now();
         if (draft.getDueDate() == null) {
             draft.setPendingField("DUE_DATE");
-            return "Cual es la fecha de entrega? Hoy es " + today + ". Debe ser hoy o despues de hoy.";
+            return "What is the due date? Today is " + today + ". It must be today or later.";
         }
 
         if (draft.getDueDate().isBefore(today)) {
             draft.setDueDate(null);
             draft.setPendingField("DUE_DATE");
-            return "La fecha de vencimiento es invalida porque ya paso. Hoy es " + today
-                    + ". Enviame una fecha que sea hoy o despues de hoy.";
+            return "The due date is invalid because it already passed. Today is " + today
+                    + ". Send me a date that is today or later.";
         }
 
         if (draft.getAssigneeEmail() == null || draft.getAssigneeEmail().isBlank()) {
             draft.setAssigneeEmail(null);
             draft.setPendingField("ASSIGNEE_EMAIL");
-            return "A que correo de developer se la asigno?\n\n" + developerEmailsMessage();
+            return "Which developer email should I assign it to?\n\n" + developerEmailsMessage();
         }
 
         draft.setPendingField(null);
@@ -432,10 +432,10 @@ public class BotActions{
     private String developerEmailsMessage() {
         List<User> developers = userService.findByRole("DEVELOPER");
         if (developers == null || developers.isEmpty()) {
-            return "No hay developers registrados.";
+            return "There are no registered developers.";
         }
 
-        StringBuilder message = new StringBuilder("Developers registrados:");
+        StringBuilder message = new StringBuilder("Registered developers:");
         developers.stream()
                 .sorted(Comparator.comparing(User::getMail))
                 .forEach(user -> message.append("\n- ").append(user.getMail()));
@@ -444,20 +444,20 @@ public class BotActions{
 
     private String sprintOptionsMessage() {
         if (sprintService == null) {
-            return "No pude consultar los sprints.";
+            return "I could not check the sprints.";
         }
 
         List<Sprint> sprints = sprintService.findAll();
         if (sprints == null || sprints.isEmpty()) {
-            return "No hay sprints registrados.";
+            return "There are no registered sprints.";
         }
 
-        StringBuilder message = new StringBuilder("Sprints registrados:");
+        StringBuilder message = new StringBuilder("Registered sprints:");
         sprints.stream()
                 .sorted(Comparator.comparing(Sprint::getSprintName))
                 .forEach(sprint -> message.append("\n- ")
                         .append(sprint.getSprintName())
-                        .append(" (ID interno: ")
+                        .append(" (internal ID: ")
                         .append(sprint.getSprintId())
                         .append(")"));
         return message.toString();
@@ -484,18 +484,18 @@ public class BotActions{
 
         BotHelper.sendMessageToTelegram(
                 chatId,
-                "Tarea creada:\n- " + savedTask.getTaskName()
-                        + "\nDescripcion: " + valueOrEmpty(savedTask.getDescription())
-                        + "\nFecha de entrega: " + savedTask.getDueDate()
-                        + "\nSprint: " + (sprint == null ? "Sin dato" : sprint.getSprintName())
-                        + "\nAsignada a: " + assignee.getName() + " (" + assignee.getMail() + ")",
+                "Task created:\n- " + savedTask.getTaskName()
+                        + "\nDescription: " + valueOrEmpty(savedTask.getDescription())
+                        + "\nDue date: " + savedTask.getDueDate()
+                        + "\nSprint: " + (sprint == null ? "No data" : sprint.getSprintName())
+                        + "\nAssigned to: " + assignee.getName() + " (" + assignee.getMail() + ")",
                 telegramClient,
                 null
         );
     }
 
     private String valueOrEmpty(Object value) {
-        return value == null ? "Sin dato" : value.toString();
+        return value == null ? "No data" : value.toString();
     }
 
 }
