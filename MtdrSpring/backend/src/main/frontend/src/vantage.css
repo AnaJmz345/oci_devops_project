@@ -707,3 +707,91 @@
   pointer-events: none;
   font-weight: 900;
 }
+
+/* ── Developer Backlog Dropdowns ────────────────────── */
+
+/* Category dropdown (FEATURE / BUG / ISSUE) */
+.VantageInlineSelect {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1.5px solid rgba(30, 50, 36, 0.18);
+  border-radius: 8px;
+  padding: 4px 26px 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #1E3224;
+  background-color: rgba(30, 50, 36, 0.04);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%231E3224' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 150ms, box-shadow 150ms, background-color 150ms;
+  min-width: 90px;
+}
+
+.VantageInlineSelect:hover {
+  border-color: rgba(30, 50, 36, 0.35);
+  background-color: rgba(30, 50, 36, 0.07);
+}
+
+.VantageInlineSelect:focus {
+  border-color: #C74634;
+  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.12);
+}
+
+/* Status dropdown — base style */
+.VantageStatusSelect {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  padding: 4px 26px 4px 10px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 150ms, box-shadow 150ms, filter 150ms;
+  min-width: 110px;
+}
+
+.VantageStatusSelect:hover {
+  filter: brightness(0.95);
+}
+
+.VantageStatusSelect:focus {
+  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.12);
+}
+
+/* Status color variants */
+.VantageStatus--TODO {
+  color: #1E3224;
+  background-color: rgba(30, 50, 36, 0.08);
+  border-color: rgba(30, 50, 36, 0.15);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%231E3224' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.VantageStatus--IN_PROGRESS {
+  color: #9a6c00;
+  background-color: rgba(241, 177, 63, 0.18);
+  border-color: rgba(241, 177, 63, 0.35);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239a6c00' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.VantageStatus--DONE {
+  color: #2d6b3f;
+  background-color: rgba(76, 130, 92, 0.18);
+  border-color: rgba(76, 130, 92, 0.35);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%232d6b3f' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.VantageStatus--BLOCKED {
+  color: #C74634;
+  background-color: rgba(199, 70, 52, 0.12);
+  border-color: rgba(199, 70, 52, 0.30);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23C74634' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+}
