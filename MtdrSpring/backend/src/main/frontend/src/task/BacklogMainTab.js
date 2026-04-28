@@ -35,11 +35,21 @@ function BacklogMainTab({
     'BLOCKED':     { background: 'rgba(199,70,52,0.15)', color: '#C74634' },
   };
 
+  const [assigneeFilter, setAssigneeFilter] = React.useState('');
+
   const showAllSprints = activeSprintId === 'all';
 
-  const filteredTasks = showAllSprints
+  const sprintFilteredTasks = showAllSprints
     ? backlogTasks
     : backlogTasks.filter(t => String(t.sprintId) === String(activeSprintId));
+
+  const visibleTasks = sprintFilteredTasks.filter(task => {
+    if (assigneeFilter === '') return true;
+    const assignee = taskAssignees?.[task.taskId];
+    const assigneeOracleId = assignee?.oracleId ?? assignee?.oracle_id;
+    if (assigneeFilter === 'unassigned') return !assigneeOracleId;
+    return String(assigneeOracleId) === String(assigneeFilter);
+  });
 
   const getSprintName = (sprintId) => {
     if (!sprintId) return 'Not assigned';
@@ -48,11 +58,25 @@ function BacklogMainTab({
   };
 
   const getAssigneeName = (taskId) => {
-    const assignee = taskAssignees[taskId];
+    const assignee = taskAssignees?.[taskId];
     if (!assignee) return null;
-    const u = users.find(u => String(u.oracleId) === String(assignee.oracleId));
+    const assigneeOracleId = assignee.oracleId ?? assignee.oracle_id;
+    const u = (users || []).find(u => String(u.oracleId ?? u.oracle_id) === String(assigneeOracleId));
     return u ? u.name.split(' ')[0] : null;
   };
+
+  const assigneeOptions = (users || [])
+    .map(u => {
+      const oracleId = u.oracleId ?? u.oracle_id;
+      if (oracleId == null) return null;
+      const name = u.name || '';
+      const mail = u.mail || '';
+      const label = mail ? `${name} (${mail})` : name;
+      if (!label) return null;
+      return { oracleId: String(oracleId), label };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
 
   const toggleSelectTask = (taskId) => {
     setSelectedTaskIds(prev => {
@@ -63,10 +87,10 @@ function BacklogMainTab({
   };
 
   const toggleSelectAll = () => {
-    if (selectedTaskIds.size === filteredTasks.length) {
+    if (selectedTaskIds.size === visibleTasks.length) {
       setSelectedTaskIds(new Set());
     } else {
-      setSelectedTaskIds(new Set(filteredTasks.map(t => t.taskId)));
+      setSelectedTaskIds(new Set(visibleTasks.map(t => t.taskId)));
     }
   };
 
@@ -108,7 +132,7 @@ function BacklogMainTab({
     setAssignSprintId('');
   };
 
-  const allSelected = filteredTasks.length > 0 && selectedTaskIds.size === filteredTasks.length;
+  const allSelected = visibleTasks.length > 0 && selectedTaskIds.size === visibleTasks.length;
 
   return (
     <div className="VantagePage">
@@ -120,13 +144,33 @@ function BacklogMainTab({
         <div className="VantageCardTitle" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <span>
             Backlog items
-            {filteredTasks.length > 0 && (
+            {visibleTasks.length > 0 && (
               <span style={{ fontWeight: 500, color: 'rgba(30,50,36,0.5)', fontSize: 13 }}>
-                {' '}({filteredTasks.length})
+                {' '}({visibleTasks.length})
               </span>
             )}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <select
+              value={assigneeFilter}
+              onChange={e => {
+                const next = e.target.value;
+                if (assignMode) setSelectedTaskIds(new Set());
+                setAssigneeFilter(next);
+              }}
+              style={{
+                height: 32, border: '1.5px solid rgba(30,50,36,0.20)',
+                borderRadius: 8, padding: '0 10px', fontSize: 12,
+                fontWeight: 700, color: '#1E3224', background: '#fff',
+                cursor: 'pointer', outline: 'none',
+              }}
+            >
+              <option value="">— All assignees —</option>
+              <option value="unassigned">Unassigned</option>
+              {assigneeOptions.map(opt => (
+                <option key={opt.oracleId} value={opt.oracleId}>{opt.label}</option>
+              ))}
+            </select>
             {assignMode ? (
               <>
                 <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(30,50,36,0.6)' }}>
@@ -208,9 +252,11 @@ function BacklogMainTab({
         <div className="VantageCardBody">
           {backlogLoading ? (
             <div style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}>Loading tasks…</div>
-          ) : filteredTasks.length === 0 ? (
+          ) : visibleTasks.length === 0 ? (
             <div style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}>
-              No tasks {showAllSprints ? 'yet' : 'for this sprint'}.{isManager ? ' Click "+ Create Task" to add one.' : ''}
+              {assigneeFilter !== ''
+                ? 'No tasks for this assignee.'
+                : (<>No tasks {showAllSprints ? 'yet' : 'for this sprint'}.{isManager ? ' Click "+ Create Task" to add one.' : ''}</>)}
             </div>
           ) : (
             <table className="VantageTable">
@@ -237,7 +283,7 @@ function BacklogMainTab({
                 </tr>
               </thead>
               <tbody>
-                {filteredTasks.map(task => {
+                {visibleTasks.map(task => {
                   const sc = STATUS_COLORS[task.status] || STATUS_COLORS['TODO'];
                   return (
                     <tr
