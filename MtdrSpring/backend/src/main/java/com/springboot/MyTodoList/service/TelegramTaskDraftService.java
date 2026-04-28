@@ -38,19 +38,29 @@ public class TelegramTaskDraftService {
             return;
         }
 
-        if (draft.getTaskName() == null) {
+        if ("TASK_NAME".equals(draft.getPendingField()) || draft.getTaskName() == null) {
             draft.setTaskName(message);
+            draft.setPendingField(null);
             return;
         }
 
-        if (draft.getDueDate() == null) {
+        if ("DUE_DATE".equals(draft.getPendingField()) || draft.getDueDate() == null) {
             LocalDate dueDate = taskNaturalLanguageService.extractDueDate(message);
             draft.setDueDate(dueDate);
+            draft.setPendingField(null);
             return;
         }
 
-        if (draft.getAssigneeEmail() == null) {
+        if ("ASSIGNEE_EMAIL".equals(draft.getPendingField()) || draft.getAssigneeEmail() == null) {
             draft.setAssigneeEmail(message.trim());
+            draft.setPendingField(null);
+            return;
+        }
+
+        if ("SPRINT".equals(draft.getPendingField())) {
+            TaskDraft sprintDraft = taskNaturalLanguageService.extractTaskDraft("pertenece al " + message);
+            draft.setSprintId(sprintDraft.getSprintId());
+            draft.setPendingField(null);
         }
     }
 }

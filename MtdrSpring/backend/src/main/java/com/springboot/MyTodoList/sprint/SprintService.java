@@ -22,6 +22,18 @@ public class SprintService {
         return sprintRepository.findByStatus(status);
     }
 
+    public Optional<Sprint> findBySprintName(String sprintName) {
+        return sprintRepository.findBySprintNameIgnoreCase(sprintName);
+    }
+
+    public Optional<Sprint> findBySprintNumber(Long sprintNumber) {
+        if (sprintNumber == null) {
+            return Optional.empty();
+        }
+
+        return findBySprintName("Sprint " + sprintNumber);
+    }
+
     public ResponseEntity<Sprint> getSprintById(Long id) {
         Optional<Sprint> sprint = sprintRepository.findById(id);
         if (sprint.isPresent()) {

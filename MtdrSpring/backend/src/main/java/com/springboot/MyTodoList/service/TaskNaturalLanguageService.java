@@ -276,7 +276,7 @@ public class TaskNaturalLanguageService {
                     StandardOpenOption.APPEND
             );
         } catch (Exception exc) {
-            // No hacemos nada para no romper el bot por un fallo de debug.
+            // No rompemos el bot por un fallo de debug.
         }
     }
 
@@ -287,6 +287,7 @@ public class TaskNaturalLanguageService {
         private LocalDate dueDate;
         private Long sprintId;
         private String assigneeEmail;
+        private String pendingField;
 
         public String getOriginalMessage() { return originalMessage; }
         public void setOriginalMessage(String originalMessage) { this.originalMessage = originalMessage; }
@@ -306,16 +307,31 @@ public class TaskNaturalLanguageService {
         public String getAssigneeEmail() { return assigneeEmail; }
         public void setAssigneeEmail(String assigneeEmail) { this.assigneeEmail = assigneeEmail; }
 
+        public String getPendingField() { return pendingField; }
+        public void setPendingField(String pendingField) { this.pendingField = pendingField; }
+
         public boolean isComplete() {
-            return taskName != null && dueDate != null && assigneeEmail != null;
+            return pendingField == null && taskName != null && dueDate != null && assigneeEmail != null;
         }
 
         public String nextMissingQuestion() {
+            if ("TASK_NAME".equals(pendingField)) {
+                return "Como se llama la tarea?";
+            }
+            if ("DUE_DATE".equals(pendingField)) {
+                return "Cual es la fecha de entrega? Debe ser hoy o despues de hoy.";
+            }
+            if ("ASSIGNEE_EMAIL".equals(pendingField)) {
+                return "A que correo de developer se la asigno?";
+            }
+            if ("SPRINT".equals(pendingField)) {
+                return "A que sprint pertenece?";
+            }
             if (taskName == null) {
                 return "Como se llama la tarea?";
             }
             if (dueDate == null) {
-                return "Cual es la fecha de entrega?";
+                return "Cual es la fecha de entrega? Debe ser hoy o despues de hoy.";
             }
             if (assigneeEmail == null) {
                 return "A que correo de developer se la asigno?";
@@ -330,6 +346,7 @@ public class TaskNaturalLanguageService {
                     + ", dueDate=" + dueDate
                     + ", sprintId=" + sprintId
                     + ", assigneeEmail='" + assigneeEmail + '\''
+                    + ", pendingField='" + pendingField + '\''
                     + '}';
         }
     }
