@@ -1,0 +1,290 @@
+/* sprint/sprint.css — CreateSprintModal styles
+ * Vantage palette: Red #C74634 · DkGreen #1E3224 · Gray #C2D4D4 · White #FFFFFF
+ */
+
+.SM-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(30, 50, 36, 0.38);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: SM-fadeIn 180ms ease;
+}
+
+@keyframes SM-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.SM-modal {
+  background: #fff;
+  border-radius: 18px;
+  border: 2px solid rgba(194, 212, 212, 0.85);
+  box-shadow: 0 24px 64px rgba(30, 50, 36, 0.18);
+  width: min(680px, 96vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: SM-slideUp 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes SM-slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Header */
+.SM-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 24px 14px;
+  border-bottom: 2px solid rgba(194, 212, 212, 0.7);
+}
+
+.SM-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.SM-tag {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  color: #C74634;
+}
+
+.SM-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  color: #1E3224;
+}
+
+.SM-close {
+  appearance: none;
+  border: 1px solid rgba(30, 50, 36, 0.18);
+  background: #fff;
+  color: #1E3224;
+  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 140ms;
+  flex-shrink: 0;
+}
+
+.SM-close:hover {
+  background: rgba(199, 70, 52, 0.08);
+  border-color: rgba(199, 70, 52, 0.35);
+  color: #C74634;
+}
+
+/* Body */
+.SM-body {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  flex: 1;
+}
+
+.SM-col {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.SM-col--meta {
+  border-left: 2px solid rgba(194, 212, 212, 0.7);
+  background: rgba(194, 212, 212, 0.08);
+}
+
+/* Fields */
+.SM-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.SM-label {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: rgba(30, 50, 36, 0.60);
+}
+
+.SM-required {
+  color: #C74634;
+}
+
+.SM-input,
+.SM-select,
+.SM-textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid rgba(30, 50, 36, 0.16);
+  border-radius: 10px;
+  background: #fff;
+  color: #1E3224;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 150ms, box-shadow 150ms;
+  box-sizing: border-box;
+}
+
+.SM-input::placeholder,
+.SM-textarea::placeholder {
+  color: rgba(30, 50, 36, 0.35);
+  font-weight: 500;
+}
+
+.SM-input:focus,
+.SM-select:focus,
+.SM-textarea:focus {
+  border-color: rgba(199, 70, 52, 0.45);
+  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.10);
+}
+
+.SM-textarea {
+  resize: vertical;
+  min-height: 90px;
+  font-family: inherit;
+}
+
+.SM-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231E3224' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+/* Duration pill */
+.SM-duration-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(76, 130, 92, 0.12);
+  border: 1px solid rgba(76, 130, 92, 0.30);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #2d6b3f;
+  font-weight: 700;
+}
+
+.SM-duration-icon {
+  font-size: 15px;
+}
+
+/* Error */
+.SM-error {
+  margin: 0 24px;
+  padding: 10px 14px;
+  background: rgba(199, 70, 52, 0.08);
+  border: 1px solid rgba(199, 70, 52, 0.30);
+  border-radius: 10px;
+  color: #C74634;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Footer */
+.SM-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 2px solid rgba(194, 212, 212, 0.7);
+}
+
+.SM-btn {
+  appearance: none;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: opacity 140ms, transform 100ms;
+}
+
+.SM-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.SM-btn:active:not(:disabled) { transform: scale(0.97); }
+
+.SM-btn--cancel {
+  background: rgba(194, 212, 212, 0.35);
+  color: rgba(30, 50, 36, 0.80);
+  border: 1px solid rgba(30, 50, 36, 0.14);
+}
+.SM-btn--cancel:hover:not(:disabled) { background: rgba(194, 212, 212, 0.55); }
+
+.SM-btn--submit {
+  background: #C74634;
+  color: #fff;
+}
+.SM-btn--submit:hover:not(:disabled) { background: #b03d2d; }
+
+@media (max-width: 600px) {
+  .SM-body { grid-template-columns: 1fr; }
+  .SM-col--meta {
+    border-left: none;
+    border-top: 2px solid rgba(194, 212, 212, 0.7);
+  }
+}
+
+/* CREATE NEW SPRINT button (shown below backlog table) */
+.SM-create-sprint-btn {
+  margin-top: 10px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  appearance: none;
+  border: 1.5px solid rgba(199, 70, 52, 0.35);
+  background: transparent;
+  color: rgba(199, 70, 52, 0.80);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms, color 150ms;
+}
+
+.SM-create-sprint-btn:hover {
+  background: rgba(199, 70, 52, 0.06);
+  border-color: #C74634;
+  color: #C74634;
+}
+
+.SM-create-sprint-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
