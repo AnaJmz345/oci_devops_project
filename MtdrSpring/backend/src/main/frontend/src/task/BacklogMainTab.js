@@ -36,6 +36,8 @@ function BacklogMainTab({
   };
 
   const [assigneeFilter, setAssigneeFilter] = React.useState('');
+  const [assigneeMenuOpen, setAssigneeMenuOpen] = React.useState(false);
+  const assigneeMenuRef = React.useRef(null);
 
   const showAllSprints = activeSprintId === 'all';
 
@@ -77,6 +79,30 @@ function BacklogMainTab({
     })
     .filter(Boolean)
     .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
+
+  React.useEffect(() => {
+    if (!assigneeMenuOpen) return;
+    const handleClick = (event) => {
+      if (assigneeMenuRef.current && !assigneeMenuRef.current.contains(event.target)) {
+        setAssigneeMenuOpen(false);
+      }
+    };
+    const handleKey = (event) => {
+      if (event.key === 'Escape') setAssigneeMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [assigneeMenuOpen]);
+
+  const applyAssigneeFilter = (next) => {
+    if (assignMode) setSelectedTaskIds(new Set());
+    setAssigneeFilter(next);
+    setAssigneeMenuOpen(false);
+  };
 
   const toggleSelectTask = (taskId) => {
     setSelectedTaskIds(prev => {
@@ -143,6 +169,11 @@ function BacklogMainTab({
     1 + // Assignee
     1 + // Points
     (!assignMode && isManager ? 1 : 0);
+  const assigneeMenuItems = [
+    { value: '', label: 'All assignees' },
+    { value: 'unassigned', label: 'Unassigned', divider: true },
+    ...assigneeOptions.map(opt => ({ value: opt.oracleId, label: opt.label })),
+  ];
 
   return (
     <div className="VantagePage">
@@ -262,36 +293,94 @@ function BacklogMainTab({
                   <th>Due Date</th>
                   {showAllSprints && <th>Sprint #</th>}
                   <th style={{ minWidth: 130 }}>
-                    <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700, color: '#1E3224' }}>
-                      <span>Assignee</span>
-                      <FaChevronDown size={11} style={{ marginTop: 1 }} />
-                      <select
-                        aria-label="Filter by assignee"
-                        value={assigneeFilter}
-                        onChange={e => {
-                          const next = e.target.value;
-                          if (assignMode) setSelectedTaskIds(new Set());
-                          setAssigneeFilter(next);
-                        }}
+                    <div ref={assigneeMenuRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        aria-haspopup="listbox"
+                        aria-expanded={assigneeMenuOpen}
+                        aria-controls="assignee-filter-menu"
+                        onClick={() => setAssigneeMenuOpen(open => !open)}
                         style={{
-                          position: 'absolute',
-                          inset: 0,
-                          width: '100%',
-                          height: '100%',
-                          opacity: 0,
-                          cursor: 'pointer',
+                          appearance: 'none',
                           border: 'none',
                           background: 'transparent',
-                          appearance: 'none',
-                          WebkitAppearance: 'none',
+                          padding: 0,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          fontWeight: 700,
+                          color: '#1E3224',
+                          cursor: 'pointer',
                         }}
                       >
-                        <option value="">— All assignees —</option>
-                        <option value="unassigned">Unassigned</option>
-                        {assigneeOptions.map(opt => (
-                          <option key={opt.oracleId} value={opt.oracleId}>{opt.label}</option>
-                        ))}
-                      </select>
+                        <span>Assignee</span>
+                        <FaChevronDown
+                          size={11}
+                          style={{
+                            marginTop: 1,
+                            transition: 'transform 120ms',
+                            transform: assigneeMenuOpen ? 'rotate(180deg)' : 'none',
+                          }}
+                        />
+                      </button>
+                      {assigneeMenuOpen && (
+                        <div
+                          id="assignee-filter-menu"
+                          role="listbox"
+                          style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 6px)',
+                            left: 0,
+                            minWidth: 220,
+                            maxWidth: 280,
+                            maxHeight: 240,
+                            overflowY: 'auto',
+                            background: '#fff',
+                            border: '1px solid rgba(30,50,36,0.12)',
+                            borderRadius: 10,
+                            padding: 6,
+                            boxShadow: '0 10px 24px rgba(30,50,36,0.15)',
+                            zIndex: 20,
+                          }}
+                        >
+                          {assigneeMenuItems.map(item => {
+                            const isSelected = String(assigneeFilter) === String(item.value);
+                            return (
+                              <React.Fragment key={item.value === '' ? 'all' : item.value}>
+                                <button
+                                  type="button"
+                                  role="option"
+                                  aria-selected={isSelected}
+                                  onClick={() => applyAssigneeFilter(item.value)}
+                                  onMouseEnter={e => {
+                                    if (!isSelected) e.currentTarget.style.background = 'rgba(194,212,212,0.35)';
+                                  }}
+                                  onMouseLeave={e => {
+                                    if (!isSelected) e.currentTarget.style.background = 'transparent';
+                                  }}
+                                  style={{
+                                    width: '100%',
+                                    textAlign: 'left',
+                                    border: 'none',
+                                    background: isSelected ? 'rgba(199,70,52,0.12)' : 'transparent',
+                                    color: isSelected ? '#C74634' : '#1E3224',
+                                    padding: '6px 8px',
+                                    borderRadius: 8,
+                                    fontSize: 12,
+                                    fontWeight: isSelected ? 700 : 600,
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  {item.label}
+                                </button>
+                                {item.divider && (
+                                  <div style={{ height: 1, background: 'rgba(30,50,36,0.08)', margin: '4px 6px' }} />
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </th>
                   <th style={{ textAlign: 'right' }}>Points</th>
