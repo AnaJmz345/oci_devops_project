@@ -196,6 +196,24 @@
   font-size: 13px;
   font-weight: 700;
 }
+.TM-modal--compact {
+  width: min(520px, 96vw);
+}
+
+.TM-compact-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px;
+}
+
+.TM-helper {
+  margin: 0;
+  color: rgba(30, 50, 36, 0.62);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 600;
+}
 
 /* ── Footer ──────────────────────────────────────────── */
 .TM-footer {

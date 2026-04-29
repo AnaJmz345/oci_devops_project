@@ -119,4 +119,20 @@ public class TaskController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<?> completeTask(
+            @PathVariable Long id,
+            @RequestBody TaskCompletionRequest body) {
+        try {
+            Task updated = taskService.completeTask(id, body.getOracleId(), body.getRealTimeSpent());
+            return new ResponseEntity<>(updated, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error completing task " + id + ": " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

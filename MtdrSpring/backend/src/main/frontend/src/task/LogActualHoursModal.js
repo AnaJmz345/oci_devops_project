@@ -52,7 +52,7 @@ function LogActualHoursModal({
           </p>
 
           <div className="TM-field">
-            <label className="TM-label">Actual Hours</label>
+            <label className="TM-label">Actual Hours TU TIO2</label>
             <input
               className="TM-input"
               type="number"
