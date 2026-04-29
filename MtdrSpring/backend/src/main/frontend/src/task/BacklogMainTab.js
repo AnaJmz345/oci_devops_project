@@ -1,6 +1,6 @@
 import React from 'react';
 import { IoMdAddCircle } from 'react-icons/io';
-import { FaEdit } from 'react-icons/fa';
+import { FaChevronDown, FaEdit } from 'react-icons/fa';
 import { BsTrash3 } from 'react-icons/bs';
 import { FaBug } from 'react-icons/fa';
 
@@ -39,11 +39,23 @@ function BacklogMainTab({
     'BLOCKED':     { background: 'rgba(199,70,52,0.15)', color: '#C74634' },
   };
 
+  const [assigneeFilter, setAssigneeFilter] = React.useState('');
+  const [assigneeMenuOpen, setAssigneeMenuOpen] = React.useState(false);
+  const assigneeMenuRef = React.useRef(null);
+
   const showAllSprints = activeSprintId === 'all';
 
-  const filteredTasks = showAllSprints
+  const sprintFilteredTasks = showAllSprints
     ? backlogTasks
     : backlogTasks.filter(t => String(t.sprintId) === String(activeSprintId));
+
+  const visibleTasks = sprintFilteredTasks.filter(task => {
+    if (assigneeFilter === '') return true;
+    const assignee = taskAssignees?.[task.taskId];
+    const assigneeOracleId = assignee?.oracleId ?? assignee?.oracle_id;
+    if (assigneeFilter === 'unassigned') return !assigneeOracleId;
+    return String(assigneeOracleId) === String(assigneeFilter);
+  });
 
   const getSprintName = (sprintId) => {
     if (!sprintId) return 'Not assigned';
@@ -52,10 +64,48 @@ function BacklogMainTab({
   };
 
   const getAssigneeName = (taskId) => {
-    const assignee = taskAssignees[taskId];
+    const assignee = taskAssignees?.[taskId];
     if (!assignee) return null;
-    const u = users.find(u => String(u.oracleId) === String(assignee.oracleId));
+    const assigneeOracleId = assignee.oracleId ?? assignee.oracle_id;
+    const u = (users || []).find(u => String(u.oracleId ?? u.oracle_id) === String(assigneeOracleId));
     return u ? u.name.split(' ')[0] : null;
+  };
+
+  const assigneeOptions = (users || [])
+    .map(u => {
+      const oracleId = u.oracleId ?? u.oracle_id;
+      if (oracleId == null) return null;
+      const name = u.name || '';
+      const mail = u.mail || '';
+      const label = mail ? `${name} (${mail})` : name;
+      if (!label) return null;
+      return { oracleId: String(oracleId), label };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
+
+  React.useEffect(() => {
+    if (!assigneeMenuOpen) return;
+    const handleClick = (event) => {
+      if (assigneeMenuRef.current && !assigneeMenuRef.current.contains(event.target)) {
+        setAssigneeMenuOpen(false);
+      }
+    };
+    const handleKey = (event) => {
+      if (event.key === 'Escape') setAssigneeMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [assigneeMenuOpen]);
+
+  const applyAssigneeFilter = (next) => {
+    if (assignMode) setSelectedTaskIds(new Set());
+    setAssigneeFilter(next);
+    setAssigneeMenuOpen(false);
   };
 
   const toggleSelectTask = (taskId) => {
@@ -67,10 +117,10 @@ function BacklogMainTab({
   };
 
   const toggleSelectAll = () => {
-    if (selectedTaskIds.size === filteredTasks.length) {
+    if (selectedTaskIds.size === visibleTasks.length) {
       setSelectedTaskIds(new Set());
     } else {
-      setSelectedTaskIds(new Set(filteredTasks.map(t => t.taskId)));
+      setSelectedTaskIds(new Set(visibleTasks.map(t => t.taskId)));
     }
   };
 
@@ -112,7 +162,22 @@ function BacklogMainTab({
     setAssignSprintId('');
   };
 
-  const allSelected = filteredTasks.length > 0 && selectedTaskIds.size === filteredTasks.length;
+  const allSelected = visibleTasks.length > 0 && selectedTaskIds.size === visibleTasks.length;
+  const tableColumnCount =
+    (assignMode ? 1 : 0) +
+    1 + // Title
+    1 + // Category
+    1 + // Status
+    1 + // Due Date
+    (showAllSprints ? 1 : 0) +
+    1 + // Assignee
+    1 + // Points
+    (!assignMode && isManager ? 1 : 0);
+  const assigneeMenuItems = [
+    { value: '', label: 'All assignees' },
+    { value: 'unassigned', label: 'Unassigned', divider: true },
+    ...assigneeOptions.map(opt => ({ value: opt.oracleId, label: opt.label })),
+  ];
 
   return (
     <div className="VantagePage">
@@ -124,9 +189,9 @@ function BacklogMainTab({
         <div className="VantageCardTitle" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <span>
             Backlog items
-            {filteredTasks.length > 0 && (
+            {visibleTasks.length > 0 && (
               <span style={{ fontWeight: 500, color: 'rgba(30,50,36,0.5)', fontSize: 13 }}>
-                {' '}({filteredTasks.length})
+                {' '}({visibleTasks.length})
               </span>
             )}
           </span>
@@ -212,10 +277,6 @@ function BacklogMainTab({
         <div className="VantageCardBody">
           {backlogLoading ? (
             <div style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}>Loading tasks…</div>
-          ) : filteredTasks.length === 0 ? (
-            <div style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}>
-              No tasks {showAllSprints ? 'yet' : 'for this sprint'}.{isManager ? ' Click "+ Create Task" to add one.' : ''}
-            </div>
           ) : (
             <table className="VantageTable">
               <thead>
@@ -235,14 +296,116 @@ function BacklogMainTab({
                   <th>Status</th>
                   <th>Due Date</th>
                   {showAllSprints && <th>Sprint #</th>}
-                  <th>Assignee</th>
+                  <th style={{ minWidth: 130 }}>
+                    <div ref={assigneeMenuRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        aria-haspopup="listbox"
+                        aria-expanded={assigneeMenuOpen}
+                        aria-controls="assignee-filter-menu"
+                        onClick={() => setAssigneeMenuOpen(open => !open)}
+                        style={{
+                          appearance: 'none',
+                          border: 'none',
+                          background: 'transparent',
+                          padding: 0,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          fontWeight: 700,
+                          color: '#1E3224',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <span>Assignee</span>
+                        <FaChevronDown
+                          size={11}
+                          style={{
+                            marginTop: 1,
+                            transition: 'transform 120ms',
+                            transform: assigneeMenuOpen ? 'rotate(180deg)' : 'none',
+                          }}
+                        />
+                      </button>
+                      {assigneeMenuOpen && (
+                        <div
+                          id="assignee-filter-menu"
+                          role="listbox"
+                          style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 6px)',
+                            left: 0,
+                            minWidth: 220,
+                            maxWidth: 280,
+                            maxHeight: 240,
+                            overflowY: 'auto',
+                            background: '#fff',
+                            border: '1px solid rgba(30,50,36,0.12)',
+                            borderRadius: 10,
+                            padding: 6,
+                            boxShadow: '0 10px 24px rgba(30,50,36,0.15)',
+                            zIndex: 20,
+                          }}
+                        >
+                          {assigneeMenuItems.map(item => {
+                            const isSelected = String(assigneeFilter) === String(item.value);
+                            return (
+                              <React.Fragment key={item.value === '' ? 'all' : item.value}>
+                                <button
+                                  type="button"
+                                  role="option"
+                                  aria-selected={isSelected}
+                                  onClick={() => applyAssigneeFilter(item.value)}
+                                  onMouseEnter={e => {
+                                    if (!isSelected) e.currentTarget.style.background = 'rgba(194,212,212,0.35)';
+                                  }}
+                                  onMouseLeave={e => {
+                                    if (!isSelected) e.currentTarget.style.background = 'transparent';
+                                  }}
+                                  style={{
+                                    width: '100%',
+                                    textAlign: 'left',
+                                    border: 'none',
+                                    background: isSelected ? 'rgba(199,70,52,0.12)' : 'transparent',
+                                    color: isSelected ? '#C74634' : '#1E3224',
+                                    padding: '6px 8px',
+                                    borderRadius: 8,
+                                    fontSize: 12,
+                                    fontWeight: isSelected ? 700 : 600,
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  {item.label}
+                                </button>
+                                {item.divider && (
+                                  <div style={{ height: 1, background: 'rgba(30,50,36,0.08)', margin: '4px 6px' }} />
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </th>
                   <th style={{ textAlign: 'right' }}>Points</th>
                   <th style={{ textAlign: 'center' }}>Defects</th>
                   {!assignMode && isManager && <th style={{ textAlign: 'right' }}></th>}
                 </tr>
               </thead>
               <tbody>
-                {filteredTasks.map(task => {
+                {visibleTasks.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={tableColumnCount}
+                      style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}
+                    >
+                      {assigneeFilter !== ''
+                        ? 'No tasks for this assignee.'
+                        : (<>No tasks {showAllSprints ? 'yet' : 'for this sprint'}.{isManager ? ' Click "+ Create Task" to add one.' : ''}</>)}
+                    </td>
+                  </tr>
+                ) : (
+                  visibleTasks.map(task => {
                   const sc = STATUS_COLORS[task.status] || STATUS_COLORS['TODO'];
                   return (
                     <tr
@@ -476,7 +639,7 @@ function BacklogMainTab({
                       )}
                     </tr>
                   );
-                })}
+                }))}
               </tbody>
             </table>
           )}
