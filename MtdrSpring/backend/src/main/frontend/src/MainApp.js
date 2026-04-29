@@ -148,6 +148,7 @@ function MainApp() {
     sprints,
     users,
     taskAssignees,
+    setTaskAssignees,
     isManager,
   };
 
@@ -222,6 +223,7 @@ function MainApp() {
               sprints={sprints}
               users={users}
               taskAssignees={taskAssignees}
+              setTaskAssignees={setTaskAssignees}
             />
           )}
           {activePage === 'analytics' && isManager && (

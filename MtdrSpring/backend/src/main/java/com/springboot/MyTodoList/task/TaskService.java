@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -104,5 +105,29 @@ public class TaskService {
             if (estimatedCompletionTime != null) assignee.setEstimatedCompletionTime(estimatedCompletionTime);
             return taskAssigneeRepository.save(assignee);
         }).orElse(null);
+    }
+
+    @Transactional
+    public Task completeTask(Long taskId, Long oracleId, Double realTimeSpent) {
+        if (realTimeSpent == null || realTimeSpent < 0) {
+            throw new IllegalArgumentException("realTimeSpent must be a non-negative number.");
+        }
+
+        Task task = taskRepository.findById(taskId)
+            .orElseThrow(() -> new IllegalArgumentException("Task not found."));
+
+        if (oracleId == null) {
+            throw new IllegalArgumentException("oracleId is required to log actual hours.");
+        }
+
+        TaskAssignee.TaskAssigneeId pk = new TaskAssignee.TaskAssigneeId(taskId, oracleId);
+        TaskAssignee assignee = taskAssigneeRepository.findById(pk)
+            .orElseThrow(() -> new IllegalArgumentException("Task assignee not found."));
+
+        assignee.setRealTimeSpent(realTimeSpent);
+        taskAssigneeRepository.save(assignee);
+
+        task.setStatus("DONE");
+        return taskRepository.save(task);
     }
 }
