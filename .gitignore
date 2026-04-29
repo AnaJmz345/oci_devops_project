@@ -43,9 +43,16 @@ frontend/build
 .env.test.local
 .env.production.local
 .idea
+*.env
 
 frontend/package-lock.json
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
 /MtdrSpring/backend/wallet
+
+logs.log
+logs.log.*
+task-ia-debug.log
+*.log
+*.log.*
