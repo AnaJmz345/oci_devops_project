@@ -1,6 +1,6 @@
 import React from 'react';
 import { IoMdAddCircle } from 'react-icons/io';
-import { FaEdit } from 'react-icons/fa';
+import { FaChevronDown, FaEdit } from 'react-icons/fa';
 import { BsTrash3 } from 'react-icons/bs';
 
 function BacklogMainTab({
@@ -151,26 +151,6 @@ function BacklogMainTab({
             )}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <select
-              value={assigneeFilter}
-              onChange={e => {
-                const next = e.target.value;
-                if (assignMode) setSelectedTaskIds(new Set());
-                setAssigneeFilter(next);
-              }}
-              style={{
-                height: 32, border: '1.5px solid rgba(30,50,36,0.20)',
-                borderRadius: 8, padding: '0 10px', fontSize: 12,
-                fontWeight: 700, color: '#1E3224', background: '#fff',
-                cursor: 'pointer', outline: 'none',
-              }}
-            >
-              <option value="">— All assignees —</option>
-              <option value="unassigned">Unassigned</option>
-              {assigneeOptions.map(opt => (
-                <option key={opt.oracleId} value={opt.oracleId}>{opt.label}</option>
-              ))}
-            </select>
             {assignMode ? (
               <>
                 <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(30,50,36,0.6)' }}>
@@ -277,7 +257,39 @@ function BacklogMainTab({
                   <th>Status</th>
                   <th>Due Date</th>
                   {showAllSprints && <th>Sprint #</th>}
-                  <th>Assignee</th>
+                  <th style={{ minWidth: 130 }}>
+                    <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700, color: '#1E3224' }}>
+                      <span>Assignee</span>
+                      <FaChevronDown size={11} style={{ marginTop: 1 }} />
+                      <select
+                        aria-label="Filter by assignee"
+                        value={assigneeFilter}
+                        onChange={e => {
+                          const next = e.target.value;
+                          if (assignMode) setSelectedTaskIds(new Set());
+                          setAssigneeFilter(next);
+                        }}
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          width: '100%',
+                          height: '100%',
+                          opacity: 0,
+                          cursor: 'pointer',
+                          border: 'none',
+                          background: 'transparent',
+                          appearance: 'none',
+                          WebkitAppearance: 'none',
+                        }}
+                      >
+                        <option value="">— All assignees —</option>
+                        <option value="unassigned">Unassigned</option>
+                        {assigneeOptions.map(opt => (
+                          <option key={opt.oracleId} value={opt.oracleId}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </th>
                   <th style={{ textAlign: 'right' }}>Points</th>
                   {!assignMode && isManager && <th style={{ textAlign: 'right' }}></th>}
                 </tr>
