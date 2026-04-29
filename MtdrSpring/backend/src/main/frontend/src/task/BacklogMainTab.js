@@ -133,6 +133,16 @@ function BacklogMainTab({
   };
 
   const allSelected = visibleTasks.length > 0 && selectedTaskIds.size === visibleTasks.length;
+  const tableColumnCount =
+    (assignMode ? 1 : 0) +
+    1 + // Title
+    1 + // Category
+    1 + // Status
+    1 + // Due Date
+    (showAllSprints ? 1 : 0) +
+    1 + // Assignee
+    1 + // Points
+    (!assignMode && isManager ? 1 : 0);
 
   return (
     <div className="VantagePage">
@@ -232,12 +242,6 @@ function BacklogMainTab({
         <div className="VantageCardBody">
           {backlogLoading ? (
             <div style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}>Loading tasks…</div>
-          ) : visibleTasks.length === 0 ? (
-            <div style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}>
-              {assigneeFilter !== ''
-                ? 'No tasks for this assignee.'
-                : (<>No tasks {showAllSprints ? 'yet' : 'for this sprint'}.{isManager ? ' Click "+ Create Task" to add one.' : ''}</>)}
-            </div>
           ) : (
             <table className="VantageTable">
               <thead>
@@ -295,7 +299,19 @@ function BacklogMainTab({
                 </tr>
               </thead>
               <tbody>
-                {visibleTasks.map(task => {
+                {visibleTasks.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={tableColumnCount}
+                      style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(30,50,36,0.45)', fontSize: 13 }}
+                    >
+                      {assigneeFilter !== ''
+                        ? 'No tasks for this assignee.'
+                        : (<>No tasks {showAllSprints ? 'yet' : 'for this sprint'}.{isManager ? ' Click "+ Create Task" to add one.' : ''}</>)}
+                    </td>
+                  </tr>
+                ) : (
+                  visibleTasks.map(task => {
                   const sc = STATUS_COLORS[task.status] || STATUS_COLORS['TODO'];
                   return (
                     <tr
@@ -474,7 +490,7 @@ function BacklogMainTab({
                       )}
                     </tr>
                   );
-                })}
+                }))}
               </tbody>
             </table>
           )}
