@@ -1,0 +1,2 @@
+WALLET_LOCATION = (SOURCE = (METHOD = file) (METHOD_DATA = (DIRECTORY="C:/Users/pao_j/Documents/1_Principal/1_Escuela/Universidad/sextoSemestre/reto_Oracle/oci_devops_project/Wallet_reacttodogxdmp")))
+SSL_SERVER_DN_MATCH=yes
