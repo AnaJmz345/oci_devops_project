@@ -30,31 +30,40 @@ public class OracleConfiguration {
     @Bean
     public DataSource dataSource() throws SQLException{
         OracleDataSource ds = new OracleDataSource();
-        // For cloud/kubernetes deployment 
-                
-            ds.setDriverType(env.getProperty("driver_class_name"));
-            logger.info("Using Driver " + env.getProperty("driver_class_name"));
-            ds.setURL(env.getProperty("db_url"));
-            logger.info("Using URL: " + env.getProperty("db_url"));
-            ds.setUser(env.getProperty("db_user"));
-            logger.info("Using Username " + env.getProperty("db_user"));
-            ds.setPassword(env.getProperty("dbpassword"));
+        String driver = firstConfiguredValue(
+                env.getProperty("spring.datasource.driver-class-name"),
+                env.getProperty("driver_class_name"),
+                dbSettings.getDriver_class_name());
+        String url = firstConfiguredValue(
+                env.getProperty("spring.datasource.url"),
+                env.getProperty("db_url"),
+                dbSettings.getUrl());
+        String username = firstConfiguredValue(
+                env.getProperty("spring.datasource.username"),
+                env.getProperty("db_user"),
+                dbSettings.getUsername());
+        String password = firstConfiguredValue(
+                env.getProperty("spring.datasource.password"),
+                env.getProperty("dbpassword"),
+                dbSettings.getPassword());
 
-        
-
-        // Uncomment for local deployment
-        /* 
-        ds.setDriverType(dbSettings.getDriver_class_name());
-        logger.info("Using Driver " + dbSettings.getDriver_class_name());
-        ds.setURL(dbSettings.getUrl());
-        logger.info("Using URL: " + dbSettings.getUrl());
-        ds.setUser(dbSettings.getUsername());
-        logger.info("Using Username: " + dbSettings.getUsername());
-        ds.setPassword(dbSettings.getPassword());
-        */
-        
-        
+        ds.setDriverType(driver);
+        logger.info("Using Driver " + driver);
+        ds.setURL(url);
+        logger.info("Using URL: " + url);
+        ds.setUser(username);
+        logger.info("Using Username " + username);
+        ds.setPassword(password);
 
         return ds;
+    }
+
+    private String firstConfiguredValue(String... values) {
+        for (String value : values) {
+            if (value != null && !value.trim().isEmpty()) {
+                return value;
+            }
+        }
+        return null;
     }
 }

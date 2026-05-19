@@ -78,6 +78,14 @@ spec:
                   name: gemini-api-secret
                   key: DEEPSEEK_API_KEY
                   optional: false
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: telegram-bot-secret
+                  key: TELEGRAM_BOT_TOKEN
+                  optional: false
+            - name: TELEGRAM_BOT_NAME
+              value: "vantage_assistant_bot"
             
           volumeMounts:
             - name: creds
