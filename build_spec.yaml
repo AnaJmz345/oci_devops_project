@@ -1,38 +1,44 @@
-version: 0.1 
+version: 0.1
 component: build
-timeoutInSeconds: 600
+timeoutInSeconds: 1200
 shell: bash
+failImmediatelyOnError: true
 
 env:
   variables:
     JAVA_HOME: /usr/lib64/graalvm/graalvm-java22
-
   exportedVariables:
-    - BuildServiceDemoVersion
+    - IMAGE_TAG
 
 steps:
   - type: Command
-    name: "Install GraalVM Enterprise 22.x Native Image for Java22"
-    command:  yum -y install graalvm-22-jdk.x86_64;
-              ls /usr/lib64/graalvm/
+    name: "Install Java 22"
+    command: |
+      yum -y install graalvm-22-jdk.x86_64
+      export PATH=$JAVA_HOME/bin:$PATH
+      java -version
 
   - type: Command
-    name: "Set PATH Variable"
-    command: export PATH=$JAVA_HOME/bin:$PATH
+    name: "Create image tag"
+    command: |
+      IMAGE_TAG=$(echo ${OCI_BUILD_RUN_ID} | rev | cut -c 1-12)
+      echo "IMAGE_TAG=${IMAGE_TAG}"
 
   - type: Command
-    name: "Docker Login"
-    command:  cd MtdrSpring;
-              oci os object get --bucket-name reacttodo-ysmiy --name deployment_config.tgz --file deployment_config.tgz;
-              tar -xzvf deployment_config.tgz;
-              source env.sh;
-              cat at.cfg | docker login -u "axyyzvpljivg/adan0001@gmail.com" --password-stdin phx.ocir.io
+    name: "Build Spring Boot and React app"
+    command: |
+      export PATH=$JAVA_HOME/bin:$PATH
+      cd MtdrSpring/backend
+      chmod +x mvnw
+      ./mvnw -DskipTests clean package spring-boot:repackage
 
   - type: Command
-    name: "Build"
-    command:  cd MtdrSpring;
-              source env.sh;
-              (cd backend;source build.sh)
+    name: "Build Docker image"
+    command: |
+      cd MtdrSpring/backend
+      docker build -f Dockerfile -t todolistapp-springboot:local .
 
-
-
+outputArtifacts:
+  - name: todolist-image
+    type: DOCKER_IMAGE
+    location: todolistapp-springboot:local
