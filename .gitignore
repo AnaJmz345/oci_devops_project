@@ -60,4 +60,4 @@ task-ia-debug.log
 MtdrSpring/backend/src/main/resources/application-local.properties
 MtdrSpring/backend/src/main/resources/application-*.local.properties
 MtdrSpring/backend/wallet/
-Wallet_*/
+Wallet_*/doc/.structurizr/
