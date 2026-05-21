@@ -61,3 +61,4 @@ MtdrSpring/backend/src/main/resources/application-local.properties
 MtdrSpring/backend/src/main/resources/application-*.local.properties
 MtdrSpring/backend/wallet/
 Wallet_*/doc/.structurizr/
+/doc/.structurizr/
