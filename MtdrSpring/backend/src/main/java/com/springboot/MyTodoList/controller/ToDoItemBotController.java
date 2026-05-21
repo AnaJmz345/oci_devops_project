@@ -101,6 +101,8 @@ public class ToDoItemBotController  implements SpringLongPollingBot, LongPolling
 		actions.fnDelete();
 		actions.fnHide();
 		actions.fnCreateTaskFromNaturalLanguage();
+		actions.fnCompletedTasksBySprint();
+		actions.fnCompletedTasksByUserInSprint();
 		actions.translateNaturalLanguageIntent();
 		actions.fnListAll();
 		actions.fnAddItem();
@@ -115,5 +117,4 @@ public class ToDoItemBotController  implements SpringLongPollingBot, LongPolling
     }
 
 }
-
 

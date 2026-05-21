@@ -39,19 +39,6 @@ public class NaturalLanguageIntentService {
             return UNKNOWN;
         }
 
-        String modelIntent = detectIntentWithModel(userMessage);
-        debug("Intent detected by model: " + modelIntent);
-
-        if (LIST_TASKS.equals(modelIntent)) {
-            debug("Final intent: " + LIST_TASKS + " using AI");
-            return LIST_TASKS;
-        }
-
-        if (CREATE_TASK.equals(modelIntent)) {
-            debug("Final intent: " + CREATE_TASK + " using AI");
-            return CREATE_TASK;
-        }
-
         if (looksLikeListTasksRequest(userMessage)) {
             debug("Final intent: " + LIST_TASKS + " using local fallback");
             return LIST_TASKS;

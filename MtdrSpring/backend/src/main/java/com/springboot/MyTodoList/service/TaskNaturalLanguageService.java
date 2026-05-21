@@ -41,6 +41,15 @@ public class TaskNaturalLanguageService {
         debug("Received message for task creation:");
         debug(userMessage);
 
+        TaskDraft draft = new TaskDraft();
+        draft.setOriginalMessage(userMessage);
+        applyFallbacks(draft, userMessage);
+        debug("Draft built with local fallback only:");
+        debug(draft.toDebugString());
+        return draft;
+    }
+
+    public TaskDraft extractTaskDraftWithAi(String userMessage) {
         String prompt = "Extract data to create a task. "
                 + "Reply ONLY with valid JSON, no markdown and no explanations. "
                 + "Expected fields: taskName, description, dueDate, sprintId, assigneeEmail. "
@@ -111,8 +120,8 @@ public class TaskNaturalLanguageService {
             return localDate;
         }
 
-        debug("Could not extract date locally. Trying AI.");
-        return extractTaskDraft("due date: " + userMessage).getDueDate();
+        debug("Could not extract date locally.");
+        return null;
     }
 
     private String extractAssistantContent(String response) {
@@ -175,15 +184,17 @@ public class TaskNaturalLanguageService {
     }
 
     private void applyFallbacks(TaskDraft draft, String userMessage) {
+        applyPipeCommandFallback(draft, userMessage);
+
         if (draft.getTaskName() == null) {
             draft.setTaskName(extractBetween(userMessage,
-                    "(?:called|named|titled)\\s+",
+                    "(?:called|named|titled|llamada|llamado|nombre|nombrada|nombrado)\\s+",
                     ",?\\s+(?:with|and)\\s+(?:the\\s+)?description|,?\\s+(?:due|with\\s+due\\s+date|deadline|by)|,?\\s+(?:for|in|belongs\\s+to)\\s+sprint|$"));
         }
 
         if (draft.getDescription() == null) {
             draft.setDescription(extractBetween(userMessage,
-                    "(?:with|and)\\s+(?:the\\s+)?description\\s+(?:as\\s+|of\\s+|to\\s+)?",
+                    "(?:with|and|con|y)\\s+(?:the\\s+|la\\s+)?(?:description|descripcion)\\s+(?:as\\s+|of\\s+|to\\s+|de\\s+)?",
                     ",?\\s+(?:due|with\\s+due\\s+date|deadline|by)|,?\\s+(?:for|in|belongs\\s+to)\\s+sprint|$"));
         }
 
@@ -204,6 +215,53 @@ public class TaskNaturalLanguageService {
                 draft.setAssigneeEmail(matcher.group());
             }
         }
+    }
+
+    private void applyPipeCommandFallback(TaskDraft draft, String userMessage) {
+        String payload = removeCreateCommand(userMessage);
+        String[] parts = payload.split("\\|");
+        if (parts.length < 2) {
+            return;
+        }
+
+        if (draft.getTaskName() == null && !parts[0].trim().isBlank()) {
+            draft.setTaskName(cleanLabeledValue(parts[0]));
+        }
+        if (draft.getDescription() == null && parts.length > 1 && !parts[1].trim().isBlank()) {
+            draft.setDescription(cleanLabeledValue(parts[1]));
+        }
+        if (draft.getDueDate() == null && parts.length > 2) {
+            draft.setDueDate(parseDateLocally(parts[2]));
+        }
+        if (draft.getAssigneeEmail() == null && parts.length > 3) {
+            Matcher matcher = EMAIL_PATTERN.matcher(parts[3]);
+            if (matcher.find()) {
+                draft.setAssigneeEmail(matcher.group());
+            }
+        }
+        if (draft.getSprintId() == null && parts.length > 4) {
+            Matcher matcher = SPRINT_PATTERN.matcher(parts[4]);
+            if (matcher.find()) {
+                draft.setSprintId(Long.valueOf(matcher.group(1)));
+            }
+        }
+    }
+
+    private String removeCreateCommand(String userMessage) {
+        String value = userMessage == null ? "" : userMessage.trim();
+        String normalized = normalize(value);
+        if (normalized.startsWith("/creartarea")) {
+            return value.substring("/creartarea".length()).trim();
+        }
+        if (normalized.startsWith("crear tarea")) {
+            return value.substring("crear tarea".length()).trim();
+        }
+        return value;
+    }
+
+    private String cleanLabeledValue(String value) {
+        return value.replaceFirst("(?i)^\\s*(nombre|titulo|title|name|descripcion|description)\\s*:\\s*", "")
+                .trim();
     }
 
     private String extractBetween(String text, String startRegex, String endRegex) {
