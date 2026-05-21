@@ -87,7 +87,7 @@ function MainApp() {
 
   useEffect(() => {
     if (user) {
-      setActivePage('overview');
+      setActivePage('backlog');
       fetchSprints();
       fetch('/users')
         .then(r => r.ok ? r.json() : [])
