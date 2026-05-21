@@ -14,7 +14,6 @@ import AnalyticsPage from './analytics/AnalyticsPage';
 
 import VantageSidebar from './VantageSidebar';
 import VantageTopbar from './VantageTopbar';
-import OverviewTab from './task/OverviewTab';
 import BacklogMainTab from './task/BacklogMainTab';
 import DashboardMainTab from './task/DashboardMainTab';
 import CalendarMainTab from './task/CalendarMainTab';
@@ -22,7 +21,7 @@ import CalendarMainTab from './task/CalendarMainTab';
 function MainApp() {
   const { user } = useAuth();
   const [page, setPage] = useState('login');
-  const [activePage, setActivePage] = useState('overview');
+  const [activePage, setActivePage] = useState('backlog');
   const [activeSprintId, setActiveSprintId] = useState('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isProjectsOpen, setIsProjectsOpen] = useState(true);
@@ -114,7 +113,7 @@ function MainApp() {
   const activeTeamName = 'PLACEHOLDER TEAM';
 
   const projectPages = [
-    { id: 'overview',  label: 'OVERVIEW' },
+   
     { id: 'backlog',   label: 'BACKLOG' },
     { id: 'board',     label: 'BOARD' },
     ...(isManager ? [{ id: 'analytics', label: 'ANALYTICS' }] : []),
@@ -131,12 +130,12 @@ function MainApp() {
 
   const pageTitle = (
     {
-      overview:  'Overview',
+     
       backlog:   'Backlog',
       board:     'Board',
       analytics: 'Analytics',
       calendar:  'Calendar',
-    }[activePage] || 'Overview'
+    }[activePage] || 'Backlog' //DEMO
   );
 
   const sharedTaskProps = {
@@ -188,12 +187,7 @@ function MainApp() {
         />
 
         <main className="VantageContent">
-          {activePage === 'overview' && (
-            <OverviewTab
-              activeProjectName={activeProjectName}
-              activeSprintLabel={activeSprintLabel}
-            />
-          )}
+          
           {activePage === 'backlog' && (
             <BacklogMainTab
               {...sharedTaskProps}

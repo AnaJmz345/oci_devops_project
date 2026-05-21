@@ -28,7 +28,7 @@ function VantageTopbar({
         <div>
           <div className="VantageTopbarTitle">{pageTitle}</div>
           <div className="VantageTopbarMeta">
-            Project USING CI/CD: {activeProjectName} • Team: {activeTeamName} • Sprint: {activeSprintLabel}
+            Project: {activeProjectName} • Team: {activeTeamName} • Sprint: {activeSprintLabel}
             {userName && <span> • 👤 {userName}</span>}
           </div>
         </div>
