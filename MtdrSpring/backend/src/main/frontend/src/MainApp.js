@@ -21,13 +21,14 @@ import CalendarMainTab from './task/CalendarMainTab';
 function MainApp() {
   const { user } = useAuth();
   const [page, setPage] = useState('login');
-  const [activePage, setActivePage] = useState('backlog');
+  const [activePage, setActivePage] = useState('backlog'); 
   const [activeSprintId, setActiveSprintId] = useState('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isProjectsOpen, setIsProjectsOpen] = useState(true);
   const [isProjectOpen, setIsProjectOpen] = useState(true);
   const [isTeamsOpen, setIsTeamsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -37,6 +38,7 @@ function MainApp() {
   const [assigning, setAssigning] = useState(false);
   const [backlogTasks, setBacklogTasks] = useState([]);
   const [backlogLoading, setBacklogLoading] = useState(false);
+
   const [sprints, setSprints] = useState([]);
   const [users, setUsers] = useState([]);
   const [taskAssignees, setTaskAssignees] = useState({});
@@ -135,7 +137,7 @@ function MainApp() {
       board:     'Board',
       analytics: 'Analytics',
       calendar:  'Calendar',
-    }[activePage] || 'Backlog' //DEMO
+    }[activePage] || 'Backlog' 
   );
 
   const sharedTaskProps = {
