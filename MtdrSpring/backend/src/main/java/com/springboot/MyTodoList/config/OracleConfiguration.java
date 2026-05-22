@@ -47,8 +47,14 @@ public class OracleConfiguration {
                 env.getProperty("dbpassword"),
                 dbSettings.getPassword());
 
-        ds.setDriverType(driver);
-        logger.info("Using Driver " + driver);
+        validateOracleConfiguration(url, username, password);
+
+        if (isOracleDriverType(driver)) {
+            ds.setDriverType(driver);
+            logger.info("Using Oracle driver type " + driver);
+        } else {
+            logger.info("Using Oracle JDBC driver class " + driver);
+        }
         ds.setURL(url);
         logger.info("Using URL: " + url);
         ds.setUser(username);
@@ -65,5 +71,28 @@ public class OracleConfiguration {
             }
         }
         return null;
+    }
+
+    private void validateOracleConfiguration(String url, String username, String password) {
+        if (url == null || url.trim().isEmpty()) {
+            throw new IllegalStateException("Missing Oracle database URL. Set SPRING_DATASOURCE_URL or run locally with: mvn spring-boot:run \"-Dspring-boot.run.profiles=local\"");
+        }
+        if (!url.trim().startsWith("jdbc:oracle:")) {
+            throw new IllegalStateException("Invalid Oracle database URL. Expected it to start with jdbc:oracle:, but got: " + url);
+        }
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalStateException("Missing Oracle database username. Set SPRING_DATASOURCE_USERNAME or spring.datasource.username.");
+        }
+        if (password == null || password.trim().isEmpty()) {
+            throw new IllegalStateException("Missing Oracle database password. Set SPRING_DATASOURCE_PASSWORD or spring.datasource.password.");
+        }
+    }
+
+    private boolean isOracleDriverType(String driver) {
+        if (driver == null) {
+            return false;
+        }
+        String value = driver.trim().toLowerCase();
+        return value.equals("thin") || value.equals("oci") || value.equals("kprb");
     }
 }
