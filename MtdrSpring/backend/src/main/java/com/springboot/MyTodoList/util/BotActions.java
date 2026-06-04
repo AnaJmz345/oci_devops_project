@@ -18,7 +18,10 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -45,6 +48,8 @@ public class BotActions{
     UserService userService;
     SprintService sprintService;
     String detectedIntent;
+
+    private static final String NO_SPRINT = "NO SPRINT";
 
     public BotActions(TelegramClient tc, ToDoItemService ts, DeepSeekService ds,
             NaturalLanguageIntentService nlIntentService, TaskService taskSvc,
@@ -198,12 +203,14 @@ public class BotActions{
     }
 
     public void fnListAll(){
-        if (!(requestText.equals(BotCommands.TODO_LIST.getCommand())
+                boolean isListCommand = requestText.equals(BotCommands.TODO_LIST.getCommand())
 				|| requestText.equals(BotLabels.LIST_ALL_ITEMS.getLabel())
-				|| requestText.equals(BotLabels.MY_TODO_LIST.getLabel())) || exit)
+				|| requestText.equals(BotLabels.MY_TODO_LIST.getLabel());
+                if (!isListCommand || exit)
             return;
-        logger.info("todoSvc: "+todoService);
-        List<ToDoItem> allItems = todoService.findAll();
+
+        logger.info("todoSvc: " + todoService);
+
         ReplyKeyboardMarkup keyboardMarkup = ReplyKeyboardMarkup.builder()
             .resizeKeyboard(true)
             .oneTimeKeyboard(false)
@@ -224,47 +231,48 @@ public class BotActions{
         myTodoListTitleRow.add(BotLabels.MY_TODO_LIST.getLabel());
         keyboard.add(myTodoListTitleRow);
 
-        List<ToDoItem> activeItems = allItems.stream().filter(item -> "TODO".equalsIgnoreCase(item.getDone()))
-                .collect(Collectors.toList());
+        List<TaskView> taskViews = buildTaskViews();
+        Map<String, List<TaskView>> tasksBySprint = groupBySprint(taskViews);
 
-        StringBuilder responseText = new StringBuilder("Here are all your tasks:");
+        StringBuilder responseText = new StringBuilder("<b>HERE ARE ALL YOUR TASKS:</b>");
 
-        if (activeItems.isEmpty() && allItems.stream().noneMatch(item -> "DONE".equalsIgnoreCase(item.getDone()))) {
-            responseText.append("\n\nYou do not have any tasks yet.");
+        boolean hasAnyTasks = !taskViews.isEmpty();
+        if (!hasAnyTasks) {
+            responseText.append("\n\n<i>You do not have any tasks yet.</i>");
         }
 
-        if (!activeItems.isEmpty()) {
-            responseText.append("\n\nPending:");
-        }
+        for (Map.Entry<String, List<TaskView>> entry : tasksBySprint.entrySet()) {
+            String sprintName = entry.getKey();
+            List<TaskView> sprintTasks = entry.getValue();
 
-        for (ToDoItem item : activeItems) {
-            responseText.append("\n- ")
-                    .append(item.getDescription())
-                    .append(" [TODO]");
+            responseText.append("\n\n<b>SPRINT: ")
+                    .append(BotHelper.escapeHtml(sprintName.toUpperCase()))
+                    .append("</b>");
 
-            KeyboardRow currentRow = new KeyboardRow();
-            currentRow.add(item.getDescription());
-            currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.DONE.getLabel());
-            keyboard.add(currentRow);
-        }
+            List<TaskView> todoItems = filterByStatus(sprintTasks, "TODO");
+            List<TaskView> inProgressItems = filterByStatus(sprintTasks, "IN PROGRESS");
+            List<TaskView> blockedItems = filterByStatus(sprintTasks, "BLOCKED");
+            List<TaskView> doneItems = filterByStatus(sprintTasks, "DONE");
 
-        List<ToDoItem> doneItems = allItems.stream().filter(item -> "DONE".equalsIgnoreCase(item.getDone()))
-                .collect(Collectors.toList());
+            if (!todoItems.isEmpty()) {
+                appendStatusSection(responseText, "TODO", todoItems, null);
+                addKeyboardRows(todoItems, false, keyboard);
+            }
 
-        if (!doneItems.isEmpty()) {
-            responseText.append("\n\nCompleted:");
-        }
+            if (!inProgressItems.isEmpty()) {
+                appendStatusSection(responseText, "IN PROGRESS", inProgressItems, null);
+                addKeyboardRows(inProgressItems, false, keyboard);
+            }
 
-        for (ToDoItem item : doneItems) {
-            responseText.append("\n- ")
-                    .append(item.getDescription())
-                    .append(" [DONE]");
+            if (!blockedItems.isEmpty()) {
+                appendStatusSection(responseText, "BLOCKED", blockedItems, null);
+                addKeyboardRows(blockedItems, false, keyboard);
+            }
 
-            KeyboardRow currentRow = new KeyboardRow();
-            currentRow.add(item.getDescription());
-            currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.UNDO.getLabel());
-            currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.DELETE.getLabel());
-            keyboard.add(currentRow);
+            if (!doneItems.isEmpty()) {
+                appendStatusSection(responseText, "DONE", doneItems, null);
+                addKeyboardRows(doneItems, true, keyboard);
+            }
         }
 
         KeyboardRow mainScreenRowBottom = new KeyboardRow();
@@ -273,7 +281,7 @@ public class BotActions{
 
         keyboardMarkup.setKeyboard(keyboard);
 
-        BotHelper.sendMessageToTelegram(chatId, responseText.toString(), telegramClient,  keyboardMarkup);
+        BotHelper.sendMessageToTelegram(chatId, responseText.toString(), telegramClient, keyboardMarkup);
         exit = true;
     }
 
@@ -311,7 +319,7 @@ public class BotActions{
 
         }
 
-        BotHelper.sendMessageToTelegram(chatId, "LLM: "+out, telegramClient, null);
+        BotHelper.sendMessageToTelegram(chatId, "<b>LLM:</b> " + BotHelper.escapeHtml(out), telegramClient, null);
 
     }
 
@@ -435,10 +443,10 @@ public class BotActions{
             return "There are no registered developers.";
         }
 
-        StringBuilder message = new StringBuilder("Registered developers:");
+        StringBuilder message = new StringBuilder("<b>Registered developers:</b>");
         developers.stream()
                 .sorted(Comparator.comparing(User::getMail))
-                .forEach(user -> message.append("\n- ").append(user.getMail()));
+            .forEach(user -> message.append("\n- ").append(BotHelper.escapeHtml(user.getMail())));
         return message.toString();
     }
 
@@ -452,13 +460,13 @@ public class BotActions{
             return "There are no registered sprints.";
         }
 
-        StringBuilder message = new StringBuilder("Registered sprints:");
+        StringBuilder message = new StringBuilder("<b>Registered sprints:</b>");
         sprints.stream()
                 .sorted(Comparator.comparing(Sprint::getSprintName))
                 .forEach(sprint -> message.append("\n- ")
-                        .append(sprint.getSprintName())
+                .append(BotHelper.escapeHtml(sprint.getSprintName()))
                         .append(" (internal ID: ")
-                        .append(sprint.getSprintId())
+                .append(BotHelper.escapeHtml(String.valueOf(sprint.getSprintId())))
                         .append(")"));
         return message.toString();
     }
@@ -482,16 +490,190 @@ public class BotActions{
         taskAssignee.setRealTimeSpent(0.0);
         taskService.assignTask(taskAssignee);
 
-        BotHelper.sendMessageToTelegram(
-                chatId,
-                "Task created:\n- " + savedTask.getTaskName()
-                        + "\nDescription: " + valueOrEmpty(savedTask.getDescription())
-                        + "\nDue date: " + savedTask.getDueDate()
-                        + "\nSprint: " + (sprint == null ? "No data" : sprint.getSprintName())
-                        + "\nAssigned to: " + assignee.getName() + " (" + assignee.getMail() + ")",
-                telegramClient,
-                null
-        );
+        String message = "<b>Task created</b>\n"
+            + "Name: <b>" + BotHelper.escapeHtml(savedTask.getTaskName()) + "</b>\n"
+            + "Description: " + BotHelper.escapeHtml(valueOrEmpty(savedTask.getDescription())) + "\n"
+            + "Due date: <code>" + BotHelper.escapeHtml(String.valueOf(savedTask.getDueDate())) + "</code>\n"
+            + "Sprint: " + BotHelper.escapeHtml(sprint == null ? "No data" : sprint.getSprintName()) + "\n"
+            + "Assigned to: " + BotHelper.escapeHtml(assignee.getName()) + " ("
+            + BotHelper.escapeHtml(assignee.getMail()) + ")";
+
+        BotHelper.sendMessageToTelegram(chatId, message, telegramClient, null);
+    }
+
+    private List<TaskView> buildTaskViews() {
+        List<TaskView> views = new ArrayList<>();
+        if (taskService != null) {
+            Map<Long, String> sprintNames = loadSprintNames();
+            List<Task> tasks = taskService.findAll();
+            for (Task task : tasks) {
+                String sprintName = resolveSprintName(task.getSprintId(), sprintNames);
+                views.add(new TaskView(
+                        task.getTaskId() == null ? 0L : task.getTaskId(),
+                        task.getTaskName(),
+                        normalizeStatus(task.getStatus()),
+                        sprintName
+                ));
+            }
+            return views;
+        }
+
+        if (todoService != null) {
+            List<ToDoItem> allItems = todoService.findAll();
+            for (ToDoItem item : allItems) {
+                views.add(new TaskView(
+                        item.getID(),
+                        item.getDescription(),
+                        normalizeStatus(item.getDone()),
+                        NO_SPRINT
+                ));
+            }
+        }
+
+        return views;
+    }
+
+    private Map<Long, String> loadSprintNames() {
+        Map<Long, String> sprintNames = new HashMap<>();
+        if (sprintService == null) {
+            return sprintNames;
+        }
+
+        List<Sprint> sprints = sprintService.findAll();
+        for (Sprint sprint : sprints) {
+            if (sprint.getSprintId() != null) {
+                sprintNames.put(sprint.getSprintId(), sprint.getSprintName());
+            }
+        }
+        return sprintNames;
+    }
+
+    private String resolveSprintName(Long sprintId, Map<Long, String> sprintNames) {
+        if (sprintId == null) {
+            return NO_SPRINT;
+        }
+        String sprintName = sprintNames.get(sprintId);
+        if (sprintName == null || sprintName.isBlank()) {
+            return NO_SPRINT;
+        }
+        return sprintName;
+    }
+
+    private Map<String, List<TaskView>> groupBySprint(List<TaskView> taskViews) {
+        List<TaskView> sorted = new ArrayList<>(taskViews);
+        sorted.sort(Comparator.comparing(TaskView::getSprintName, this::compareSprintNames)
+                .thenComparing(TaskView::getTitle, String.CASE_INSENSITIVE_ORDER));
+
+        return sorted.stream()
+                .collect(Collectors.groupingBy(TaskView::getSprintName, LinkedHashMap::new, Collectors.toList()));
+    }
+
+    private int compareSprintNames(String left, String right) {
+        if (NO_SPRINT.equals(left) && NO_SPRINT.equals(right)) {
+            return 0;
+        }
+        if (NO_SPRINT.equals(left)) {
+            return 1;
+        }
+        if (NO_SPRINT.equals(right)) {
+            return -1;
+        }
+        return left.compareToIgnoreCase(right);
+    }
+
+    private List<TaskView> filterByStatus(List<TaskView> tasks, String status) {
+        return tasks.stream()
+                .filter(task -> status.equals(task.getStatus()))
+                .collect(Collectors.toList());
+    }
+
+    private void appendStatusSection(StringBuilder responseText, String status, List<TaskView> items, String meta) {
+        if (items.isEmpty()) {
+            return;
+        }
+        String heading = statusHeading(status, items.size(), meta);
+        responseText.append("\n\n<b>").append(heading).append("</b>");
+        for (TaskView item : items) {
+            responseText.append("\n- ")
+                    .append(BotHelper.escapeHtml(item.getTitle()));
+        }
+    }
+
+    private String statusHeading(String status, int count, String meta) {
+        String base = statusEmoji(status) + " " + status + " (" + count + ")";
+        if (meta == null || meta.isBlank()) {
+            return base;
+        }
+        return base + " - " + meta;
+    }
+
+    private String statusEmoji(String status) {
+        switch (status) {
+            case "IN PROGRESS":
+                return "\uD83D\uDFE1"; // yellow circle
+            case "DONE":
+                return "\uD83D\uDFE2"; // green circle
+            case "BLOCKED":
+                return "\uD83D\uDD34"; // red circle
+            case "TODO":
+            default:
+                return "\u26AB"; // black circle
+        }
+    }
+
+    private String normalizeStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return "TODO";
+        }
+        String normalized = status.trim().toUpperCase();
+        if ("IN_PROGRESS".equals(normalized)) {
+            return "IN PROGRESS";
+        }
+        return normalized;
+    }
+
+    private void addKeyboardRows(List<TaskView> items, boolean isDone, List<KeyboardRow> keyboard) {
+        for (TaskView item : items) {
+            KeyboardRow currentRow = new KeyboardRow();
+            currentRow.add(item.getTitle());
+            if (isDone) {
+                currentRow.add(item.getId() + BotLabels.DASH.getLabel() + BotLabels.UNDO.getLabel());
+                currentRow.add(item.getId() + BotLabels.DASH.getLabel() + BotLabels.DELETE.getLabel());
+            } else {
+                currentRow.add(item.getId() + BotLabels.DASH.getLabel() + BotLabels.DONE.getLabel());
+            }
+            keyboard.add(currentRow);
+        }
+    }
+
+    private static class TaskView {
+        private final long id;
+        private final String title;
+        private final String status;
+        private final String sprintName;
+
+        private TaskView(long id, String title, String status, String sprintName) {
+            this.id = id;
+            this.title = title == null ? "" : title;
+            this.status = status == null ? "TODO" : status;
+            this.sprintName = sprintName == null ? NO_SPRINT : sprintName;
+        }
+
+        private long getId() {
+            return id;
+        }
+
+        private String getTitle() {
+            return title;
+        }
+
+        private String getStatus() {
+            return status;
+        }
+
+        private String getSprintName() {
+            return sprintName;
+        }
     }
 
     private String valueOrEmpty(Object value) {
