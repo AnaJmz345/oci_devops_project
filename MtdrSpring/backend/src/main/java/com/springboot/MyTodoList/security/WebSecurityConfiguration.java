@@ -1,3 +1,4 @@
+/*  Este cambio hace que Spring ya no permita todo, sino que mande a OCI Login cuando alguien intente entrar a una ruta protegida. */
 package com.springboot.MyTodoList.security;
 
 import org.springframework.context.annotation.Bean;
@@ -8,20 +9,37 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfiguration {
-    
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll() // Permitir todo sin autenticación
+                .requestMatchers(
+                    "/",
+                    "/index.html",
+                    "/static/**",
+                    "/favicon.ico",
+                    "/manifest.json",
+                    "/asset-manifest.json",
+                    "/robots.txt",
+                    "/actuator/health"
+                ).permitAll()
+                .anyRequest().authenticated()
             )
-            .csrf(csrf -> csrf.disable()) // Desactivar CSRF si no usas formularios
-            .httpBasic(httpBasic -> httpBasic.disable()) // Desactivar autenticación básica
-            .formLogin(formLogin -> formLogin.disable()); // Desactivar login por formulario
+            .csrf(csrf -> csrf.disable())
+            .httpBasic(httpBasic -> httpBasic.disable())
+            .formLogin(formLogin -> formLogin.disable())
+            .oauth2Login(oauth2 -> oauth2
+                .defaultSuccessUrl("http://localhost:3000/", true)
+            )
+            .logout(logout -> logout
+                .logoutSuccessUrl("http://localhost:3000/")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+            );
 
         return http.build();
     }
@@ -30,5 +48,4 @@ public class WebSecurityConfiguration {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }
