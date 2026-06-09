@@ -37,12 +37,21 @@ export function AuthProvider({ children }) {
     window.location.href = 'http://localhost:8080/oauth2/authorization/oci';
   };
 
-  const logout = () => {
+  const logout = async () => {
     localStorage.removeItem('vantage_user');
     setUser(null);
-    window.location.href = '/logout';
-  };
 
+    try {
+      await fetch('/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Error closing Spring session:', error);
+    }
+
+    window.location.href = 'http://localhost:3000';
+  };
   return (
     <AuthContext.Provider
       value={{

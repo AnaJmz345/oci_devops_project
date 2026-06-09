@@ -38,8 +38,10 @@ public class WebSecurityConfiguration {
                 .defaultSuccessUrl("http://localhost:3000/", true)
             )
             .logout(logout -> logout
+                .logoutUrl("/logout")
                 .logoutSuccessUrl("http://localhost:3000/")
                 .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
                 .clearAuthentication(true)
             );
 
