@@ -11,6 +11,7 @@ import CreateSprintModal from './sprint/CreateSprintModal';
 import ReportBugModal from './bug/ReportBugModal';
 import ViewBugsModal from './bug/ViewBugsModal';
 import AnalyticsPage from './analytics/AnalyticsPage';
+import AIAnalyticsPage from './analytics/AIAnalyticsPage';
 
 import VantageSidebar from './VantageSidebar';
 import VantageTopbar from './VantageTopbar';
@@ -117,7 +118,10 @@ function MainApp() {
     { id: 'overview',  label: 'OVERVIEW' },
     { id: 'backlog',   label: 'BACKLOG' },
     { id: 'board',     label: 'BOARD' },
-    ...(isManager ? [{ id: 'analytics', label: 'ANALYTICS' }] : []),
+    ...(isManager ? [
+      { id: 'analytics', label: 'ANALYTICS' },
+      { id: 'ai-analytics', label: 'AI ANALYTICS' },
+    ] : []),
     { id: 'calendar',  label: 'CALENDAR' },
   ];
 
@@ -135,6 +139,7 @@ function MainApp() {
       backlog:   'Backlog',
       board:     'Board',
       analytics: 'Analytics',
+      'ai-analytics': 'AI Analytics',
       calendar:  'Calendar',
     }[activePage] || 'Overview'
   );
@@ -228,6 +233,9 @@ function MainApp() {
           )}
           {activePage === 'analytics' && isManager && (
             <AnalyticsPage sprints={sprints} activeSprintId={activeSprintId} />
+          )}
+          {activePage === 'ai-analytics' && isManager && (
+            <AIAnalyticsPage activeSprintId={activeSprintId} />
           )}
           {activePage === 'calendar' && (
             <CalendarMainTab

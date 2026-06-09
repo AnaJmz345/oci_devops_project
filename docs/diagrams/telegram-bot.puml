@@ -1,0 +1,235 @@
+@startuml
+
+class BotActions {
+	{field} {static} -EMAIL_PATTERN : Pattern
+	{field} {static} -NUMBER_PATTERN : Pattern
+	{field} ~chatId : long
+	{field} ~detectedIntent : String
+	{field} ~exit : boolean
+	{field} {static} -logger : Logger
+	{field} ~requestText : String
+	{field} ~sprintService : SprintService
+	{field} ~taskService : TaskService
+	{field} ~telegramClient : TelegramClient
+	{method} -commandPayload ( text : String ) : String
+	{method} -completedTasksMessage ( title : String , tasks : List ) : String
+	{method} -createTask ( draft : TaskDraft , assignee : User , sprint : Sprint ) : void
+	{method} -createTaskHelpMessage () : String
+	{method} -developerEmailsMessage () : String
+	{method} -firstEmail ( text : String ) : String
+	{method} -firstNumber ( text : String ) : Long
+	{method} +fnAddItem () : void
+	{method} +fnCompletedTasksBySprint () : void
+	{method} +fnCompletedTasksByUserInSprint () : void
+	{method} +fnCreateTaskFromNaturalLanguage () : void
+	{method} +fnDelete () : void
+	{method} +fnDone () : void
+	{method} +fnElse () : void
+	{method} +fnHide () : void
+	{method} +fnLLM () : void
+	{method} +fnListAll () : void
+	{method} +fnStart () : void
+	{method} +fnUndo () : void
+	{method} -handleTaskDraft ( chatKey : Long , draft : TaskDraft ) : void
+	{method} -isCompletedBySprintCommand ( text : String ) : boolean
+	{method} -isCompletedByUserSprintCommand ( text : String ) : boolean
+	{method} -isCreateTaskCommand ( text : String ) : boolean
+	{method} -normalize ( text : String ) : String
+	{method} -resolveSprint ( draft : TaskDraft ) : Optional
+	{method} -sprintOptionsMessage () : String
+	{method} +translateNaturalLanguageIntent () : void
+	{method} -validateDraft ( draft : TaskDraft ) : String
+	{method} -valueOrEmpty ( value : Object ) : String
+}
+
+
+class BotClient {
+	{method} +telegramClient ( botProps : BotProps ) : TelegramClient
+}
+
+
+enum BotCommands {
+	{field} +ADD_ITEM
+	{field} +COMPLETED_BY_SPRINT
+	{field} +COMPLETED_BY_USER_SPRINT
+	{field} +CREATE_TASK
+	{field} +HIDE_COMMAND
+	{field} +LLM_REQ
+	{field} +START_COMMAND
+	{field} +TODO_LIST
+}
+
+
+class BotHelper {
+	{field} {static} -logger : Logger
+	{method}  {static} +sendMessageToTelegram ( chatId : Long , text : String , bot : TelegramClient ) : void
+	{method}  {static} +sendMessageToTelegram ( chatId : Long , text : String , bot : TelegramClient , rk : ReplyKeyboardMarkup ) : void
+}
+
+
+enum BotLabels {
+	{field} +ADD_NEW_ITEM
+	{field} +COMPLETED_BY_SPRINT
+	{field} +COMPLETED_BY_USER_SPRINT
+	{field} +CREATE_TASK
+	{field} +DASH
+	{field} +DELETE
+	{field} +DONE
+	{field} +HIDE_MAIN_SCREEN
+	{field} +LIST_ALL_ITEMS
+	{field} +MY_TODO_LIST
+	{field} +SHOW_MAIN_SCREEN
+	{field} +UNDO
+}
+
+
+enum BotMessages {
+	{field} +BOT_REGISTERED_STARTED
+	{field} +BYE
+	{field} +HELLO_MYTODO_BOT
+	{field} +ITEM_DELETED
+	{field} +ITEM_DONE
+	{field} +ITEM_UNDONE
+	{field} +NEW_ITEM_ADDED
+	{field} +TYPE_NEW_TODO_ITEM
+}
+
+
+class NaturalLanguageIntentService {
+	{field} {static} -CREATE_TASK : String
+	{field} {static} -DEBUG_FILE : Path
+	{field} {static} -LIST_TASKS : String
+	{field} {static} -MIN_CONFIDENCE : double
+	{field} {static} -UNKNOWN : String
+	{field} {static} -logger : Logger
+	{field} -vectorIntentMatchingService : VectorIntentMatchingService
+	{method} -debug ( message : String ) : void
+	{method} +detectIntent ( userMessage : String ) : String
+	{method} -looksLikeCreateTaskRequest ( userMessage : String ) : boolean
+	{method} -looksLikeListTasksRequest ( userMessage : String ) : boolean
+	{method} -normalize ( text : String ) : String
+	{method} -toLegacyIntent ( intentKey : String ) : String
+}
+
+
+class TaskDraft {
+	{field} +assigneeEmail : String
+	{field} +description : String
+	{field} +dueDate : LocalDate
+	{field} +originalMessage : String
+	{field} +pendingField : String
+	{field} +sprintId : Long
+	{field} +taskName : String
+	{method} +isComplete () : boolean
+	{method} +nextMissingQuestion () : String
+	{method} +toDebugString () : String
+}
+
+
+class TaskNaturalLanguageService {
+	{field} {static} -DEBUG_FILE : Path
+	{field} {static} -EMAIL_PATTERN : Pattern
+	{field} {static} -ENGLISH_DATE_PATTERN : Pattern
+	{field} {static} -ENGLISH_DATE_PATTERN_DAY_FIRST : Pattern
+	{field} {static} -ISO_DATE_PATTERN : Pattern
+	{field} {static} -SLASH_DATE_PATTERN : Pattern
+	{field} {static} -SPRINT_PATTERN : Pattern
+	{method} -applyFallbacks ( draft : TaskDraft , userMessage : String ) : void
+	{method} -applyPipeCommandFallback ( draft : TaskDraft , userMessage : String ) : void
+	{method} -cleanLabeledValue ( value : String ) : String
+	{method} -debug ( message : String ) : void
+	{method} -extractBetween ( text : String , startRegex : String , endRegex : String ) : String
+	{method} +extractDueDate ( userMessage : String ) : LocalDate
+	{method} +extractTaskDraft ( userMessage : String ) : TaskDraft
+	{method} -monthNumber ( month : String ) : int
+	{method} -normalize ( text : String ) : String
+	{method} -parseDateLocally ( text : String ) : LocalDate
+	{method} -removeCreateCommand ( userMessage : String ) : String
+}
+
+
+class TelegramTaskDraftService {
+	{method} +clearDraft ( chatId : Long ) : void
+	{method} +fillNextMissing ( chatId : Long , message : String ) : void
+	{method} +getDraft ( chatId : Long ) : TaskDraft
+	{method} +hasDraft ( chatId : Long ) : boolean
+	{method} +saveDraft ( chatId : Long , draft : TaskDraft ) : void
+}
+
+
+class ToDoItemBotController {
+	{field} -botProps : BotProps
+	{field} {static} -logger : Logger
+	{field} -sprintService : SprintService
+	{field} -taskService : TaskService
+	{field} -telegramBotToken : String
+	{field} -telegramClient : TelegramClient
+	{method} +afterRegistration ( botSession : BotSession ) : void
+	{method} +consume ( update : Update ) : void
+	{method} +getBotToken () : String
+	{method} +getUpdatesConsumer () : LongPollingUpdateConsumer
+}
+
+
+class ToDoItemController {
+	{method} +addToDoItem ( todoItem : ToDoItem ) : ResponseEntity
+	{method} +deleteToDoItem ( id : int ) : ResponseEntity
+	{method} +getAllToDoItems () : List
+	{method} +getToDoItemById ( id : int ) : ResponseEntity
+	{method} +updateToDoItem ( toDoItem : ToDoItem , id : int ) : ResponseEntity
+}
+
+
+class ToDoItemService {
+	{field} -toDoItemRepository : ToDoItemRepository
+	{method} +addToDoItem ( toDoItem : ToDoItem ) : ToDoItem
+	{method} +deleteToDoItem ( id : int ) : boolean
+	{method} +findAll () : List
+	{method} +getItemById ( id : int ) : ResponseEntity
+	{method} +getToDoItemById ( id : int ) : ToDoItem
+	{method} -toDto ( t : Task ) : ToDoItem
+	{method} -toEntity ( item : ToDoItem ) : Task
+	{method} +updateToDoItem ( id : int , td : ToDoItem ) : ToDoItem
+}
+
+
+class UserController {
+	{method} +addUser ( newUser : User ) : ResponseEntity
+	{method} +getAllUsers () : List
+	{method} +getDevelopers () : List
+	{method} +getUserById ( id : Long ) : ResponseEntity
+	{method} +login ( loginRequest : User ) : ResponseEntity
+}
+
+
+class UserService {
+	{field} -passwordEncoder : PasswordEncoder
+	{field} -userRepository : UserRepository
+	{method} +addUser ( newUser : User ) : User
+	{method} +checkPassword ( rawPassword : String , encodedPassword : String ) : boolean
+	{method} +findAll () : List
+	{method} +findByMail ( mail : String ) : Optional
+	{method} +findByRole ( role : String ) : List
+	{method} +getUserById ( id : Long ) : ResponseEntity
+}
+
+
+
+
+BotActions -->  NaturalLanguageIntentService : naturalLanguageIntentService
+BotActions -->  TaskNaturalLanguageService : taskNaturalLanguageService
+BotActions -->  TelegramTaskDraftService : telegramTaskDraftService
+BotActions -->  ToDoItemService : todoService
+BotActions -->  UserService : userService
+TelegramTaskDraftService "1" o-- "0..*"  TaskDraft : draftsByChat
+TelegramTaskDraftService *--  TaskNaturalLanguageService : taskNaturalLanguageService
+ToDoItemBotController -->  NaturalLanguageIntentService : naturalLanguageIntentService
+ToDoItemBotController -->  TaskNaturalLanguageService : taskNaturalLanguageService
+ToDoItemBotController -->  TelegramTaskDraftService : telegramTaskDraftService
+ToDoItemBotController -->  ToDoItemService : toDoItemService
+ToDoItemBotController -->  UserService : userService
+ToDoItemController -->  ToDoItemService : toDoItemService
+UserController -->  UserService : userService
+
+
+@enduml

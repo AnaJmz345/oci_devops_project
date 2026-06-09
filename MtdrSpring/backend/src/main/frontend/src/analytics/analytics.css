@@ -78,6 +78,40 @@
 
 /* ── Stat pills ─────────────────────────────────────── */
 /* ── Main grid ──────────────────────────────────────── */
+.AN-pills-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.AN-stat-pill {
+  flex: 1;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 10px;
+  background: #fff;
+  border: 2px solid rgba(194, 212, 212, 0.9);
+  border-radius: 14px;
+}
+
+.AN-stat-value {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.AN-stat-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: rgba(30, 50, 36, 0.50);
+}
+
 .AN-grid {
   display: grid;
   grid-template-columns: 260px 1fr 1fr;
