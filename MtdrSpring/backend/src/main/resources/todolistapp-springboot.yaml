@@ -15,6 +15,7 @@ spec:
   selector:
     app: todolistapp-springboot
 ---
+#this is new stuff for hosting on the load balancer
 apiVersion: v1
 kind: Service
 metadata:
@@ -38,27 +39,25 @@ spec:
   replicas: 2
   template:
     metadata:
-      annotations:
-        ci-build: "${IMAGE_TAG}"
       labels:
         app: todolistapp-springboot
         version: v1
     spec:
       containers:
         - name: todolistapp-springboot
-          image: ${DOCKER_REGISTRY}/todolistapp-springboot:${IMAGE_TAG}
+          image: %DOCKER_REGISTRY%/todolistapp-springboot:0.1
           imagePullPolicy: Always
           env:
             - name: db_user
               value: "VANTAGE"
             - name: db_url
-              value: "jdbc:oracle:thin:@${TODO_PDB_NAME}_tp?TNS_ADMIN=/mtdrworkshop/creds"
+              value: "jdbc:oracle:thin:@%TODO_PDB_NAME%_tp?TNS_ADMIN=/mtdrworkshop/creds"
             - name: todo.table.name
               value: "todoitem"
             - name: driver_class_name
               value: "oracle.jdbc.OracleDriver"
             - name: OCI_REGION
-              value: "${REGION}"
+              value: "%OCI_REGION%"
             - name: dbpassword
               valueFrom:
                 secretKeyRef:
@@ -66,28 +65,13 @@ spec:
                   key: dbpassword
                   optional: true
             - name: ui_username
-              value: "${UI_USERNAME}"
+              value: "%UI_USERNAME%"
             - name: ui_password
               valueFrom:
                 secretKeyRef:
                   name: frontendadmin
                   key: password
                   optional: true
-            - name: DEEPSEEK_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: gemini-api-secret
-                  key: DEEPSEEK_API_KEY
-                  optional: false
-            - name: TELEGRAM_BOT_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: telegram-bot-secret
-                  key: TELEGRAM_BOT_TOKEN
-                  optional: false
-            - name: TELEGRAM_BOT_NAME
-              value: "vantage_assistant_bot"
-            
           volumeMounts:
             - name: creds
               mountPath: /mtdrworkshop/creds

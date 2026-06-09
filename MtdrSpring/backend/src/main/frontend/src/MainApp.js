@@ -14,6 +14,7 @@ import AnalyticsPage from './analytics/AnalyticsPage';
 
 import VantageSidebar from './VantageSidebar';
 import VantageTopbar from './VantageTopbar';
+import OverviewTab from './task/OverviewTab';
 import BacklogMainTab from './task/BacklogMainTab';
 import DashboardMainTab from './task/DashboardMainTab';
 import CalendarMainTab from './task/CalendarMainTab';
@@ -21,14 +22,13 @@ import CalendarMainTab from './task/CalendarMainTab';
 function MainApp() {
   const { user } = useAuth();
   const [page, setPage] = useState('login');
-  const [activePage, setActivePage] = useState('backlog'); 
+  const [activePage, setActivePage] = useState('overview');
   const [activeSprintId, setActiveSprintId] = useState('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isProjectsOpen, setIsProjectsOpen] = useState(true);
   const [isProjectOpen, setIsProjectOpen] = useState(true);
   const [isTeamsOpen, setIsTeamsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -38,7 +38,6 @@ function MainApp() {
   const [assigning, setAssigning] = useState(false);
   const [backlogTasks, setBacklogTasks] = useState([]);
   const [backlogLoading, setBacklogLoading] = useState(false);
-
   const [sprints, setSprints] = useState([]);
   const [users, setUsers] = useState([]);
   const [taskAssignees, setTaskAssignees] = useState({});
@@ -89,7 +88,7 @@ function MainApp() {
 
   useEffect(() => {
     if (user) {
-      setActivePage('backlog');
+      setActivePage('overview');
       fetchSprints();
       fetch('/users')
         .then(r => r.ok ? r.json() : [])
@@ -115,7 +114,7 @@ function MainApp() {
   const activeTeamName = 'PLACEHOLDER TEAM';
 
   const projectPages = [
-   
+    { id: 'overview',  label: 'OVERVIEW' },
     { id: 'backlog',   label: 'BACKLOG' },
     { id: 'board',     label: 'BOARD' },
     ...(isManager ? [{ id: 'analytics', label: 'ANALYTICS' }] : []),
@@ -132,12 +131,12 @@ function MainApp() {
 
   const pageTitle = (
     {
-     
+      overview:  'Overview',
       backlog:   'Backlog',
       board:     'Board',
       analytics: 'Analytics',
       calendar:  'Calendar',
-    }[activePage] || 'Backlog' 
+    }[activePage] || 'Overview'
   );
 
   const sharedTaskProps = {
@@ -189,7 +188,12 @@ function MainApp() {
         />
 
         <main className="VantageContent">
-          
+          {activePage === 'overview' && (
+            <OverviewTab
+              activeProjectName={activeProjectName}
+              activeSprintLabel={activeSprintLabel}
+            />
+          )}
           {activePage === 'backlog' && (
             <BacklogMainTab
               {...sharedTaskProps}

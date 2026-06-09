@@ -105,7 +105,7 @@ function VantageSidebar({
 
         {isTeamsOpen && (
           <div className="VantageSectionBody">
-            <button type="button" className="VantageRowButton" onClick={() => setActivePage('backlog')}>
+            <button type="button" className="VantageRowButton" onClick={() => setActivePage('overview')}>
               <span className="VantageBadgeMini VantageBadgeAmber">01</span>
               <span className="VantageRowText">{activeTeamName}</span>
             </button>
