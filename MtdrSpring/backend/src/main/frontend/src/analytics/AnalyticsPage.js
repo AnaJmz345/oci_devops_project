@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ProgressRing from './ProgressRing';
 import BarChart from './BarChart';
+import GroupedBarChart from './GroupedBarChart';
 import './analytics.css';
 
 function SeverityBadge({ severity }) {
@@ -19,6 +20,27 @@ function formatMoney(value) {
     currency: 'USD',
     maximumFractionDigits: 0,
   });
+}
+
+function getOracleId(record) {
+  return record?.oracleId ?? record?.oracle_id;
+}
+
+function getFirstName(name) {
+  return (name || 'Unknown').split(' ')[0];
+}
+
+function getSprintNumber(label, id) {
+  const labelMatch = String(label || '').match(/sprint\s*#?\s*(\d+)/i);
+  if (labelMatch) return Number(labelMatch[1]);
+
+  const idNumber = Number(id);
+  return Number.isFinite(idNumber) ? idNumber : Number.MAX_SAFE_INTEGER;
+}
+
+function formatSprintLabel(label, id) {
+  const sprintNumber = getSprintNumber(label, id);
+  return sprintNumber !== Number.MAX_SAFE_INTEGER ? `Sprint ${sprintNumber}` : (label || `Sprint ${id}`);
 }
 
 function AnalyticsPage({ sprints, activeSprintId }) {
@@ -70,26 +92,111 @@ function AnalyticsPage({ sprints, activeSprintId }) {
   const ringLabel = isAllSprints ? 'All Sprints' : (selectedSprint?.sprintName || 'Sprint');
   const ringGoal = isAllSprints ? null : selectedSprint?.goal;
 
-  const tasksByMember = users
+  const developers = users
     .filter((u) => u.role === 'DEVELOPER')
+    .map((u) => ({
+      id: String(getOracleId(u)),
+      label: getFirstName(u.name),
+    }))
+    .filter((u) => u.id !== 'undefined' && u.id !== 'null');
+
+  const developerSeries = developers.filter((developer) =>
+    assignees.some((a) => String(getOracleId(a)) === developer.id)
+  );
+
+  const tasksByMember = developers
     .map((u) => {
-      const userAssignees = assignees.filter((a) => String(a.oracleId) === String(u.oracleId));
+      const userAssignees = assignees.filter((a) => String(getOracleId(a)) === u.id);
       const userTaskIds = new Set(userAssignees.map((a) => a.taskId));
       const doneCount = tasks.filter((t) => userTaskIds.has(t.taskId) && t.status === 'DONE').length;
       const totalCount = tasks.filter((t) => userTaskIds.has(t.taskId)).length;
-      return { label: u.name.split(' ')[0], value: doneCount, total: totalCount };
+      return { label: u.label, value: doneCount, total: totalCount };
     })
     .filter((d) => d.total > 0);
 
-  const actualHoursByMember = users
-    .filter((u) => u.role === 'DEVELOPER')
+  const actualHoursByMember = developers
     .map((u) => {
       const actual = assignees
-        .filter((a) => String(a.oracleId) === String(u.oracleId))
+        .filter((a) => String(getOracleId(a)) === u.id)
         .reduce((sum, a) => sum + (a.realTimeSpent || 0), 0);
-      return { label: u.name.split(' ')[0], value: Math.round(actual * 10) / 10 };
+      return { label: u.label, value: Math.round(actual * 10) / 10 };
     })
     .filter((d) => d.value > 0);
+
+  const sprintIdsWithTasks = new Set(
+    tasks
+      .map((t) => t.sprintId)
+      .filter((id) => id != null)
+      .map((id) => String(id))
+  );
+  const knownSprintGroups = (sprints || [])
+    .map((s) => {
+      const id = String(s.sprintId ?? s.sprint_id);
+      const rawLabel = s.sprintName ?? s.sprint_name ?? `Sprint ${id}`;
+
+      return {
+        id,
+        label: formatSprintLabel(rawLabel, id),
+        sortOrder: getSprintNumber(rawLabel, id),
+      };
+    })
+    .filter((s) => s.id !== 'undefined' && s.id !== 'null');
+  const knownSprintIds = new Set(knownSprintGroups.map((s) => s.id));
+  const missingSprintGroups = Array.from(sprintIdsWithTasks)
+    .filter((id) => !knownSprintIds.has(id))
+    .map((id) => ({
+      id,
+      label: formatSprintLabel(null, id),
+      sortOrder: getSprintNumber(null, id),
+    }));
+  const sprintGroups = [...knownSprintGroups, ...missingSprintGroups]
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label));
+
+  const tasksBySprintAndMember = sprintGroups.map((sprint) => {
+    const sprintTasks = tasks.filter((t) => String(t.sprintId) === sprint.id);
+    const sprintTaskIdsForGroup = new Set(sprintTasks.map((t) => t.taskId));
+    const doneTaskIdsForGroup = new Set(
+      sprintTasks.filter((t) => t.status === 'DONE').map((t) => t.taskId)
+    );
+    const sprintAssignees = assignees.filter((a) => sprintTaskIdsForGroup.has(a.taskId));
+
+    return {
+      ...sprint,
+      values: developerSeries.map((developer) => ({
+        seriesId: developer.id,
+        value: sprintAssignees.filter((a) =>
+          String(getOracleId(a)) === developer.id && doneTaskIdsForGroup.has(a.taskId)
+        ).length,
+      })),
+    };
+  });
+
+  const hoursBySprintAndMember = sprintGroups.map((sprint) => {
+    const sprintTasks = tasks.filter((t) => String(t.sprintId) === sprint.id);
+    const sprintTaskIdsForGroup = new Set(sprintTasks.map((t) => t.taskId));
+    const sprintAssignees = assignees.filter((a) => sprintTaskIdsForGroup.has(a.taskId));
+
+    return {
+      ...sprint,
+      values: developerSeries.map((developer) => {
+        const actual = sprintAssignees
+          .filter((a) => String(getOracleId(a)) === developer.id)
+          .reduce((sum, a) => sum + (a.realTimeSpent || 0), 0);
+
+        return {
+          seriesId: developer.id,
+          value: Math.round(actual * 10) / 10,
+        };
+      }),
+    };
+  });
+
+  const hasGroupedTaskData = tasksBySprintAndMember.some((group) =>
+    group.values.some((item) => item.value > 0)
+  );
+  const hasGroupedHourData = hoursBySprintAndMember.some((group) =>
+    group.values.some((item) => item.value > 0)
+  );
 
   const doneTaskIds = new Set(tasks.filter((t) => t.status === 'DONE').map((t) => t.taskId));
   const completedAssignees = assignees.filter((a) =>
@@ -202,6 +309,70 @@ function AnalyticsPage({ sprints, activeSprintId }) {
     ...estimatedVsActualByMember.flatMap((item) => [item.estimated, item.actual])
   );
 
+  const renderProgressCard = () => (
+    <div className="AN-card AN-card--ring">
+      <div className="AN-card-label">SPRINT PROGRESS</div>
+      <div className="AN-card-title">{ringLabel}</div>
+      {ringGoal && <p className="AN-goal">"{ringGoal}"</p>}
+      <div className="AN-ring-wrap">
+        <ProgressRing percent={progressPct} size={160} stroke={14} color="#C74634" />
+      </div>
+      <div className="AN-ring-meta">
+        <span><strong>{doneTasks}</strong> done of <strong>{totalTasks}</strong> tasks</span>
+      </div>
+    </div>
+  );
+
+  const renderTasksChartCard = () => (
+    <div className="AN-card AN-card--grouped-chart">
+      <div className="AN-card-label">TASKS COMPLETED</div>
+      <div className="AN-card-title">
+        {isAllSprints ? 'TASKS PER DEVELOPER / SPRINT' : 'TASKS PER MEMBER'}
+      </div>
+      {isAllSprints ? (
+        hasGroupedTaskData ? (
+          <GroupedBarChart
+            groups={tasksBySprintAndMember}
+            series={developerSeries}
+            unit=" tasks"
+            yAxisLabel="Tasks"
+          />
+        ) : (
+          <div className="AN-empty">No completed tasks yet for these sprints.</div>
+        )
+      ) : tasksByMember.length === 0 ? (
+        <div className="AN-empty">No completed tasks yet for this sprint.</div>
+      ) : (
+        <BarChart data={tasksByMember} unit=" tasks" color="#C74634" />
+      )}
+    </div>
+  );
+
+  const renderHoursChartCard = () => (
+    <div className="AN-card AN-card--grouped-chart">
+      <div className="AN-card-label">TIME WORKED</div>
+      <div className="AN-card-title">
+        {isAllSprints ? 'ACTUAL HOURS PER DEVELOPER / SPRINT' : 'ACTUAL HOURS PER MEMBER'}
+      </div>
+      {isAllSprints ? (
+        hasGroupedHourData ? (
+          <GroupedBarChart
+            groups={hoursBySprintAndMember}
+            series={developerSeries}
+            unit="h"
+            yAxisLabel="Hours"
+          />
+        ) : (
+          <div className="AN-empty">No time logged yet for these sprints.</div>
+        )
+      ) : actualHoursByMember.length === 0 ? (
+        <div className="AN-empty">No time logged yet for this sprint.</div>
+      ) : (
+        <BarChart data={actualHoursByMember} unit="h" color="#4C825C" />
+      )}
+    </div>
+  );
+
   return (
     <div className="AN-root">
       <div className="AN-header">
@@ -260,39 +431,21 @@ function AnalyticsPage({ sprints, activeSprintId }) {
             </div>
           )}
 
-          <div className="AN-grid">
-            <div className="AN-card AN-card--ring">
-              <div className="AN-card-label">SPRINT PROGRESS</div>
-              <div className="AN-card-title">{ringLabel}</div>
-              {ringGoal && <p className="AN-goal">"{ringGoal}"</p>}
-              <div className="AN-ring-wrap">
-                <ProgressRing percent={progressPct} size={160} stroke={14} color="#C74634" />
-              </div>
-              <div className="AN-ring-meta">
-                <span><strong>{doneTasks}</strong> done of <strong>{totalTasks}</strong> tasks</span>
+          {isAllSprints ? (
+            <div className="AN-sprint-summary-grid">
+              {renderProgressCard()}
+              <div className="AN-sprint-summary-charts">
+                {renderTasksChartCard()}
+                {renderHoursChartCard()}
               </div>
             </div>
-
-            <div className="AN-card">
-              <div className="AN-card-label">TASKS COMPLETED</div>
-              <div className="AN-card-title">TASKS PER MEMBER</div>
-              {tasksByMember.length === 0 ? (
-                <div className="AN-empty">No completed tasks yet for this sprint.</div>
-              ) : (
-                <BarChart data={tasksByMember} unit=" tasks" color="#C74634" />
-              )}
+          ) : (
+            <div className="AN-grid">
+              {renderProgressCard()}
+              {renderTasksChartCard()}
+              {renderHoursChartCard()}
             </div>
-
-            <div className="AN-card">
-              <div className="AN-card-label">TIME WORKED</div>
-              <div className="AN-card-title">ACTUAL HOURS PER MEMBER</div>
-              {actualHoursByMember.length === 0 ? (
-                <div className="AN-empty">No time logged yet for this sprint.</div>
-              ) : (
-                <BarChart data={actualHoursByMember} unit="h" color="#4C825C" />
-              )}
-            </div>
-          </div>
+          )}
 
           <div className="AN-card AN-card--breakdown">
             <div className="AN-card-label">DELIVERY MIX</div>

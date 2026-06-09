@@ -187,7 +187,7 @@ function MainApp() {
           userName={user?.name}
         />
 
-        <main className="VantageContent">
+        <main className={`VantageContent ${activePage === 'analytics' ? 'VantageContent--analytics' : ''}`}>
           {activePage === 'overview' && (
             <OverviewTab
               activeProjectName={activeProjectName}
