@@ -2,7 +2,6 @@ package com.springboot.MyTodoList.util;
 
 import com.springboot.MyTodoList.model.User;
 import com.springboot.MyTodoList.model.ToDoItem;
-import com.springboot.MyTodoList.service.DeepSeekService;
 import com.springboot.MyTodoList.service.NaturalLanguageIntentService;
 import com.springboot.MyTodoList.service.TaskNaturalLanguageService;
 import com.springboot.MyTodoList.service.TaskNaturalLanguageService.TaskDraft;
@@ -21,6 +20,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -37,7 +38,6 @@ public class BotActions{
     boolean exit;
 
     ToDoItemService todoService;
-    DeepSeekService deepSeekService;
     NaturalLanguageIntentService naturalLanguageIntentService;
     TaskService taskService;
     TaskNaturalLanguageService taskNaturalLanguageService;
@@ -45,14 +45,15 @@ public class BotActions{
     UserService userService;
     SprintService sprintService;
     String detectedIntent;
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}");
+    private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 
-    public BotActions(TelegramClient tc, ToDoItemService ts, DeepSeekService ds,
+    public BotActions(TelegramClient tc, ToDoItemService ts,
             NaturalLanguageIntentService nlIntentService, TaskService taskSvc,
             TaskNaturalLanguageService taskNlService, TelegramTaskDraftService taskDraftService,
             UserService usrService, SprintService sprService){
         telegramClient = tc;
         todoService = ts;
-        deepSeekService = ds;
         naturalLanguageIntentService = nlIntentService;
         taskService = taskSvc;
         taskNaturalLanguageService = taskNlService;
@@ -80,14 +81,6 @@ public class BotActions{
 
     public ToDoItemService getTodoService(){
         return todoService;
-    }
-
-    public void setDeepSeekService(DeepSeekService dssvc){
-        deepSeekService = dssvc;
-    }
-
-    public DeepSeekService getDeepSeekService(){
-        return deepSeekService;
     }
 
     public void setNaturalLanguageIntentService(NaturalLanguageIntentService nlIntentService){
@@ -122,8 +115,10 @@ public class BotActions{
 
         BotHelper.sendMessageToTelegram(chatId, BotMessages.HELLO_MYTODO_BOT.getMessage(), telegramClient,  ReplyKeyboardMarkup
             .builder()
-            .keyboardRow(new KeyboardRow(BotLabels.LIST_ALL_ITEMS.getLabel(),BotLabels.ADD_NEW_ITEM.getLabel()))
-            .keyboardRow(new KeyboardRow(BotLabels.SHOW_MAIN_SCREEN.getLabel(),BotLabels.HIDE_MAIN_SCREEN.getLabel()))
+            .keyboardRow(new KeyboardRow(BotLabels.LIST_ALL_ITEMS.getLabel(), BotLabels.ADD_NEW_ITEM.getLabel()))
+            .keyboardRow(new KeyboardRow(BotLabels.CREATE_TASK.getLabel(), BotLabels.COMPLETED_BY_SPRINT.getLabel()))
+            .keyboardRow(new KeyboardRow(BotLabels.COMPLETED_BY_USER_SPRINT.getLabel()))
+            .keyboardRow(new KeyboardRow(BotLabels.SHOW_MAIN_SCREEN.getLabel(), BotLabels.HIDE_MAIN_SCREEN.getLabel()))
             .build()
         );
         exit = true;
@@ -302,16 +297,11 @@ public class BotActions{
         logger.info("Calling LLM");
         if (!(requestText.contains(BotCommands.LLM_REQ.getCommand())) || exit)
             return;
-        
-        String prompt = "Give me the weather in Monterrey";
-        String out = "<empty>";
-        try{
-            out = deepSeekService.generateText(prompt);
-        }catch(Exception exc){
 
-        }
-
-        BotHelper.sendMessageToTelegram(chatId, "LLM: "+out, telegramClient, null);
+        BotHelper.sendMessageToTelegram(chatId,
+                "Las APIs externas de IA estan desactivadas. Usa lenguaje natural como: 'muestrame mis tareas' o 'crea una tarea para terminar el login'.",
+                telegramClient, null);
+        exit = true;
 
     }
 
@@ -332,8 +322,15 @@ public class BotActions{
                 return;
             }
 
-            String intent = getDetectedIntent();
+            boolean explicitCreateCommand = isCreateTaskCommand(requestText);
+            String intent = explicitCreateCommand ? "CREATE_TASK" : getDetectedIntent();
             if (!"CREATE_TASK".equals(intent)) {
+                return;
+            }
+
+            if (explicitCreateCommand && commandPayload(requestText).isBlank()) {
+                BotHelper.sendMessageToTelegram(chatId, createTaskHelpMessage(), telegramClient, null);
+                exit = true;
                 return;
             }
 
@@ -347,6 +344,96 @@ public class BotActions{
                     telegramClient, null);
             exit = true;
         }
+    }
+
+    public void fnCompletedTasksBySprint() {
+        if (exit || requestText == null || taskService == null || sprintService == null) {
+            return;
+        }
+
+        if (!isCompletedBySprintCommand(requestText)) {
+            return;
+        }
+
+        Long sprintNumber = firstNumber(requestText);
+        if (sprintNumber == null) {
+            BotHelper.sendMessageToTelegram(chatId,
+                    "Indica el sprint. Ejemplo: /completadas_sprint 1",
+                    telegramClient, null);
+            exit = true;
+            return;
+        }
+
+        Optional<Sprint> sprint = sprintService.findBySprintNumber(sprintNumber);
+        if (sprint.isEmpty()) {
+            BotHelper.sendMessageToTelegram(chatId,
+                    "No encontre el Sprint " + sprintNumber + ".\n\n" + sprintOptionsMessage(),
+                    telegramClient, null);
+            exit = true;
+            return;
+        }
+
+        List<Task> completedTasks = taskService.findBySprintId(sprint.get().getSprintId()).stream()
+                .filter(task -> "DONE".equalsIgnoreCase(task.getStatus()))
+                .sorted(Comparator.comparing(Task::getTaskName))
+                .collect(Collectors.toList());
+
+        BotHelper.sendMessageToTelegram(chatId,
+                completedTasksMessage("Tareas completadas de " + sprint.get().getSprintName(), completedTasks),
+                telegramClient, null);
+        exit = true;
+    }
+
+    public void fnCompletedTasksByUserInSprint() {
+        if (exit || requestText == null || taskService == null || sprintService == null || userService == null) {
+            return;
+        }
+
+        if (!isCompletedByUserSprintCommand(requestText)) {
+            return;
+        }
+
+        String email = firstEmail(requestText);
+        Long sprintNumber = firstNumber(email == null ? requestText : requestText.replace(email, ""));
+        if (email == null || sprintNumber == null) {
+            BotHelper.sendMessageToTelegram(chatId,
+                    "Indica correo y sprint. Ejemplo: /completadas_usuario_sprint dev@correo.com 1",
+                    telegramClient, null);
+            exit = true;
+            return;
+        }
+
+        Optional<User> user = userService.findByMail(email);
+        if (user.isEmpty()) {
+            BotHelper.sendMessageToTelegram(chatId,
+                    "No encontre al usuario " + email + ".\n\n" + developerEmailsMessage(),
+                    telegramClient, null);
+            exit = true;
+            return;
+        }
+
+        Optional<Sprint> sprint = sprintService.findBySprintNumber(sprintNumber);
+        if (sprint.isEmpty()) {
+            BotHelper.sendMessageToTelegram(chatId,
+                    "No encontre el Sprint " + sprintNumber + ".\n\n" + sprintOptionsMessage(),
+                    telegramClient, null);
+            exit = true;
+            return;
+        }
+
+        Long oracleId = user.get().getOracleId();
+        List<Task> completedTasks = taskService.findBySprintId(sprint.get().getSprintId()).stream()
+                .filter(task -> "DONE".equalsIgnoreCase(task.getStatus()))
+                .filter(task -> taskService.getAssigneesByTaskId(task.getTaskId()).stream()
+                        .anyMatch(assignee -> oracleId.equals(assignee.getOracleId())))
+                .sorted(Comparator.comparing(Task::getTaskName))
+                .collect(Collectors.toList());
+
+        BotHelper.sendMessageToTelegram(chatId,
+                completedTasksMessage("Tareas completadas de " + user.get().getName()
+                        + " en " + sprint.get().getSprintName(), completedTasks),
+                telegramClient, null);
+        exit = true;
     }
 
     private void handleTaskDraft(Long chatKey, TaskDraft draft) {
@@ -496,6 +583,85 @@ public class BotActions{
 
     private String valueOrEmpty(Object value) {
         return value == null ? "No data" : value.toString();
+    }
+
+    private boolean isCreateTaskCommand(String text) {
+        String normalized = normalize(text);
+        return normalized.startsWith(BotCommands.CREATE_TASK.getCommand())
+                || normalized.startsWith("crear tarea")
+                || normalized.equals(BotLabels.CREATE_TASK.getLabel().toLowerCase());
+    }
+
+    private boolean isCompletedBySprintCommand(String text) {
+        String normalized = normalize(text);
+        return normalized.startsWith(BotCommands.COMPLETED_BY_SPRINT.getCommand())
+                || normalized.startsWith("completadas sprint")
+                || normalized.equals(BotLabels.COMPLETED_BY_SPRINT.getLabel().toLowerCase());
+    }
+
+    private boolean isCompletedByUserSprintCommand(String text) {
+        String normalized = normalize(text);
+        return normalized.startsWith(BotCommands.COMPLETED_BY_USER_SPRINT.getCommand())
+                || normalized.startsWith("completadas usuario sprint")
+                || normalized.equals(BotLabels.COMPLETED_BY_USER_SPRINT.getLabel().toLowerCase());
+    }
+
+    private String commandPayload(String text) {
+        String normalized = normalize(text);
+        if (normalized.startsWith(BotCommands.CREATE_TASK.getCommand())) {
+            return text.substring(BotCommands.CREATE_TASK.getCommand().length()).trim();
+        }
+        if (normalized.startsWith("crear tarea")) {
+            return text.substring("crear tarea".length()).trim();
+        }
+        return "";
+    }
+
+    private Long firstNumber(String text) {
+        Matcher matcher = NUMBER_PATTERN.matcher(text);
+        if (!matcher.find()) {
+            return null;
+        }
+        return Long.valueOf(matcher.group());
+    }
+
+    private String firstEmail(String text) {
+        Matcher matcher = EMAIL_PATTERN.matcher(text);
+        if (!matcher.find()) {
+            return null;
+        }
+        return matcher.group();
+    }
+
+    private String completedTasksMessage(String title, List<Task> tasks) {
+        StringBuilder message = new StringBuilder(title);
+        if (tasks == null || tasks.isEmpty()) {
+            return message.append("\n\nNo hay tareas completadas.").toString();
+        }
+
+        tasks.forEach(task -> message.append("\n- #")
+                .append(task.getTaskId())
+                .append(" ")
+                .append(task.getTaskName())
+                .append(" (vence: ")
+                .append(valueOrEmpty(task.getDueDate()))
+                .append(")"));
+        return message.toString();
+    }
+
+    private String createTaskHelpMessage() {
+        return "Enviame la tarea con este formato:\n"
+                + "/creartarea Nombre | Descripcion | 2026-06-01 | dev@correo.com | Sprint 1";
+    }
+
+    private String normalize(String text) {
+        if (text == null) {
+            return "";
+        }
+        return java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase()
+                .trim();
     }
 
 }
