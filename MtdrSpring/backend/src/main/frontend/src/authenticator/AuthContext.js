@@ -9,7 +9,6 @@ export function AuthProvider({ children }) {
   });
 
   const login = (userData) => {
-    // Normaliza el id sin importar si el backend devuelve oracleId o oracle_id
     const normalized = {
       ...userData,
       oracle_id: userData.oracle_id ?? userData.oracleId ?? null,
@@ -23,8 +22,19 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const checkSpringSession = async () => {
+    const response = await fetch('/auth/status', {
+      credentials: 'include',
+    });
+
+    const data = await response.json();
+    console.log('Spring session:', data);
+
+    return data;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, checkSpringSession }}>
       {children}
     </AuthContext.Provider>
   );

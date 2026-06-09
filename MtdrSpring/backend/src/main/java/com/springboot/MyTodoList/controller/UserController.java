@@ -7,6 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.springboot.MyTodoList.dto.CurrentUserResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +67,52 @@ public class UserController {
         response.put("name", user.getName());
         response.put("mail", user.getMail());
         response.put("role", user.getRole());
+        return ResponseEntity.ok(response);
+    }
+
+    //método para que el frontend pueda obtener los datos del usuario autenticado (si es que hay uno)
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return new ResponseEntity<>("No autenticado", HttpStatus.UNAUTHORIZED);
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        if (!(principal instanceof OAuth2User)) {
+            return new ResponseEntity<>("Usuario OAuth inválido", HttpStatus.UNAUTHORIZED);
+        }
+
+        OAuth2User oauthUser = (OAuth2User) principal;
+
+        String email = oauthUser.getAttribute("email");
+        String name = oauthUser.getAttribute("name");
+
+        if (email == null || email.isBlank()) {
+            return new ResponseEntity<>("OCI no devolvió email", HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<User> userOpt = userService.findByMail(email);
+
+        User user;
+        if (userOpt.isPresent()) {
+            user = userOpt.get();
+        } else {
+            User newUser = new User();
+            newUser.setMail(email);
+            newUser.setName(name != null ? name : email);
+            newUser.setPassword("OCI_LOGIN");
+            newUser.setRole("DEVELOPER");
+            user = userService.addUser(newUser);
+        }
+
+        CurrentUserResponse response = new CurrentUserResponse(
+                user.getOracleId(),
+                user.getName(),
+                user.getMail(),
+                user.getRole()
+        );
+
         return ResponseEntity.ok(response);
     }
 }

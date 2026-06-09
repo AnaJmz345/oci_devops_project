@@ -25,7 +25,8 @@ public class WebSecurityConfiguration {
                     "/manifest.json",
                     "/asset-manifest.json",
                     "/robots.txt",
-                    "/actuator/health"
+                    "/actuator/health",
+                    "/auth/status" // so react can ask if the user is authenticated without triggering the login flow
                 ).permitAll()
                 .anyRequest().authenticated()
             )
