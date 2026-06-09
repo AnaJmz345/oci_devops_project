@@ -1,40 +1,59 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('vantage_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
 
-  const login = (userData) => {
-    const normalized = {
-      ...userData,
-      oracle_id: userData.oracle_id ?? userData.oracleId ?? null,
-    };
-    localStorage.setItem('vantage_user', JSON.stringify(normalized));
-    setUser(normalized);
+  const loadCurrentUser = async () => {
+    try {
+      const response = await fetch('/users/me', {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const currentUser = await response.json();
+        setUser(currentUser);
+        return currentUser;
+      }
+
+      setUser(null);
+      return null;
+    } catch (error) {
+      console.error('Error loading current user:', error);
+      setUser(null);
+      return null;
+    } finally {
+      setLoadingAuth(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCurrentUser();
+  }, []);
+
+  const login = () => {
+    window.location.href = 'http://localhost:8080/oauth2/authorization/oci';
   };
 
   const logout = () => {
     localStorage.removeItem('vantage_user');
     setUser(null);
-  };
-
-  const checkSpringSession = async () => {
-    const response = await fetch('/auth/status', {
-      credentials: 'include',
-    });
-
-    const data = await response.json();
-    console.log('Spring session:', data);
-
-    return data;
+    window.location.href = '/logout';
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, checkSpringSession }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        loadingAuth,
+        loadCurrentUser,
+        isAuthenticated: !!user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

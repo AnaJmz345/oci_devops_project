@@ -23,29 +23,7 @@ function AuthLanding({ mode = 'login', onModeChange }) {
 
   const handleLogin = async (e) => {
     if (e && typeof e.preventDefault === 'function') e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const response = await fetch('/users/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginForm),
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        login(userData);
-      } else if (response.status === 401) {
-        setError('Credenciales incorrectas.');
-      } else {
-        setError('Error al iniciar sesión.');
-      }
-    } catch {
-      setError('No se pudo conectar al servidor.');
-    } finally {
-      setLoading(false);
-    }
+    login();
   };
 
   const handleRegister = async (e) => {

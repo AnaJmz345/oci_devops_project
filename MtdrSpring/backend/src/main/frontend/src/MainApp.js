@@ -19,7 +19,7 @@ import DashboardMainTab from './task/DashboardMainTab';
 import CalendarMainTab from './task/CalendarMainTab';
 
 function MainApp() {
-  const { user } = useAuth();
+  const { user, loadingAuth } = useAuth();
   const [page, setPage] = useState('login');
   const [activePage, setActivePage] = useState('backlog'); 
   const [activeSprintId, setActiveSprintId] = useState('all');
@@ -107,6 +107,10 @@ function MainApp() {
     }
   }, [user, activePage, fetchBacklogTasks, fetchSprints]);
 
+  if (loadingAuth) {
+    return null;
+  }
+  
   if (!user) {
     return <AuthLanding mode={page} onModeChange={setPage} />;
   }
