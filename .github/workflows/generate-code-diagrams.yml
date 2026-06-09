@@ -1,0 +1,45 @@
+name: Generate PlantUML Code Diagrams
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "MtdrSpring/backend/src/main/java/**/*.java"
+      - "MtdrSpring/backend/pom.xml"
+      - ".github/workflows/generate-code-diagrams.yml"
+
+  workflow_dispatch:
+
+jobs:
+  generate-diagrams:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
+          persist-credentials: true
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Generate PlantUML diagrams from Java code
+        working-directory: MtdrSpring/backend
+        run: |
+          chmod +x mvnw
+          ./mvnw -DskipTests process-classes
+
+      - name: Commit generated PlantUML diagrams
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "docs: update generated PlantUML code diagrams"
+          file_pattern: "docs/diagrams/*.puml"
