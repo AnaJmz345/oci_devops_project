@@ -1,0 +1,139 @@
+@startuml
+
+class IntentCatalogService {
+	{method} -add ( target : List , intentKey : String , phrases : String[] ) : void
+	{method} +findActiveExamples () : List
+}
+
+
+interface IntentEmbeddingService {
+	{method}  {abstract} +embed ( text : String ) : float[]
+}
+
+
+class IntentExample {
+	{field} -intentKey : String
+	{field} -text : String
+}
+
+
+class IntentMatchResult {
+	{field} -confidence : double
+	{field} -intentKey : String
+	{field} -matchedExample : String
+}
+
+
+class LocalHashEmbeddingService {
+	{field} {static} +DIMENSIONS : int
+	{method} -addCharacterNgrams ( vector : float[] , token : String ) : void
+	{method} +embed ( text : String ) : float[]
+	{method} +normalize ( text : String ) : String
+	{method} -normalizeVector ( vector : float[] ) : void
+}
+
+
+class NaturalLanguageIntentService {
+	{field} {static} -CREATE_TASK : String
+	{field} {static} -DEBUG_FILE : Path
+	{field} {static} -LIST_TASKS : String
+	{field} {static} -MIN_CONFIDENCE : double
+	{field} {static} -UNKNOWN : String
+	{field} {static} -logger : Logger
+	{method} -debug ( message : String ) : void
+	{method} +detectIntent ( userMessage : String ) : String
+	{method} -looksLikeCreateTaskRequest ( userMessage : String ) : boolean
+	{method} -looksLikeListTasksRequest ( userMessage : String ) : boolean
+	{method} -normalize ( text : String ) : String
+	{method} -toLegacyIntent ( intentKey : String ) : String
+}
+
+
+class TaskDraft {
+	{field} +assigneeEmail : String
+	{field} +description : String
+	{field} +dueDate : LocalDate
+	{field} +originalMessage : String
+	{field} +pendingField : String
+	{field} +sprintId : Long
+	{field} +taskName : String
+	{method} +isComplete () : boolean
+	{method} +nextMissingQuestion () : String
+	{method} +toDebugString () : String
+}
+
+
+class TaskNaturalLanguageService {
+	{field} {static} -DEBUG_FILE : Path
+	{field} {static} -EMAIL_PATTERN : Pattern
+	{field} {static} -ENGLISH_DATE_PATTERN : Pattern
+	{field} {static} -ENGLISH_DATE_PATTERN_DAY_FIRST : Pattern
+	{field} {static} -ISO_DATE_PATTERN : Pattern
+	{field} {static} -SLASH_DATE_PATTERN : Pattern
+	{field} {static} -SPRINT_PATTERN : Pattern
+	{method} -applyFallbacks ( draft : TaskDraft , userMessage : String ) : void
+	{method} -applyPipeCommandFallback ( draft : TaskDraft , userMessage : String ) : void
+	{method} -cleanLabeledValue ( value : String ) : String
+	{method} -debug ( message : String ) : void
+	{method} -extractBetween ( text : String , startRegex : String , endRegex : String ) : String
+	{method} +extractDueDate ( userMessage : String ) : LocalDate
+	{method} +extractTaskDraft ( userMessage : String ) : TaskDraft
+	{method} -monthNumber ( month : String ) : int
+	{method} -normalize ( text : String ) : String
+	{method} -parseDateLocally ( text : String ) : LocalDate
+	{method} -removeCreateCommand ( userMessage : String ) : String
+}
+
+
+class TelegramTaskDraftService {
+	{method} +clearDraft ( chatId : Long ) : void
+	{method} +fillNextMissing ( chatId : Long , message : String ) : void
+	{method} +getDraft ( chatId : Long ) : TaskDraft
+	{method} +hasDraft ( chatId : Long ) : boolean
+	{method} +saveDraft ( chatId : Long , draft : TaskDraft ) : void
+}
+
+
+class ToDoItemService {
+	{field} -toDoItemRepository : ToDoItemRepository
+	{method} +addToDoItem ( toDoItem : ToDoItem ) : ToDoItem
+	{method} +deleteToDoItem ( id : int ) : boolean
+	{method} +findAll () : List
+	{method} +getItemById ( id : int ) : ResponseEntity
+	{method} +getToDoItemById ( id : int ) : ToDoItem
+	{method} -toDto ( t : Task ) : ToDoItem
+	{method} -toEntity ( item : ToDoItem ) : Task
+	{method} +updateToDoItem ( id : int , td : ToDoItem ) : ToDoItem
+}
+
+
+class UserService {
+	{field} -passwordEncoder : PasswordEncoder
+	{field} -userRepository : UserRepository
+	{method} +addUser ( newUser : User ) : User
+	{method} +checkPassword ( rawPassword : String , encodedPassword : String ) : boolean
+	{method} +findAll () : List
+	{method} +findByMail ( mail : String ) : Optional
+	{method} +findByRole ( role : String ) : List
+	{method} +getUserById ( id : Long ) : ResponseEntity
+}
+
+
+class VectorIntentMatchingService {
+	{method} -cosine ( left : float[] , right : float[] ) : double
+	{method} +findBestIntent ( message : String ) : Optional
+}
+
+
+
+
+IntentCatalogService "1" o-- "0..*"  IntentExample : examples
+LocalHashEmbeddingService ..|>  IntentEmbeddingService
+NaturalLanguageIntentService *--  VectorIntentMatchingService : vectorIntentMatchingService
+TelegramTaskDraftService "1" o-- "0..*"  TaskDraft : draftsByChat
+TelegramTaskDraftService *--  TaskNaturalLanguageService : taskNaturalLanguageService
+VectorIntentMatchingService *--  IntentCatalogService : catalogService
+VectorIntentMatchingService *--  IntentEmbeddingService : embeddingService
+
+
+@enduml

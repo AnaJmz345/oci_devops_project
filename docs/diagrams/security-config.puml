@@ -1,0 +1,43 @@
+@startuml
+
+class BotProps {
+	{field} +name : String
+	{field} +token : String
+}
+
+
+class CorsConfig {
+	{field} ~logger : Logger
+	{method} +corsFilter () : CorsFilter
+}
+
+
+class DbSettings {
+	{field} +driver_class_name : String
+	{field} +password : String
+	{field} +url : String
+	{field} +username : String
+}
+
+
+class OracleConfiguration {
+	{field} -env : Environment
+	{field} ~logger : Logger
+	{method} +dataSource () : DataSource
+	{method} -firstConfiguredValue ( values : String[] ) : String
+	{method} -validateRequired ( label : String , value : String , hint : String ) : void
+}
+
+
+class WebSecurityConfiguration {
+	{method} +passwordEncoder () : PasswordEncoder
+	{method} +securityFilterChain ( http : HttpSecurity ) : SecurityFilterChain
+}
+
+
+
+
+OracleConfiguration -->  DbSettings : dbSettings
+
+
+@enduml

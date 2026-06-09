@@ -1,0 +1,204 @@
+@startuml
+
+class Bug {
+	{field} +bugId : Long
+	{field} +description : String
+	{field} +reportedBy : Long
+	{field} +solvedBy : Long
+	{field} +taskId : Long
+}
+
+
+class BugController {
+	{method} +createBug ( bug : Bug ) : ResponseEntity
+	{method} +deleteBug ( id : Long ) : ResponseEntity
+	{method} +getAllBugs () : List
+	{method} +getBugById ( id : Long ) : ResponseEntity
+	{method} +getBugsByTaskId ( taskId : Long ) : List
+	{method} +solveBug ( id : Long , body : Map ) : ResponseEntity
+	{method} +updateBug ( id : Long , bug : Bug ) : ResponseEntity
+}
+
+
+interface BugRepository {
+	{method}  {abstract} +findByReportedBy ( reportedBy : Long ) : List
+	{method}  {abstract} +findBySolvedByIsNotNull () : List
+	{method}  {abstract} +findBySolvedByIsNull () : List
+	{method}  {abstract} +findByTaskId ( taskId : Long ) : List
+}
+
+
+class BugService {
+	{method} +addBug ( bug : Bug ) : Bug
+	{method} +deleteBug ( id : Long ) : void
+	{method} +findAll () : List
+	{method} +findByReportedBy ( reportedBy : Long ) : List
+	{method} +findByTaskId ( taskId : Long ) : List
+	{method} +getBugById ( id : Long ) : ResponseEntity
+	{method} +updateBug ( id : Long , bugDetails : Bug ) : Bug
+}
+
+
+class Sprint {
+	{field} +endDate : LocalDate
+	{field} +goal : String
+	{field} +sprintDuration : Integer
+	{field} +sprintId : Long
+	{field} +sprintName : String
+	{field} +startDate : LocalDate
+	{field} +status : String
+	{method} #calculateDuration () : void
+}
+
+
+class SprintController {
+	{method} +createSprint ( sprint : Sprint ) : ResponseEntity
+	{method} +deleteSprint ( id : Long ) : ResponseEntity
+	{method} +getAllSprints () : List
+	{method} +getByStatus ( status : String ) : List
+	{method} +getSprintById ( id : Long ) : ResponseEntity
+	{method} +updateSprint ( id : Long , sprint : Sprint ) : ResponseEntity
+}
+
+
+interface SprintRepository {
+	{method}  {abstract} +findBySprintNameIgnoreCase ( sprintName : String ) : Optional
+	{method}  {abstract} +findByStatus ( status : String ) : List
+}
+
+
+class SprintService {
+	{method} +createSprint ( sprint : Sprint ) : Sprint
+	{method} +deleteSprint ( id : Long ) : boolean
+	{method} +findAll () : List
+	{method} +findBySprintName ( sprintName : String ) : Optional
+	{method} +findBySprintNumber ( sprintNumber : Long ) : Optional
+	{method} +findByStatus ( status : String ) : List
+	{method} +getSprintById ( id : Long ) : ResponseEntity
+	{method} +updateSprint ( id : Long , updated : Sprint ) : Sprint
+}
+
+
+class Task {
+	{field} +category : String
+	{field} +createdAt : OffsetDateTime
+	{field} +createdBy : Long
+	{field} +description : String
+	{field} +dueDate : LocalDate
+	{field} +sprintId : Long
+	{field} +status : String
+	{field} +storyPoints : Integer
+	{field} +taskId : Long
+	{field} +taskName : String
+	{field} +updatedAt : OffsetDateTime
+}
+
+
+class TaskAssignee {
+	{field} +additionalComments : String
+	{field} +estimatedCompletionTime : Double
+	{field} +oracleId : Long
+	{field} +realTimeSpent : Double
+	{field} +taskId : Long
+}
+
+
+class TaskAssigneeId {
+	{field} -oracleId : Long
+	{field} -taskId : Long
+	{method} +equals ( o : Object ) : boolean
+	{method} +hashCode () : int
+}
+
+
+interface TaskAssigneeRepository {
+	{method}  {abstract} +findByOracleId ( oracleId : Long ) : List
+	{method}  {abstract} +findByTaskId ( taskId : Long ) : List
+}
+
+
+class TaskCompletionRequest {
+	{field} +oracleId : Long
+	{field} +realTimeSpent : Double
+}
+
+
+class TaskController {
+	{method} +assignTask ( assignee : TaskAssignee ) : ResponseEntity
+	{method} +completeTask ( id : Long , body : TaskCompletionRequest ) : ResponseEntity
+	{method} +createTask ( task : Task ) : ResponseEntity
+	{method} +deleteTask ( id : Long ) : ResponseEntity
+	{method} +getAllAssignees () : List
+	{method} +getAllTasks () : List
+	{method} +getAssignees ( id : Long ) : List
+	{method} +getTaskById ( id : Long ) : ResponseEntity
+	{method} +getTasksBySprint ( sprintId : Long ) : List
+	{method} +removeAssignee ( taskId : Long , oracleId : Long ) : ResponseEntity
+	{method} +updateHours ( taskId : Long , oracleId : Long , body : Map ) : ResponseEntity
+	{method} +updateTask ( id : Long , task : Task ) : ResponseEntity
+}
+
+
+interface TaskRepository {
+	{method}  {abstract} +findByCreatedBy ( createdBy : Long ) : List
+	{method}  {abstract} +findBySprintId ( sprintId : Long ) : List
+}
+
+
+class TaskService {
+	{method} +addTask ( task : Task ) : Task
+	{method} +assignTask ( assignee : TaskAssignee ) : TaskAssignee
+	{method} +completeTask ( taskId : Long , oracleId : Long , realTimeSpent : Double ) : Task
+	{method} +deleteTask ( id : Long ) : boolean
+	{method} +findAll () : List
+	{method} +findBySprintId ( sprintId : Long ) : List
+	{method} +getAllAssignees () : List
+	{method} +getAssigneesByTaskId ( taskId : Long ) : List
+	{method} +getTaskById ( id : Long ) : ResponseEntity
+	{method} +removeAssignee ( taskId : Long , oracleId : Long ) : void
+	{method} +updateAssigneeHours ( taskId : Long , oracleId : Long , realTimeSpent : Double , estimatedCompletionTime : Double ) : TaskAssignee
+	{method} +updateTask ( id : Long , updated : Task ) : Task
+}
+
+
+class ToDoItem {
+	{field} +ID : int
+	{field} +description : String
+	{field} +done : String
+	{field} +name : String
+	{field} +storyPoints : Integer
+	{method} +toString () : String
+}
+
+
+interface ToDoItemRepository {
+}
+
+
+class User {
+	{field} +mail : String
+	{field} +name : String
+	{field} +oracleId : Long
+	{field} +password : String
+	{field} +role : String
+}
+
+
+interface UserRepository {
+	{method}  {abstract} +findByMail ( mail : String ) : Optional
+	{method}  {abstract} +findByRole ( role : String ) : List
+}
+
+
+
+
+BugController -->  BugService : bugService
+BugService -->  BugRepository : bugRepository
+SprintController -->  SprintService : sprintService
+SprintService -->  SprintRepository : sprintRepository
+TaskController -->  TaskService : taskService
+TaskService -->  TaskAssigneeRepository : taskAssigneeRepository
+TaskService -->  TaskRepository : taskRepository
+
+
+@enduml

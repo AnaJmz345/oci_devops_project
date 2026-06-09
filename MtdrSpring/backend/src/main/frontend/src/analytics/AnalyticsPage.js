@@ -4,22 +4,13 @@ import BarChart from './BarChart';
 import GroupedBarChart from './GroupedBarChart';
 import './analytics.css';
 
-function SeverityBadge({ severity }) {
-  const label = {
-    critical: 'Critical',
-    warning: 'Watch',
-    positive: 'Healthy',
-  }[severity] || 'Info';
-
-  return <span className={`AN-severity AN-severity--${severity || 'info'}`}>{label}</span>;
-}
-
-function formatMoney(value) {
-  return Number(value || 0).toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  });
+function StatPill({ label, value, color }) {
+  return (
+    <div className="AN-stat-pill" style={{ borderColor: color + '30' }}>
+      <span className="AN-stat-value" style={{ color }}>{value}</span>
+      <span className="AN-stat-label">{label}</span>
+    </div>
+  );
 }
 
 function getOracleId(record) {
@@ -48,7 +39,6 @@ function AnalyticsPage({ sprints, activeSprintId }) {
   const [allAssignees, setAllAssignees] = useState([]);
   const [users, setUsers] = useState([]);
   const [allBugs, setAllBugs] = useState([]);
-  const [productivityReport, setProductivityReport] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const isAllSprints = activeSprintId === 'all';
@@ -61,13 +51,11 @@ function AnalyticsPage({ sprints, activeSprintId }) {
       fetch('/tasks/assignees/all').then((r) => (r.ok ? r.json() : [])).catch(() => []),
       fetch('/users').then((r) => (r.ok ? r.json() : [])),
       fetch('/bugs').then((r) => (r.ok ? r.json() : [])).catch(() => []),
-      fetch(`/productivity-report?sprintId=${activeSprintId}`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-    ]).then(([fetchedTasks, fetchedAssignees, fetchedUsers, fetchedBugs, fetchedReport]) => {
+    ]).then(([fetchedTasks, fetchedAssignees, fetchedUsers, fetchedBugs]) => {
       setAllTasks(fetchedTasks);
       setAllAssignees(fetchedAssignees);
       setUsers(fetchedUsers);
       setAllBugs(fetchedBugs);
-      setProductivityReport(fetchedReport);
     }).finally(() => setLoading(false));
   }, [activeSprintId]);
 
@@ -377,9 +365,9 @@ function AnalyticsPage({ sprints, activeSprintId }) {
     <div className="AN-root">
       <div className="AN-header">
         <div>
-          <div className="AN-kicker">REPORTS</div>
-          <h1 className="AN-title">Productivity Analytics</h1>
-          <p className="AN-subtitle">Team performance, delivery quality, workload balance, and savings analysis</p>
+          <div className="AN-kicker">MANAGER VIEW</div>
+          <h1 className="AN-title">Analytics</h1>
+          <p className="AN-subtitle">Sprint KPI dashboard - track team performance and progress</p>
         </div>
       </div>
 
@@ -387,49 +375,13 @@ function AnalyticsPage({ sprints, activeSprintId }) {
         <div className="AN-loading">Loading analytics...</div>
       ) : (
         <>
-          {productivityReport && (
-            <div className="AN-intel">
-              <div className="AN-intel-main">
-                <div className="AN-card-label">PRODUCTIVITY REPORT</div>
-                <div className="AN-intel-title">
-                  <span>Executive performance summary</span>
-                </div>
-                <p className="AN-intel-copy">
-                  A focused operational report for delivery progress, estimation quality, workload distribution, product quality, and business impact.
-                </p>
-                <div className="AN-intel-score-row">
-                  <div className="AN-score-block">
-                    <span className="AN-score-value">{productivityReport.teamSummary?.teamProductivityScore || 0}</span>
-                    <span className="AN-score-label">Team score</span>
-                  </div>
-                  <div className="AN-score-block">
-                    <span className="AN-score-value">{formatMoney(productivityReport.savingsEstimate?.estimatedMoneySaved)}</span>
-                    <span className="AN-score-label">Estimated savings</span>
-                  </div>
-                  <div className="AN-score-block">
-                    <span className="AN-score-value">{productivityReport.savingsEstimate?.estimatedHoursSaved || 0}h</span>
-                    <span className="AN-score-label">Time saved</span>
-                  </div>
-                  <div className="AN-score-block">
-                    <span className="AN-score-value">{productivityReport.teamSummary?.progressPct || progressPct}%</span>
-                    <span className="AN-score-label">Delivery progress</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="AN-intel-side">
-                {(productivityReport.patterns || []).slice(0, 2).map((item) => (
-                  <div className="AN-insight" key={item.type}>
-                    <div className="AN-insight-head">
-                      <SeverityBadge severity={item.severity} />
-                    </div>
-                    <div className="AN-insight-title">{item.title}</div>
-                    <div className="AN-insight-copy">{item.description}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="AN-pills-row">
+            <StatPill label="Total Tasks" value={totalTasks} color="#1E3224" />
+            <StatPill label="Done" value={doneTasks} color="#4C825C" />
+            <StatPill label="In Progress" value={inProgress} color="#F1B13F" />
+            <StatPill label="To Do" value={todoTasks} color="#2b2dbf" />
+            <StatPill label="Blocked" value={blockedTasks} color="#C74634" />
+          </div>
 
           {isAllSprints ? (
             <div className="AN-sprint-summary-grid">
@@ -448,8 +400,8 @@ function AnalyticsPage({ sprints, activeSprintId }) {
           )}
 
           <div className="AN-card AN-card--breakdown">
-            <div className="AN-card-label">DELIVERY MIX</div>
-            <div className="AN-card-title">WORK STATUS DISTRIBUTION</div>
+            <div className="AN-card-label">STATUS BREAKDOWN</div>
+            <div className="AN-card-title">TASK BY STATUS</div>
             <div className="AN-breakdown-bars">
               {[
                 { label: 'Done', value: doneTasks, color: '#4C825C' },
@@ -741,72 +693,6 @@ function AnalyticsPage({ sprints, activeSprintId }) {
                 ))}
               </div>
             </div>
-          )}
-
-          {productivityReport && (
-            <>
-              <div className="AN-card AN-card--breakdown">
-                <div className="AN-card-label">ACTIONABLE RECOMMENDATIONS</div>
-                <div className="AN-card-title">NEXT BEST ACTIONS</div>
-                {(productivityReport.recommendations || []).length === 0 ? (
-                <div className="AN-empty">No critical recommendations for the selected scope.</div>
-                ) : (
-                  <div className="AN-recommendation-list">
-                    {productivityReport.recommendations.map((item) => (
-                      <div className="AN-recommendation" key={item.type}>
-                        <SeverityBadge severity={item.severity} />
-                        <div>
-                          <div className="AN-recommendation-title">{item.title}</div>
-                          <div className="AN-recommendation-copy">{item.recommendation}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="AN-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                <div className="AN-card">
-                  <div className="AN-card-label">INDIVIDUAL ANALYSIS</div>
-                  <div className="AN-card-title">MEMBER PRODUCTIVITY</div>
-                  {(productivityReport.members || []).length === 0 ? (
-                    <div className="AN-empty">No member activity in this scope.</div>
-                  ) : (
-                    <div className="AN-member-list">
-                      {productivityReport.members.slice(0, 6).map((member) => (
-                        <div className="AN-member-row" key={member.oracleId}>
-                          <div>
-                            <div className="AN-member-name">{member.name}</div>
-                            <div className="AN-member-summary">{member.summary}</div>
-                          </div>
-                          <div className="AN-member-metrics">
-                            <span>{member.doneTasks}/{member.assignedTasks} done</span>
-                            <span>{member.workloadSharePct}% load</span>
-                            <span className={member.varianceHours <= 0 ? 'AN-good' : 'AN-risk'}>
-                              {member.varianceHours}h delta
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="AN-card">
-                  <div className="AN-card-label">KPI EXPLANATION</div>
-                  <div className="AN-card-title">REPORT METRICS</div>
-                  <div className="AN-kpi-list">
-                    {(productivityReport.kpiExplanations || []).slice(0, 5).map((kpi) => (
-                      <div className="AN-kpi-row" key={kpi.key}>
-                        <div className="AN-kpi-title">{kpi.label}</div>
-                        <div className="AN-kpi-copy">{kpi.description}</div>
-                        <div className="AN-kpi-formula">{kpi.formula}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </>
           )}
         </>
       )}
