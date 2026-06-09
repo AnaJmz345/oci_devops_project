@@ -77,40 +77,6 @@
 }
 
 /* ── Stat pills ─────────────────────────────────────── */
-.AN-pills-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.AN-stat-pill {
-  flex: 1;
-  min-width: 100px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 14px 10px;
-  background: #fff;
-  border: 2px solid rgba(194, 212, 212, 0.9);
-  border-radius: 14px;
-}
-
-.AN-stat-value {
-  font-size: 26px;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.5px;
-}
-
-.AN-stat-label {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: rgba(30, 50, 36, 0.50);
-}
-
 /* ── Main grid ──────────────────────────────────────── */
 .AN-grid {
   display: grid;
@@ -180,6 +146,188 @@
   text-align: center;
 }
 
+.AN-intel {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 14px;
+  background: #fff;
+  border: 2px solid rgba(194, 212, 212, 0.9);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.AN-intel-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.AN-intel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 18px;
+  font-weight: 900;
+  color: #1E3224;
+}
+
+.AN-intel-copy {
+  margin: 0;
+  max-width: 560px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(30, 50, 36, 0.58);
+}
+
+.AN-intel-score-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.AN-score-block {
+  min-width: 120px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(194, 212, 212, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.AN-score-value {
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 900;
+  color: #C74634;
+}
+
+.AN-score-label {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  color: rgba(30, 50, 36, 0.52);
+  text-transform: uppercase;
+}
+
+.AN-intel-side,
+.AN-recommendation-list,
+.AN-member-list,
+.AN-kpi-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.AN-insight,
+.AN-recommendation,
+.AN-member-row,
+.AN-kpi-row {
+  border: 1px solid rgba(194, 212, 212, 0.8);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.AN-insight-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.AN-severity {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 54px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.AN-severity--critical {
+  background: rgba(199, 70, 52, 0.12);
+  color: #C74634;
+}
+
+.AN-severity--warning {
+  background: rgba(241, 177, 63, 0.18);
+  color: #8a5f07;
+}
+
+.AN-severity--positive {
+  background: rgba(76, 130, 92, 0.12);
+  color: #4C825C;
+}
+
+.AN-severity--info {
+  background: rgba(194, 212, 212, 0.30);
+  color: #1E3224;
+}
+
+.AN-insight-title,
+.AN-recommendation-title,
+.AN-member-name,
+.AN-kpi-title {
+  margin-top: 7px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #1E3224;
+}
+
+.AN-insight-copy,
+.AN-recommendation-copy,
+.AN-member-summary,
+.AN-kpi-copy {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(30, 50, 36, 0.58);
+}
+
+.AN-recommendation {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.AN-member-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.AN-member-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 900;
+  color: rgba(30, 50, 36, 0.55);
+}
+
+.AN-good {
+  color: #4C825C;
+}
+
+.AN-risk {
+  color: #C74634;
+}
+
+.AN-kpi-formula {
+  margin-top: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #4C825C;
+}
+
 /* ── Breakdown bars ─────────────────────────────────── */
 .AN-breakdown-bars {
   display: flex;
@@ -239,10 +387,10 @@
   .AN-grid {
     grid-template-columns: 1fr;
   }
+  .AN-intel {
+    grid-template-columns: 1fr;
+  }
   .AN-card--breakdown {
     grid-column: 1;
-  }
-  .AN-pills-row {
-    gap: 8px;
   }
 }

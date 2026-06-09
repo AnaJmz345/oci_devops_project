@@ -47,6 +47,18 @@ public class OracleConfiguration {
                 env.getProperty("dbpassword"),
                 dbSettings.getPassword());
 
+        validateRequired("Oracle JDBC URL", url,
+                "Set SPRING_DATASOURCE_URL or db_url. Example: jdbc:oracle:thin:@reacttodogxdmp_tp?TNS_ADMIN=C:/path/to/Wallet_reacttodogxdmp");
+        validateRequired("Oracle username", username,
+                "Set SPRING_DATASOURCE_USERNAME or db_user.");
+        validateRequired("Oracle password", password,
+                "Set SPRING_DATASOURCE_PASSWORD or dbpassword.");
+
+        if (!url.startsWith("jdbc:oracle:thin:@")) {
+            throw new IllegalStateException("Invalid Oracle JDBC URL: " + url
+                    + ". It must start with jdbc:oracle:thin:@");
+        }
+
         ds.setDriverType(driver);
         logger.info("Using Driver " + driver);
         ds.setURL(url);
@@ -56,6 +68,12 @@ public class OracleConfiguration {
         ds.setPassword(password);
 
         return ds;
+    }
+
+    private void validateRequired(String label, String value, String hint) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalStateException(label + " is missing. " + hint);
+        }
     }
 
     private String firstConfiguredValue(String... values) {

@@ -1,7 +1,7 @@
 package com.springboot.MyTodoList.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.springboot.MyTodoList.botai.IntentMatchResult;
+import com.springboot.MyTodoList.botai.VectorIntentMatchingService;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,20 +18,20 @@ import org.springframework.stereotype.Service;
 public class NaturalLanguageIntentService {
 
     private static final Logger logger = LoggerFactory.getLogger(NaturalLanguageIntentService.class);
+    private static final double MIN_CONFIDENCE = 0.35;
     private static final String LIST_TASKS = "LIST_TASKS";
     private static final String CREATE_TASK = "CREATE_TASK";
     private static final String UNKNOWN = "UNKNOWN";
     private static final Path DEBUG_FILE = Paths.get("task-ia-debug.log");
 
-    private final DeepSeekService deepSeekService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final VectorIntentMatchingService vectorIntentMatchingService;
 
-    public NaturalLanguageIntentService(DeepSeekService deepSeekService) {
-        this.deepSeekService = deepSeekService;
+    public NaturalLanguageIntentService(VectorIntentMatchingService vectorIntentMatchingService) {
+        this.vectorIntentMatchingService = vectorIntentMatchingService;
     }
 
     public String detectIntent(String userMessage) {
-        debug("========== INTENT DETECTION ==========");
+        debug("========== VECTOR INTENT DETECTION ==========");
         debug("Received message: " + userMessage);
 
         if (userMessage == null || userMessage.trim().isEmpty()) {
@@ -49,64 +49,33 @@ public class NaturalLanguageIntentService {
             return CREATE_TASK;
         }
 
+        try {
+            IntentMatchResult match = vectorIntentMatchingService.findBestIntent(userMessage).orElse(null);
+            if (match != null) {
+                debug("Vector match: intent=" + match.getIntentKey()
+                        + ", confidence=" + match.getConfidence()
+                        + ", example=" + match.getMatchedExample());
+                if (match.getConfidence() >= MIN_CONFIDENCE) {
+                    return toLegacyIntent(match.getIntentKey());
+                }
+            }
+        } catch (Exception exc) {
+            debug("Vector intent detection failed: " + exc.getMessage());
+            logger.warn("Could not detect intent with vector matching: {}", exc.getMessage());
+        }
+
         debug("Final intent: " + UNKNOWN);
         return UNKNOWN;
     }
 
-    private String detectIntentWithModel(String userMessage) {
-        String prompt = "Classify the user's intent for a task management bot. "
-                + "Reply only LIST_TASKS if the user wants to see, list, show, display, review, or check their tasks. "
-                + "Reply only CREATE_TASK if the user wants to create, add, register, open, or file a task. "
-                + "Reply only UNKNOWN for any other intent. "
-                + "Message: " + userMessage;
-
-        try {
-            debug("Prompt sent to detect intent:");
-            debug(prompt);
-
-            String response = deepSeekService.generateText(prompt);
-            debug("Raw API response for intent:");
-            debug(response);
-
-            String assistantText = extractAssistantText(response);
-            debug("Assistant text extracted for intent:");
-            debug(assistantText);
-
-            String normalizedResponse = assistantText.toUpperCase(Locale.ROOT);
-
-            if (normalizedResponse.contains(LIST_TASKS)) {
-                return LIST_TASKS;
-            }
-
-            if (normalizedResponse.contains(CREATE_TASK)) {
-                return CREATE_TASK;
-            }
-        } catch (Exception exc) {
-            debug("AI intent detection failed: " + exc.getMessage());
-            logger.warn("Could not detect intent with the AI model: {}", exc.getMessage());
+    private String toLegacyIntent(String intentKey) {
+        if ("TASK_LIST_MINE".equals(intentKey)) {
+            return LIST_TASKS;
         }
-
+        if ("TASK_CREATE".equals(intentKey)) {
+            return CREATE_TASK;
+        }
         return UNKNOWN;
-    }
-
-    private String extractAssistantText(String response) {
-        try {
-            JsonNode root = objectMapper.readTree(response);
-
-            JsonNode openAiContent = root.path("choices").path(0).path("message").path("content");
-            if (!openAiContent.isMissingNode() && !openAiContent.isNull()) {
-                return openAiContent.asText();
-            }
-
-            JsonNode geminiContent = root.path("candidates").path(0).path("content").path("parts").path(0).path("text");
-            if (!geminiContent.isMissingNode() && !geminiContent.isNull()) {
-                return geminiContent.asText();
-            }
-        } catch (Exception exc) {
-            return response;
-        }
-
-        return response;
     }
 
     private boolean looksLikeListTasksRequest(String userMessage) {

@@ -1,7 +1,5 @@
 package com.springboot.MyTodoList.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,9 +15,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class TaskNaturalLanguageService {
 
-    private final DeepSeekService deepSeekService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     private static final Path DEBUG_FILE = Paths.get("task-ia-debug.log");
     private static final Pattern ISO_DATE_PATTERN = Pattern.compile("\\b(\\d{4}-\\d{2}-\\d{2})\\b");
     private static final Pattern SLASH_DATE_PATTERN = Pattern.compile("\\b(\\d{1,2})/(\\d{1,2})/(\\d{4})\\b");
@@ -32,10 +27,6 @@ public class TaskNaturalLanguageService {
     private static final Pattern SPRINT_PATTERN = Pattern.compile("\\bsprint\\s+(\\d+)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern EMAIL_PATTERN = Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}");
 
-    public TaskNaturalLanguageService(DeepSeekService deepSeekService) {
-        this.deepSeekService = deepSeekService;
-    }
-
     public TaskDraft extractTaskDraft(String userMessage) {
         debug("========== TASK EXTRACTION ==========");
         debug("Received message for task creation:");
@@ -47,66 +38,6 @@ public class TaskNaturalLanguageService {
         debug("Draft built with local fallback only:");
         debug(draft.toDebugString());
         return draft;
-    }
-
-    public TaskDraft extractTaskDraftWithAi(String userMessage) {
-        String prompt = "Extract data to create a task. "
-                + "Reply ONLY with valid JSON, no markdown and no explanations. "
-                + "Expected fields: taskName, description, dueDate, sprintId, assigneeEmail. "
-                + "dueDate must be formatted as yyyy-MM-dd. "
-                + "sprintId must be a number if the user says something like sprint 2. "
-                + "assigneeEmail must be the assignee email if one appears. "
-                + "Use null for missing fields. "
-                + "Message: " + userMessage;
-
-        try {
-            debug("Prompt sent to extract task:");
-            debug(prompt);
-
-            String response = deepSeekService.generateText(prompt);
-            debug("Raw API response for task:");
-            debug(response);
-
-            String assistantContent = extractAssistantContent(response);
-            debug("Assistant content for task:");
-            debug(assistantContent);
-
-            String json = extractJson(assistantContent);
-            debug("Extracted JSON for task:");
-            debug(json);
-
-            JsonNode root = objectMapper.readTree(json);
-
-            TaskDraft draft = new TaskDraft();
-            draft.setOriginalMessage(userMessage);
-            draft.setTaskName(readText(root, "taskName"));
-            draft.setDescription(readText(root, "description"));
-            draft.setDueDate(readDate(root, "dueDate"));
-            draft.setSprintId(readLong(root, "sprintId"));
-            draft.setAssigneeEmail(readText(root, "assigneeEmail"));
-
-            debug("Draft before fallback:");
-            debug(draft.toDebugString());
-
-            applyFallbacks(draft, userMessage);
-
-            debug("Draft after fallback:");
-            debug(draft.toDebugString());
-
-            return draft;
-        } catch (Exception exc) {
-            debug("AI extraction failed. Local fallbacks will be used.");
-            debug("Error: " + exc.getClass().getName() + " - " + exc.getMessage());
-
-            TaskDraft draft = new TaskDraft();
-            draft.setOriginalMessage(userMessage);
-            applyFallbacks(draft, userMessage);
-
-            debug("Draft built only with fallback:");
-            debug(draft.toDebugString());
-
-            return draft;
-        }
     }
 
     public LocalDate extractDueDate(String userMessage) {
@@ -122,65 +53,6 @@ public class TaskNaturalLanguageService {
 
         debug("Could not extract date locally.");
         return null;
-    }
-
-    private String extractAssistantContent(String response) {
-        try {
-            JsonNode root = objectMapper.readTree(response);
-
-            JsonNode openAiContent = root.path("choices").path(0).path("message").path("content");
-            if (!openAiContent.isMissingNode() && !openAiContent.isNull()) {
-                return openAiContent.asText();
-            }
-
-            JsonNode geminiContent = root.path("candidates").path(0).path("content").path("parts").path(0).path("text");
-            if (!geminiContent.isMissingNode() && !geminiContent.isNull()) {
-                return geminiContent.asText();
-            }
-        } catch (Exception exc) {
-            debug("Could not parse response as JSON wrapper. Raw response will be used.");
-            return response;
-        }
-
-        return response;
-    }
-
-    private String extractJson(String response) {
-        int start = response.indexOf("{");
-        int end = response.lastIndexOf("}");
-        if (start >= 0 && end > start) {
-            return response.substring(start, end + 1);
-        }
-
-        return response;
-    }
-
-    private String readText(JsonNode root, String field) {
-        JsonNode node = root.get(field);
-        if (node == null || node.isNull()) {
-            return null;
-        }
-
-        String value = node.asText();
-        return value == null || value.isBlank() ? null : value.trim();
-    }
-
-    private LocalDate readDate(JsonNode root, String field) {
-        String value = readText(root, field);
-        if (value == null) {
-            return null;
-        }
-
-        return LocalDate.parse(value);
-    }
-
-    private Long readLong(JsonNode root, String field) {
-        JsonNode node = root.get(field);
-        if (node == null || node.isNull()) {
-            return null;
-        }
-
-        return node.asLong();
     }
 
     private void applyFallbacks(TaskDraft draft, String userMessage) {

@@ -7,8 +7,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.springboot.MyTodoList.botai.IntentCatalogService;
+import com.springboot.MyTodoList.botai.LocalHashEmbeddingService;
+import com.springboot.MyTodoList.botai.VectorIntentMatchingService;
 import com.springboot.MyTodoList.model.User;
-import com.springboot.MyTodoList.service.DeepSeekService;
 import com.springboot.MyTodoList.service.NaturalLanguageIntentService;
 import com.springboot.MyTodoList.service.TaskNaturalLanguageService;
 import com.springboot.MyTodoList.service.TelegramTaskDraftService;
@@ -32,7 +34,6 @@ class BotActionsMockTest {
 
     private TelegramClient telegramClient;
     private ToDoItemService toDoItemService;
-    private DeepSeekService deepSeekService;
     private NaturalLanguageIntentService intentService;
     private TaskService taskService;
     private TaskNaturalLanguageService taskNaturalLanguageService;
@@ -45,15 +46,17 @@ class BotActionsMockTest {
     void setUp() {
         telegramClient = mock(TelegramClient.class);
         toDoItemService = mock(ToDoItemService.class);
-        deepSeekService = mock(DeepSeekService.class);
-        intentService = new NaturalLanguageIntentService(deepSeekService);
+        VectorIntentMatchingService matcher = new VectorIntentMatchingService(
+                new LocalHashEmbeddingService(),
+                new IntentCatalogService());
+        intentService = new NaturalLanguageIntentService(matcher);
         taskService = mock(TaskService.class);
-        taskNaturalLanguageService = new TaskNaturalLanguageService(deepSeekService);
+        taskNaturalLanguageService = new TaskNaturalLanguageService();
         draftService = new TelegramTaskDraftService(taskNaturalLanguageService);
         userService = mock(UserService.class);
         sprintService = mock(SprintService.class);
 
-        actions = new BotActions(telegramClient, toDoItemService, deepSeekService,
+        actions = new BotActions(telegramClient, toDoItemService,
                 intentService, taskService, taskNaturalLanguageService, draftService,
                 userService, sprintService);
         actions.setChatId(123L);
@@ -63,20 +66,21 @@ class BotActionsMockTest {
     void createsTaskUsingFallbackParserWithoutCallingAi() throws Exception {
         User developer = user(7L, "dev@correo.com", "Dev Uno");
         Sprint sprint = sprint(10L, "Sprint 1");
-        Task savedTask = task(99L, "Login mobile", "DONE", LocalDate.of(2026, 6, 1));
+        LocalDate dueDate = LocalDate.now().plusDays(7);
+        Task savedTask = task(99L, "Login mobile", "DONE", dueDate);
 
         when(userService.findByMail("dev@correo.com")).thenReturn(Optional.of(developer));
         when(sprintService.findBySprintNumber(1L)).thenReturn(Optional.of(sprint));
         when(taskService.addTask(any(Task.class))).thenReturn(savedTask);
 
-        actions.setRequestText("/creartarea Login mobile | Implementar acceso | 2026-06-01 | dev@correo.com | Sprint 1");
+        actions.setRequestText("/creartarea Login mobile | Implementar acceso | " + dueDate + " | dev@correo.com | Sprint 1");
         actions.fnCreateTaskFromNaturalLanguage();
 
         ArgumentCaptor<Task> taskCaptor = ArgumentCaptor.forClass(Task.class);
         verify(taskService).addTask(taskCaptor.capture());
         assertEquals("Login mobile", taskCaptor.getValue().getTaskName());
         assertEquals("Implementar acceso", taskCaptor.getValue().getDescription());
-        assertEquals(LocalDate.of(2026, 6, 1), taskCaptor.getValue().getDueDate());
+        assertEquals(dueDate, taskCaptor.getValue().getDueDate());
         assertEquals(10L, taskCaptor.getValue().getSprintId());
 
         ArgumentCaptor<TaskAssignee> assigneeCaptor = ArgumentCaptor.forClass(TaskAssignee.class);

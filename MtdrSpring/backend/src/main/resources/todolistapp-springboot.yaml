@@ -72,13 +72,6 @@ spec:
                   name: frontendadmin
                   key: password
                   optional: true
-            - name: DEEPSEEK_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: gemini-api-secret
-                  key: DEEPSEEK_API_KEY
-                  optional: false
-            
           volumeMounts:
             - name: creds
               mountPath: /mtdrworkshop/creds

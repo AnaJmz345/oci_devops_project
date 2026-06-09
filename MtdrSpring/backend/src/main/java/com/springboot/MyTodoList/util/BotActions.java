@@ -2,7 +2,6 @@ package com.springboot.MyTodoList.util;
 
 import com.springboot.MyTodoList.model.User;
 import com.springboot.MyTodoList.model.ToDoItem;
-import com.springboot.MyTodoList.service.DeepSeekService;
 import com.springboot.MyTodoList.service.NaturalLanguageIntentService;
 import com.springboot.MyTodoList.service.TaskNaturalLanguageService;
 import com.springboot.MyTodoList.service.TaskNaturalLanguageService.TaskDraft;
@@ -39,7 +38,6 @@ public class BotActions{
     boolean exit;
 
     ToDoItemService todoService;
-    DeepSeekService deepSeekService;
     NaturalLanguageIntentService naturalLanguageIntentService;
     TaskService taskService;
     TaskNaturalLanguageService taskNaturalLanguageService;
@@ -50,13 +48,12 @@ public class BotActions{
     private static final Pattern EMAIL_PATTERN = Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}");
     private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 
-    public BotActions(TelegramClient tc, ToDoItemService ts, DeepSeekService ds,
+    public BotActions(TelegramClient tc, ToDoItemService ts,
             NaturalLanguageIntentService nlIntentService, TaskService taskSvc,
             TaskNaturalLanguageService taskNlService, TelegramTaskDraftService taskDraftService,
             UserService usrService, SprintService sprService){
         telegramClient = tc;
         todoService = ts;
-        deepSeekService = ds;
         naturalLanguageIntentService = nlIntentService;
         taskService = taskSvc;
         taskNaturalLanguageService = taskNlService;
@@ -84,14 +81,6 @@ public class BotActions{
 
     public ToDoItemService getTodoService(){
         return todoService;
-    }
-
-    public void setDeepSeekService(DeepSeekService dssvc){
-        deepSeekService = dssvc;
-    }
-
-    public DeepSeekService getDeepSeekService(){
-        return deepSeekService;
     }
 
     public void setNaturalLanguageIntentService(NaturalLanguageIntentService nlIntentService){
@@ -308,16 +297,11 @@ public class BotActions{
         logger.info("Calling LLM");
         if (!(requestText.contains(BotCommands.LLM_REQ.getCommand())) || exit)
             return;
-        
-        String prompt = "Give me the weather in Monterrey";
-        String out = "<empty>";
-        try{
-            out = deepSeekService.generateText(prompt);
-        }catch(Exception exc){
 
-        }
-
-        BotHelper.sendMessageToTelegram(chatId, "LLM: "+out, telegramClient, null);
+        BotHelper.sendMessageToTelegram(chatId,
+                "Las APIs externas de IA estan desactivadas. Usa lenguaje natural como: 'muestrame mis tareas' o 'crea una tarea para terminar el login'.",
+                telegramClient, null);
+        exit = true;
 
     }
 
