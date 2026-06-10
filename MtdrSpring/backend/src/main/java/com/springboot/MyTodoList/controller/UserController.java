@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.springboot.MyTodoList.service.AuthUserService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,9 +28,16 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private AuthUserService authUserService;
+
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.findAll();
+    public ResponseEntity<?> getAllUsers(Authentication authentication) {
+        if (!authUserService.isManager(authentication)) {
+            return new ResponseEntity<>("No tienes permisos para ver usuarios.", HttpStatus.FORBIDDEN);
+        }
+
+        return ResponseEntity.ok(userService.findAll());
     }
 
     @GetMapping("/{id}")
