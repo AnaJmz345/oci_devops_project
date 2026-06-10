@@ -15,15 +15,13 @@ import AIAnalyticsPage from './analytics/AIAnalyticsPage';
 
 import VantageSidebar from './VantageSidebar';
 import VantageTopbar from './VantageTopbar';
-import OverviewTab from './task/OverviewTab';
 import BacklogMainTab from './task/BacklogMainTab';
 import DashboardMainTab from './task/DashboardMainTab';
-import CalendarMainTab from './task/CalendarMainTab';
 
 function MainApp() {
   const { user } = useAuth();
   const [page, setPage] = useState('login');
-  const [activePage, setActivePage] = useState('overview');
+  const [activePage, setActivePage] = useState('backlog');
   const [activeSprintId, setActiveSprintId] = useState('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isProjectsOpen, setIsProjectsOpen] = useState(true);
@@ -89,7 +87,7 @@ function MainApp() {
 
   useEffect(() => {
     if (user) {
-      setActivePage('overview');
+      setActivePage('backlog');
       fetchSprints();
       fetch('/users')
         .then(r => r.ok ? r.json() : [])
@@ -115,14 +113,12 @@ function MainApp() {
   const activeTeamName = 'PLACEHOLDER TEAM';
 
   const projectPages = [
-    { id: 'overview',  label: 'OVERVIEW' },
     { id: 'backlog',   label: 'BACKLOG' },
     { id: 'board',     label: 'BOARD' },
     ...(isManager ? [
       { id: 'analytics', label: 'ANALYTICS' },
       { id: 'ai-analytics', label: 'AI ANALYTICS' },
     ] : []),
-    { id: 'calendar',  label: 'CALENDAR' },
   ];
 
   const sprintOptions = [
@@ -135,13 +131,11 @@ function MainApp() {
 
   const pageTitle = (
     {
-      overview:  'Overview',
       backlog:   'Backlog',
       board:     'Board',
       analytics: 'Analytics',
       'ai-analytics': 'AI Analytics',
-      calendar:  'Calendar',
-    }[activePage] || 'Overview'
+    }[activePage] || 'Backlog'
   );
 
   const sharedTaskProps = {
@@ -193,12 +187,6 @@ function MainApp() {
         />
 
         <main className={`VantageContent ${activePage === 'analytics' ? 'VantageContent--analytics' : ''}`}>
-          {activePage === 'overview' && (
-            <OverviewTab
-              activeProjectName={activeProjectName}
-              activeSprintLabel={activeSprintLabel}
-            />
-          )}
           {activePage === 'backlog' && (
             <BacklogMainTab
               {...sharedTaskProps}
@@ -236,12 +224,6 @@ function MainApp() {
           )}
           {activePage === 'ai-analytics' && isManager && (
             <AIAnalyticsPage activeSprintId={activeSprintId} />
-          )}
-          {activePage === 'calendar' && (
-            <CalendarMainTab
-              activeProjectName={activeProjectName}
-              activeSprintLabel={activeSprintLabel}
-            />
           )}
         </main>
       </div>

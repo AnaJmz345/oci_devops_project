@@ -1,15 +1,5 @@
 import React, { useEffect, useState } from 'react';
-
-const MEMBER_COLORS = [
-  '#C74634',
-  '#F1B13F',
-  '#4C825C',
-  '#2b2dbf',
-  '#9b59b6',
-  '#e07b39',
-  '#16a085',
-  '#8e44ad',
-];
+import { getMemberColorByIndex } from '../utils/memberColors';
 
 function formatChartValue(value, unit) {
   const rounded = Math.round((value || 0) * 10) / 10;
@@ -41,7 +31,7 @@ function GroupedBarChart({ groups = [], series = [], unit = '', yAxisLabel = '' 
           <span className="AN-grouped-legend-item" key={item.id}>
             <span
               className="AN-grouped-legend-swatch"
-              style={{ background: MEMBER_COLORS[index % MEMBER_COLORS.length] }}
+              style={{ background: item.color || getMemberColorByIndex(index) }}
             />
             {item.label}
           </span>
@@ -65,7 +55,7 @@ function GroupedBarChart({ groups = [], series = [], unit = '', yAxisLabel = '' 
                   <div className="AN-grouped-bars">
                     {series.map((item, index) => {
                       const value = group.values.find((entry) => entry.seriesId === item.id)?.value || 0;
-                      const color = MEMBER_COLORS[index % MEMBER_COLORS.length];
+                      const color = item.color || getMemberColorByIndex(index);
                       const heightPct = animated ? Math.max((value / max) * 100, value > 0 ? 5 : 0) : 0;
 
                       return (

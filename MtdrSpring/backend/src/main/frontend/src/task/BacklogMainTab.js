@@ -4,6 +4,7 @@ import { FaChevronDown, FaEdit } from 'react-icons/fa';
 import { BsTrash3 } from 'react-icons/bs';
 import { FaBug } from 'react-icons/fa';
 import LogActualHoursModal from './LogActualHoursModal';
+import { getDeveloperColor } from '../utils/memberColors';
 
 function BacklogMainTab({
   activeProjectName,
@@ -67,14 +68,19 @@ function BacklogMainTab({
     return found ? found.sprintName : `Sprint #${sprintId}`;
   };
 
-  const getAssigneeName = (taskId) => {
+  const getAssigneeInfo = (taskId) => {
     const assignee = taskAssignees?.[taskId];
     if (!assignee) return null;
     const assigneeOracleId = assignee.oracleId ?? assignee.oracle_id;
     const u = (users || []).find(user =>
       String(user.oracleId ?? user.oracle_id) === String(assigneeOracleId)
     );
-    return u ? u.name.split(' ')[0] : null;
+    const name = u?.name ? u.name.split(' ')[0] : null;
+    return name ? { name, oracleId: assigneeOracleId } : null;
+  };
+
+  const getAssigneeName = (taskId) => {
+    return getAssigneeInfo(taskId)?.name || null;
   };
 
   const assigneeOptions = (users || [])
@@ -700,9 +706,9 @@ function BacklogMainTab({
 
                         <td>
                           {(() => {
-                            const name = getAssigneeName(task.taskId);
+                            const assignee = getAssigneeInfo(task.taskId);
 
-                            return name ? (
+                            return assignee ? (
                               <span style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -715,7 +721,7 @@ function BacklogMainTab({
                                   width: 22,
                                   height: 22,
                                   borderRadius: '50%',
-                                  background: '#C74634',
+                                  background: getDeveloperColor(assignee.oracleId, users),
                                   color: '#fff',
                                   display: 'inline-flex',
                                   alignItems: 'center',
@@ -724,9 +730,9 @@ function BacklogMainTab({
                                   fontWeight: 900,
                                   flexShrink: 0,
                                 }}>
-                                  {name[0].toUpperCase()}
+                                  {assignee.name[0].toUpperCase()}
                                 </span>
-                                {name}
+                                {assignee.name}
                               </span>
                             ) : (
                               <span style={{ fontSize: 11, color: 'rgba(30,50,36,0.35)', fontStyle: 'italic' }}>

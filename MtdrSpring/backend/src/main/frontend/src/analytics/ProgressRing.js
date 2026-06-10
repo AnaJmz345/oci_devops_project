@@ -22,15 +22,14 @@ function ProgressRing({ percent = 0, size = 160, stroke = 14 }) {
   const offset = circumference - (animatedPercent / 100) * circumference;
   const { start, end } = getGradientColors(percent);
 
-  const angle = (2 * Math.PI * animatedPercent) / 100 - Math.PI / 2;
-  const dotX = size / 2 + radius * Math.cos(angle);
-  const dotY = size / 2 + radius * Math.sin(angle);
+  const progressDegrees = (animatedPercent / 100) * 360;
+  const showDot = percent > 0;
   const gradId = `ring-grad-${Math.round(percent)}`;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
       <div style={{ position: 'relative', width: size, height: size }}>
-        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+        <svg width={size} height={size}>
           <defs>
             <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor={start} />
@@ -53,27 +52,33 @@ function ProgressRing({ percent = 0, size = 160, stroke = 14 }) {
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
             style={{ transition: 'stroke-dashoffset 1.3s cubic-bezier(0.4, 0, 0.2, 1)' }}
           />
 
-          {animatedPercent > 2 && animatedPercent < 100 && (
-            <>
+          {showDot && (
+            <g
+              style={{
+                transform: `rotate(${progressDegrees}deg)`,
+                transformBox: 'view-box',
+                transformOrigin: 'center',
+                transition: 'transform 1.3s cubic-bezier(0.4,0,0.2,1)',
+              }}
+            >
               <circle
-                cx={dotX}
-                cy={dotY}
+                cx={size / 2}
+                cy={size / 2 - radius}
                 r={stroke * 0.85}
                 fill={end}
                 opacity="0.25"
-                style={{ transition: 'all 1.3s cubic-bezier(0.4,0,0.2,1)' }}
               />
               <circle
-                cx={dotX}
-                cy={dotY}
+                cx={size / 2}
+                cy={size / 2 - radius}
                 r={stroke * 0.55}
                 fill={end}
-                style={{ transition: 'all 1.3s cubic-bezier(0.4,0,0.2,1)' }}
               />
-            </>
+            </g>
           )}
         </svg>
 
@@ -88,7 +93,7 @@ function ProgressRing({ percent = 0, size = 160, stroke = 14 }) {
             fontWeight: 900,
             color: '#1E3224',
             lineHeight: 1,
-            letterSpacing: '-1px',
+            letterSpacing: 0,
           }}>
             {Math.round(animatedPercent)}%
           </span>
