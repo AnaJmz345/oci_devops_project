@@ -53,4 +53,11 @@ public class AuthUserService {
     public boolean isDeveloper(Authentication authentication) {
         return hasRole(authentication, "DEVELOPER");
     }
+    public boolean isAdmin(Authentication authentication) {
+        return hasRole(authentication, "ADMIN");
+    }
+
+    public boolean isManagerOrAdmin(Authentication authentication) {
+        return isManager(authentication) || isAdmin(authentication);
+    }
 }

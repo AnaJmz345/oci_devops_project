@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.springboot.MyTodoList.service.AuthUserService;
 
+import com.springboot.MyTodoList.dto.CreateUserRequest;
+import com.springboot.MyTodoList.service.AuthUserService;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +55,15 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<?> addUser(@RequestBody User newUser) {
+        return new ResponseEntity<>(
+                "El registro publico esta deshabilitado. Contacta a un manager o admin.",
+                HttpStatus.GONE
+        );
+    }
+
+    /*
+    @PostMapping("/register")
+    public ResponseEntity<?> addUser(@RequestBody User newUser) {
         try {
             if (userService.findByMailIgnoreCase(newUser.getMail()).isPresent()) {
                 return new ResponseEntity<>("El correo ya esta registrado", HttpStatus.CONFLICT);
@@ -61,7 +73,49 @@ public class UserController {
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }*/
+
+    @PostMapping
+    public ResponseEntity<?> createInternalUser(
+            @RequestBody CreateUserRequest request,
+            Authentication authentication) {
+
+        if (!authUserService.isManagerOrAdmin(authentication)) {
+            return new ResponseEntity<>("No tienes permisos para crear usuarios.", HttpStatus.FORBIDDEN);
+        }
+
+        if (request.getName() == null || request.getName().isBlank()
+                || request.getMail() == null || request.getMail().isBlank()
+                || request.getRole() == null || request.getRole().isBlank()) {
+            return new ResponseEntity<>("Name, mail y role son obligatorios.", HttpStatus.BAD_REQUEST);
+        }
+
+        String role = request.getRole().toUpperCase();
+
+        if (!role.equals("ADMIN") && !role.equals("MANAGER") && !role.equals("DEVELOPER")) {
+            return new ResponseEntity<>("Rol invalido.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (userService.findByMailIgnoreCase(request.getMail()).isPresent()) {
+            return new ResponseEntity<>("El correo ya esta registrado.", HttpStatus.CONFLICT);
+        }
+
+        User saved = userService.createInternalUser(
+                request.getName(),
+                request.getMail(),
+                role
+        );
+
+        CurrentUserResponse response = new CurrentUserResponse(
+                saved.getOracleId(),
+                saved.getName(),
+                saved.getMail(),
+                saved.getRole()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User loginRequest) {
         return new ResponseEntity<>(
