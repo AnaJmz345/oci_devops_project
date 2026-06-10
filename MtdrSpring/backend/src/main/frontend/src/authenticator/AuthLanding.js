@@ -84,42 +84,20 @@ function AuthLanding({ mode = 'login', onModeChange }) {
     <div className={`AuthRoot ${isRegister ? 'is-register' : ''}`}>
       <div className="AuthCard" role="region" aria-label="Authentication">
         <div className="AuthPane AuthPane--login" aria-hidden={isRegister ? 'true' : 'false'}>
-          <p className="AuthKicker">WELCOME BACK TO</p>
-          <p className="AuthBrand">VANTAGE</p>
-          <h1 className="AuthTitle">SIGN IN</h1>
+            <h1 className="AuthWelcomeTitle">
+              WELCOME BACK TO<br />
+              <span>VANTAGE</span>
+            </h1>
 
-          <form className="AuthForm" onSubmit={handleLogin}>
-            <label className="AuthLabel">
-              <span className="AuthLabelText">Mail</span>
-              <input
-                className="AuthInput"
-                name="mail"
-                autoComplete="email"
-                placeholder="MAIL..."
-                value={loginForm.mail}
-                onChange={(e) => setLoginForm((prev) => ({ ...prev, mail: e.target.value }))}
-              />
-            </label>
+            <p className="AuthLoginSubtitle">Let's continue doing great things</p>
 
-            <label className="AuthLabel">
-              <span className="AuthLabelText">Password</span>
-              <input
-                className="AuthInput"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="PASSWORD..."
-                value={loginForm.password}
-                onChange={(e) => setLoginForm((prev) => ({ ...prev, password: e.target.value }))}
-              />
-            </label>
+            <form className="AuthForm AuthForm--login" onSubmit={handleLogin}>
+              <button className="AuthPrimaryButton" type="submit" disabled={loading}>
+                {loading ? 'SIGNING IN...' : 'SIGN IN'}
+              </button>
 
-            <button className="AuthPrimaryButton" type="submit" disabled={loading}>
-              {loading ? 'SIGNING IN...' : 'SIGN IN'}
-            </button>
-
-            {error && !isRegister && <p className="AuthError">{error}</p>}
-          </form>
+              {error && !isRegister && <p className="AuthError">{error}</p>}
+            </form>
         </div>
 
         <div className="AuthPane AuthPane--register" aria-hidden={!isRegister ? 'true' : 'false'}>
