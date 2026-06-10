@@ -657,7 +657,9 @@
   opacity: 0.75;
   cursor: not-allowed;
 }
-
+.AuthPane--register .AuthPrimaryButton {
+  width: 190px;
+}
 @media (max-width: 900px) {
   .AuthCard {
     flex-direction: column;

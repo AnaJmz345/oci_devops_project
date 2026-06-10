@@ -101,63 +101,18 @@ function AuthLanding({ mode = 'login', onModeChange }) {
         </div>
 
         <div className="AuthPane AuthPane--register" aria-hidden={!isRegister ? 'true' : 'false'}>
-          <p className="AuthKicker">WELCOME TO</p>
-          <p className="AuthBrand">VANTAGE</p>
-          <h1 className="AuthTitle">SIGN UP</h1>
+          <h1 className="AuthWelcomeTitle">
+            REQUEST ACCESS<br />
+            <span>VANTAGE</span>
+          </h1>
 
-          <form className="AuthForm" onSubmit={handleRegister}>
-            <label className="AuthLabel">
-              <span className="AuthLabelText">Name</span>
-              <input
-                className="AuthInput"
-                name="name"
-                autoComplete="name"
-                placeholder="NAME..."
-                value={registerForm.name}
-                onChange={(e) => setRegisterForm((prev) => ({ ...prev, name: e.target.value }))}
-              />
-            </label>
+          <p className="AuthLoginSubtitle">
+            Contact your project manager to create your Vantage account.
+          </p>
 
-            <label className="AuthLabel">
-              <span className="AuthLabelText">Mail</span>
-              <input
-                className="AuthInput"
-                name="mail"
-                autoComplete="email"
-                placeholder="MAIL..."
-                value={registerForm.mail}
-                onChange={(e) => setRegisterForm((prev) => ({ ...prev, mail: e.target.value }))}
-              />
-            </label>
-
-            <label className="AuthLabel">
-              <span className="AuthLabelText">Password</span>
-              <input
-                className="AuthInput"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                placeholder="PASSWORD..."
-                value={registerForm.password}
-                onChange={(e) => setRegisterForm((prev) => ({ ...prev, password: e.target.value }))}
-              />
-            </label>
-
-            <label className="AuthLabel">
-              <span className="AuthLabelText">Confirm password</span>
-              <input
-                className="AuthInput"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                placeholder="CONFIRM PASSWORD..."
-                value={registerForm.confirmPassword}
-                onChange={(e) => setRegisterForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-              />
-            </label>
-
+          <form className="AuthForm AuthForm--login" onSubmit={goLogin}>
             <button className="AuthPrimaryButton" type="submit" disabled={loading}>
-              {loading ? 'SIGNING UP...' : 'SIGN UP'}
+              BACK TO SIGN IN
             </button>
 
             {error && isRegister && <p className="AuthError">{error}</p>}
