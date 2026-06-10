@@ -36,7 +36,7 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<?> getAllUsers(Authentication authentication) {
-        if (!authUserService.isManager(authentication)) {
+        if (!authUserService.isManagerOrAdmin(authentication)) {
             return new ResponseEntity<>("No tienes permisos para ver usuarios.", HttpStatus.FORBIDDEN);
         }
 

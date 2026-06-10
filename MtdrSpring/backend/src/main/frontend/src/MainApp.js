@@ -18,6 +18,8 @@ import BacklogMainTab from './task/BacklogMainTab';
 import DashboardMainTab from './task/DashboardMainTab';
 import CalendarMainTab from './task/CalendarMainTab';
 
+import UserManagementPage from './users/UserManagementPage';
+
 function MainApp() {
   const { user, loadingAuth } = useAuth();
   const [page, setPage] = useState('login');
@@ -46,7 +48,9 @@ function MainApp() {
   const [viewBugsTask, setViewBugsTask] = useState(null);
   const [taskBugCounts, setTaskBugCounts] = useState({});
 
+  const isAdmin = user?.role === 'ADMIN';
   const isManager = user?.role === 'MANAGER';
+  const canManageWork = isManager || isAdmin;
 
   const fetchBacklogTasks = React.useCallback(() => {
     setBacklogLoading(true);
@@ -122,7 +126,8 @@ function MainApp() {
    
     { id: 'backlog',   label: 'BACKLOG' },
     { id: 'board',     label: 'BOARD' },
-    ...(isManager ? [{ id: 'analytics', label: 'ANALYTICS' }] : []),
+    ...(canManageWork ? [{ id: 'analytics', label: 'ANALYTICS' }] : []),
+    ...(isAdmin ? [{ id: 'users', label: 'USERS' }] : []),
     { id: 'calendar',  label: 'CALENDAR' },
   ];
 
@@ -226,7 +231,7 @@ function MainApp() {
               setTaskAssignees={setTaskAssignees}
             />
           )}
-          {activePage === 'analytics' && isManager && (
+          {activePage === 'analytics' && canManageWork && (
             <AnalyticsPage sprints={sprints} activeSprintId={activeSprintId} />
           )}
           {activePage === 'calendar' && (
@@ -234,6 +239,9 @@ function MainApp() {
               activeProjectName={activeProjectName}
               activeSprintLabel={activeSprintLabel}
             />
+          )}
+          {activePage === 'users' && isAdmin && (
+            <UserManagementPage />
           )}
         </main>
       </div>
