@@ -521,6 +521,118 @@
   color: rgba(30, 50, 36, 0.55);
 }
 
+.AN-ranking-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.AN-ranking-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  border: 1px solid rgba(194, 212, 212, 0.8);
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  min-width: 0;
+}
+
+.AN-ranking-position {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(199, 70, 52, 0.10);
+  color: #C74634;
+  font-size: 15px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.AN-ranking-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.AN-ranking-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.AN-ranking-name {
+  font-size: 14px;
+  font-weight: 900;
+  color: #1E3224;
+}
+
+.AN-ranking-signal {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #4C825C;
+}
+
+.AN-ranking-score {
+  min-width: 56px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.AN-ranking-score span {
+  display: block;
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 900;
+  color: #C74634;
+}
+
+.AN-ranking-score small {
+  display: block;
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 900;
+  color: rgba(30, 50, 36, 0.48);
+  text-transform: uppercase;
+}
+
+.AN-ranking-copy {
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(30, 50, 36, 0.58);
+}
+
+.AN-ranking-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.AN-ranking-metrics span {
+  padding: 5px 7px;
+  border-radius: 999px;
+  background: rgba(194, 212, 212, 0.22);
+  font-size: 10px;
+  font-weight: 900;
+  color: rgba(30, 50, 36, 0.62);
+  white-space: nowrap;
+}
+
+.AN-ranking-metrics .AN-good {
+  color: #4C825C;
+}
+
+.AN-ranking-metrics .AN-risk {
+  color: #C74634;
+}
+
 .AN-good {
   color: #4C825C;
 }
@@ -606,5 +718,14 @@
   }
   .AN-card--breakdown {
     grid-column: 1;
+  }
+  .AN-ranking-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 801px) and (max-width: 1180px) {
+  .AN-ranking-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
