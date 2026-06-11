@@ -87,6 +87,8 @@ spec:
                   optional: false
             - name: TELEGRAM_BOT_NAME
               value: "vantage_assistant_bot"
+            - name: APP_FRONTEND_URL
+              value: "https://vantage.myvnc.com"
             
           volumeMounts:
             - name: creds
