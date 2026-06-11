@@ -3,6 +3,7 @@
 class NaturalLanguageIntentService {
 	{field} {static} -CREATE_TASK : String
 	{field} {static} -DEBUG_FILE : Path
+	{field} {static} -LIST_ASSIGNED_TASKS : String
 	{field} {static} -LIST_TASKS : String
 	{field} {static} -MIN_CONFIDENCE : double
 	{field} {static} -UNKNOWN : String
@@ -10,6 +11,7 @@ class NaturalLanguageIntentService {
 	{field} -vectorIntentMatchingService : VectorIntentMatchingService
 	{method} -debug ( message : String ) : void
 	{method} +detectIntent ( userMessage : String ) : String
+	{method} -looksLikeAssignedTasksRequest ( userMessage : String ) : boolean
 	{method} -looksLikeCreateTaskRequest ( userMessage : String ) : boolean
 	{method} -looksLikeListTasksRequest ( userMessage : String ) : boolean
 	{method} -normalize ( text : String ) : String

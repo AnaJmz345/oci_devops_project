@@ -21,6 +21,7 @@ public class NaturalLanguageIntentService {
     private static final double MIN_CONFIDENCE = 0.35;
     private static final String LIST_TASKS = "LIST_TASKS";
     private static final String CREATE_TASK = "CREATE_TASK";
+    private static final String LIST_ASSIGNED_TASKS = "LIST_ASSIGNED_TASKS";
     private static final String UNKNOWN = "UNKNOWN";
     private static final Path DEBUG_FILE = Paths.get("task-ia-debug.log");
 
@@ -37,6 +38,11 @@ public class NaturalLanguageIntentService {
         if (userMessage == null || userMessage.trim().isEmpty()) {
             debug("Empty message. Final intent: " + UNKNOWN);
             return UNKNOWN;
+        }
+
+        if (looksLikeAssignedTasksRequest(userMessage)) {
+            debug("Final intent: " + LIST_ASSIGNED_TASKS + " using local fallback");
+            return LIST_ASSIGNED_TASKS;
         }
 
         if (looksLikeListTasksRequest(userMessage)) {
@@ -72,10 +78,61 @@ public class NaturalLanguageIntentService {
         if ("TASK_LIST_MINE".equals(intentKey)) {
             return LIST_TASKS;
         }
+        if ("TASK_LIST_BY_USER".equals(intentKey) || "TASK_LIST_BY_DEVELOPER".equals(intentKey)) {
+            return LIST_ASSIGNED_TASKS;
+        }
         if ("TASK_CREATE".equals(intentKey)) {
             return CREATE_TASK;
         }
         return UNKNOWN;
+    }
+
+    private boolean looksLikeAssignedTasksRequest(String userMessage) {
+        String normalizedMessage = normalize(userMessage);
+        boolean hasTaskNoun = normalizedMessage.contains("task")
+                || normalizedMessage.contains("tasks")
+                || normalizedMessage.contains("todo")
+                || normalizedMessage.contains("to do")
+                || normalizedMessage.contains("tarea")
+                || normalizedMessage.contains("tareas")
+                || normalizedMessage.contains("pendiente")
+                || normalizedMessage.contains("pendientes");
+
+        boolean hasAssignmentLanguage = normalizedMessage.contains("assigned")
+                || normalizedMessage.contains("assignee")
+                || normalizedMessage.contains("developer")
+                || normalizedMessage.contains("developers")
+                || normalizedMessage.contains("member")
+                || normalizedMessage.contains("person")
+                || normalizedMessage.contains("asignad")
+                || normalizedMessage.contains("desarrollador")
+                || normalizedMessage.contains("desarrolladores")
+                || normalizedMessage.contains("usuario")
+                || normalizedMessage.contains("usuarios")
+                || normalizedMessage.contains("persona")
+                || normalizedMessage.contains("equipo");
+
+        boolean hasListVerb = normalizedMessage.contains("show")
+                || normalizedMessage.contains("display")
+                || normalizedMessage.contains("list")
+                || normalizedMessage.contains("see")
+                || normalizedMessage.contains("tell me")
+                || normalizedMessage.contains("what")
+                || normalizedMessage.contains("who")
+                || normalizedMessage.contains("muestra")
+                || normalizedMessage.contains("mostrar")
+                || normalizedMessage.contains("lista")
+                || normalizedMessage.contains("listar")
+                || normalizedMessage.contains("dime")
+                || normalizedMessage.contains("quien")
+                || normalizedMessage.contains("que");
+
+        debug("Fallback LIST_ASSIGNED_TASKS. normalizedMessage=" + normalizedMessage
+                + ", hasTaskNoun=" + hasTaskNoun
+                + ", hasAssignmentLanguage=" + hasAssignmentLanguage
+                + ", hasListVerb=" + hasListVerb);
+
+        return hasTaskNoun && hasAssignmentLanguage && hasListVerb;
     }
 
     private boolean looksLikeListTasksRequest(String userMessage) {

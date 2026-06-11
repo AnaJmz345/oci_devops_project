@@ -1,2 +1,2 @@
 WALLET_LOCATION = (SOURCE = (METHOD = file) (METHOD_DATA = (DIRECTORY="C:/Users/demmi/Documents/Coding/PROJECTS/oci_devops_project/Wallet_reacttodogxdmp")))
-SSL_SERVER_DN_MATCH=yes  
+SSL_SERVER_DN_MATCH=yes

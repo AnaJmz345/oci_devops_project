@@ -103,7 +103,7 @@ class BotActionsMockTest {
         actions.fnCompletedTasksBySprint();
 
         String message = lastMessageText();
-        assertTrue(message.contains("Tareas completadas de Sprint 1"));
+        assertTrue(message.contains("Completed tasks for Sprint 1"));
         assertTrue(message.contains("API terminada"));
         assertTrue(!message.contains("UI pendiente"));
     }
@@ -124,9 +124,54 @@ class BotActionsMockTest {
         actions.fnCompletedTasksByUserInSprint();
 
         String message = lastMessageText();
-        assertTrue(message.contains("Tareas completadas de Dev Uno en Sprint 1"));
+        assertTrue(message.contains("Completed tasks for Dev Uno in Sprint 1"));
         assertTrue(message.contains("API de pagos"));
         assertTrue(!message.contains("API de reportes"));
+    }
+
+    @Test
+    void listsAssignedTasksForEachDeveloper() throws Exception {
+        User devOne = user(7L, "dev1@correo.com", "Dev Uno");
+        User devTwo = user(9L, "dev2@correo.com", "Dev Dos");
+        when(userService.findByRole("DEVELOPER")).thenReturn(List.of(devOne, devTwo));
+        when(taskService.findAll()).thenReturn(List.of(
+                task(1L, "API de pagos", "TODO", LocalDate.of(2026, 6, 20)),
+                task(2L, "UI dashboard", "IN PROGRESS", LocalDate.of(2026, 6, 21))));
+        when(taskService.getAllAssignees()).thenReturn(List.of(
+                assignee(1L, 7L),
+                assignee(2L, 9L)));
+
+        actions.setRequestText("show tasks assigned to each developer");
+        actions.fnListAssignedTasks();
+
+        String message = lastMessageText();
+        assertTrue(message.contains("Tasks Assigned by Developer"));
+        assertTrue(message.contains("Dev Uno"));
+        assertTrue(message.contains("API de pagos"));
+        assertTrue(message.contains("Dev Dos"));
+        assertTrue(message.contains("UI dashboard"));
+    }
+
+    @Test
+    void listsAssignedTasksForSpecificDeveloper() throws Exception {
+        User devOne = user(7L, "dev1@correo.com", "Dev Uno");
+        User devTwo = user(9L, "dev2@correo.com", "Dev Dos");
+        when(userService.findByRole("DEVELOPER")).thenReturn(List.of(devOne, devTwo));
+        when(userService.findByMail("dev1@correo.com")).thenReturn(Optional.of(devOne));
+        when(taskService.findAll()).thenReturn(List.of(
+                task(1L, "API de pagos", "TODO", LocalDate.of(2026, 6, 20)),
+                task(2L, "UI dashboard", "IN PROGRESS", LocalDate.of(2026, 6, 21))));
+        when(taskService.getAllAssignees()).thenReturn(List.of(
+                assignee(1L, 7L),
+                assignee(2L, 9L)));
+
+        actions.setRequestText("what tasks are assigned to dev1@correo.com");
+        actions.fnListAssignedTasks();
+
+        String message = lastMessageText();
+        assertTrue(message.contains("Tasks Assigned to Dev Uno"));
+        assertTrue(message.contains("API de pagos"));
+        assertTrue(!message.contains("UI dashboard"));
     }
 
     private String lastMessageText() throws Exception {

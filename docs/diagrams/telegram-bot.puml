@@ -2,6 +2,7 @@
 
 class BotActions {
 	{field} {static} -EMAIL_PATTERN : Pattern
+	{field} {static} -NO_SPRINT : String
 	{field} {static} -NUMBER_PATTERN : Pattern
 	{field} ~chatId : long
 	{field} ~detectedIntent : String
@@ -11,11 +12,22 @@ class BotActions {
 	{field} ~sprintService : SprintService
 	{field} ~taskService : TaskService
 	{field} ~telegramClient : TelegramClient
+	{method} -addKeyboardRows ( items : List , isDone : boolean , keyboard : List ) : void
+	{method} -appendAssignedTaskLines ( message : StringBuilder , tasks : List , sprintNames : Map ) : void
+	{method} -appendStatusSection ( responseText : StringBuilder , status : String , items : List , meta : String ) : void
+	{method} -appendTaskLine ( responseText : StringBuilder , item : TaskView ) : void
+	{method} -assignedTasksByDeveloperMessage ( developers : List , tasksById : Map , assigneesByTask : Map , sprintNames : Map ) : String
+	{method} -assignedTasksForDeveloperMessage ( developer : User , tasksById : Map , assigneesByTask : Map , sprintNames : Map ) : String
+	{method} -assigneeNames ( taskId : Long , assigneesByTask : Map , userLabels : Map ) : String
+	{method} -buildTaskViews () : List
 	{method} -commandPayload ( text : String ) : String
+	{method} -compareSprintNames ( left : String , right : String ) : int
 	{method} -completedTasksMessage ( title : String , tasks : List ) : String
 	{method} -createTask ( draft : TaskDraft , assignee : User , sprint : Sprint ) : void
 	{method} -createTaskHelpMessage () : String
 	{method} -developerEmailsMessage () : String
+	{method} -filterByStatus ( tasks : List , status : String ) : List
+	{method} -findRequestedDeveloper ( text : String , developers : List ) : Optional
 	{method} -firstEmail ( text : String ) : String
 	{method} -firstNumber ( text : String ) : Long
 	{method} +fnAddItem () : void
@@ -28,16 +40,33 @@ class BotActions {
 	{method} +fnHide () : void
 	{method} +fnLLM () : void
 	{method} +fnListAll () : void
+	{method} +fnListAssignedTasks () : void
 	{method} +fnStart () : void
 	{method} +fnUndo () : void
+	{method} -groupBySprint ( taskViews : List ) : Map
 	{method} -handleTaskDraft ( chatKey : Long , draft : TaskDraft ) : void
+	{method} -isAssignedTasksRequest ( text : String ) : boolean
 	{method} -isCompletedBySprintCommand ( text : String ) : boolean
 	{method} -isCompletedByUserSprintCommand ( text : String ) : boolean
 	{method} -isCreateTaskCommand ( text : String ) : boolean
+	{method} -loadAssigneesByTask () : Map
+	{method} -loadDevelopers () : List
+	{method} -loadSprintNames () : Map
+	{method} -loadUserLabels () : Map
+	{method} -looksLikeSpecificDeveloperRequest ( text : String ) : boolean
+	{method} -matchesUserMention ( normalizedText : String , user : User ) : boolean
 	{method} -normalize ( text : String ) : String
+	{method} -normalizeStatus ( status : String ) : String
 	{method} -resolveSprint ( draft : TaskDraft ) : Optional
+	{method} -resolveSprintName ( sprintId : Long , sprintNames : Map ) : String
+	{method} -safeAssignees () : List
+	{method} -safeTasks () : List
 	{method} -sprintOptionsMessage () : String
+	{method} -statusEmoji ( status : String ) : String
+	{method} -statusHeading ( status : String , count : int , meta : String ) : String
+	{method} -tasksAssignedTo ( oracleId : Long , tasksById : Map , assigneesByTask : Map ) : List
 	{method} +translateNaturalLanguageIntent () : void
+	{method} -userLabel ( user : User ) : String
 	{method} -validateDraft ( draft : TaskDraft ) : String
 	{method} -valueOrEmpty ( value : Object ) : String
 }
@@ -55,15 +84,22 @@ enum BotCommands {
 	{field} +CREATE_TASK
 	{field} +HIDE_COMMAND
 	{field} +LLM_REQ
+	{field} +SHOW_ALL_DONE
 	{field} +START_COMMAND
 	{field} +TODO_LIST
 }
 
 
 class BotHelper {
+	{field} {static} -PARSE_MODE_HTML : String
+	{field} {static} -SAFE_MESSAGE_LIMIT : int
+	{field} {static} -TELEGRAM_MESSAGE_LIMIT : int
 	{field} {static} -logger : Logger
+	{method}  {static} +escapeHtml ( value : String ) : String
 	{method}  {static} +sendMessageToTelegram ( chatId : Long , text : String , bot : TelegramClient ) : void
 	{method}  {static} +sendMessageToTelegram ( chatId : Long , text : String , bot : TelegramClient , rk : ReplyKeyboardMarkup ) : void
+	{method}  {static} -sendMessageToTelegram ( chatId : Long , text : String , bot : TelegramClient , rk : ReplyKeyboardMarkup , removeKeyboard : boolean ) : void
+	{method}  {static} -splitMessage ( text : String ) : List
 }
 
 
@@ -78,6 +114,7 @@ enum BotLabels {
 	{field} +HIDE_MAIN_SCREEN
 	{field} +LIST_ALL_ITEMS
 	{field} +MY_TODO_LIST
+	{field} +SHOW_ALL_DONE
 	{field} +SHOW_MAIN_SCREEN
 	{field} +UNDO
 }
@@ -98,6 +135,7 @@ enum BotMessages {
 class NaturalLanguageIntentService {
 	{field} {static} -CREATE_TASK : String
 	{field} {static} -DEBUG_FILE : Path
+	{field} {static} -LIST_ASSIGNED_TASKS : String
 	{field} {static} -LIST_TASKS : String
 	{field} {static} -MIN_CONFIDENCE : double
 	{field} {static} -UNKNOWN : String
@@ -105,6 +143,7 @@ class NaturalLanguageIntentService {
 	{field} -vectorIntentMatchingService : VectorIntentMatchingService
 	{method} -debug ( message : String ) : void
 	{method} +detectIntent ( userMessage : String ) : String
+	{method} -looksLikeAssignedTasksRequest ( userMessage : String ) : boolean
 	{method} -looksLikeCreateTaskRequest ( userMessage : String ) : boolean
 	{method} -looksLikeListTasksRequest ( userMessage : String ) : boolean
 	{method} -normalize ( text : String ) : String
