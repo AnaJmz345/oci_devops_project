@@ -32,7 +32,10 @@ function DashboardMainTab({
   const getAssigneeName = (taskId) => {
     const assignee = taskAssignees[taskId];
     if (!assignee) return null;
-    const u = users.find(usr => String(usr.oracleId) === String(assignee.oracleId));
+    const assigneeOracleId = assignee.oracleId ?? assignee.oracle_id;
+    const u = users.find(usr =>
+      String(usr.oracleId ?? usr.oracle_id) === String(assigneeOracleId)
+    );
     return u ? u.name.split(' ')[0] : null;
   };
 
@@ -46,7 +49,7 @@ function DashboardMainTab({
 
   const getAssigneeDisplayName = (oracleId) => {
     if (!oracleId) return null;
-    const found = users.find((usr) => String(usr.oracleId) === String(oracleId));
+    const found = users.find((usr) => String(usr.oracleId ?? usr.oracle_id) === String(oracleId));
     return found ? found.name.split(' ')[0] : null;
   };
 
@@ -77,7 +80,8 @@ function DashboardMainTab({
 
     if (newStatus === 'DONE' && task.status !== 'DONE') {
       const assignee = getAssignee(taskId);
-      if (!assignee?.oracleId) {
+      const assigneeOracleId = assignee?.oracleId ?? assignee?.oracle_id;
+      if (!assigneeOracleId) {
         setCompletionError('Assign a developer to this task before marking it as DONE.');
         setPendingCompletion({
           task,
@@ -92,7 +96,7 @@ function DashboardMainTab({
       setPendingCompletion({
         task,
         assignee,
-        assigneeName: getAssigneeDisplayName(assignee.oracleId),
+        assigneeName: getAssigneeDisplayName(assigneeOracleId),
         initialHours: assignee.realTimeSpent ?? '',
       });
       return;
@@ -134,7 +138,9 @@ function DashboardMainTab({
   };
 
   const handleCompletionConfirm = async (realTimeSpent) => {
-    if (!pendingCompletion?.task?.taskId || !pendingCompletion?.assignee?.oracleId) {
+    const assigneeOracleId = pendingCompletion?.assignee?.oracleId ?? pendingCompletion?.assignee?.oracle_id;
+
+    if (!pendingCompletion?.task?.taskId || !assigneeOracleId) {
       setCompletionError('Assign a developer to this task before marking it as DONE.');
       return;
     }
@@ -149,7 +155,7 @@ function DashboardMainTab({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          oracleId: assignee.oracleId,
+          oracleId: assigneeOracleId,
           realTimeSpent,
         }),
       });

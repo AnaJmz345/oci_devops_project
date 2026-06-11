@@ -95,12 +95,13 @@ function MainApp() {
     if (user) {
       setActivePage('backlog');
       fetchSprints();
-      fetch('/users')
+      const usersEndpoint = canManageWork ? '/users' : '/users/developers';
+      fetch(usersEndpoint)
         .then(r => r.ok ? r.json() : [])
         .then(setUsers)
         .catch(() => {});
     }
-  }, [user, fetchSprints]);
+  }, [user, canManageWork, fetchSprints]);
 
   useEffect(() => {
     if (user && (activePage === 'backlog' || activePage === 'board')) {
