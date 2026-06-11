@@ -13,6 +13,12 @@ public class IntentCatalogService {
         List<IntentExample> seed = new ArrayList<>();
         add(seed, "TASK_LIST_MINE", "muestrame mis tareas", "que pendientes tengo", "lista mis tareas",
                 "ver mis tareas", "consultar mis pendientes");
+        add(seed, "TASK_LIST_BY_USER", "que tareas tiene Juan", "muestrame las tareas de ana@correo.com",
+                "pendientes asignados a Maria", "tasks assigned to dev@correo.com",
+                "show me tasks for a developer");
+        add(seed, "TASK_LIST_BY_DEVELOPER", "tareas por desarrollador",
+                "tasks assigned to each developer", "workload by developer",
+                "lista tareas asignadas por usuario");
         add(seed, "TASK_CREATE", "agrega una tarea para terminar el login", "crea una tarea",
                 "registrar tarea nueva", "crear pendiente", "alta de tarea");
         add(seed, "TASK_UPDATE_STATUS", "marca la tarea 5 como terminada", "pon la tarea en progreso",

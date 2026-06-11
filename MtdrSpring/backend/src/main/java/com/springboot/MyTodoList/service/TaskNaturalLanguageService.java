@@ -125,6 +125,12 @@ public class TaskNaturalLanguageService {
         if (normalized.startsWith("/creartarea")) {
             return value.substring("/creartarea".length()).trim();
         }
+        if (normalized.startsWith("/create_task")) {
+            return value.substring("/create_task".length()).trim();
+        }
+        if (normalized.startsWith("create task")) {
+            return value.substring("create task".length()).trim();
+        }
         if (normalized.startsWith("crear tarea")) {
             return value.substring("crear tarea".length()).trim();
         }

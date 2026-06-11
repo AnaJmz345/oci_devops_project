@@ -6,10 +6,11 @@ public enum BotCommands {
 	HIDE_COMMAND("/hide"), 
 	TODO_LIST("/todolist"),
 	ADD_ITEM("/additem"),
+	SHOW_ALL_DONE("/showdone"),
 	LLM_REQ("/llm"),
-	CREATE_TASK("/creartarea"),
-	COMPLETED_BY_SPRINT("/completadas_sprint"),
-	COMPLETED_BY_USER_SPRINT("/completadas_usuario_sprint");
+	CREATE_TASK("/create_task"),
+	COMPLETED_BY_SPRINT("/completed_by_sprint"),
+	COMPLETED_BY_USER_SPRINT("/completed_by_user_sprint");
 
 	private String command;
 
