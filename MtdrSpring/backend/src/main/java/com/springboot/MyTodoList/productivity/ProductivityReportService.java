@@ -54,6 +54,7 @@ public class ProductivityReportService {
 
         TeamProductivitySummary teamSummary = buildTeamSummary(sprintId, selectedTasks, assignees, bugs);
         List<MemberProductivitySummary> members = buildMembers(developers, selectedTasks, assignees, bugs);
+        List<MemberProductivityRank> memberRanking = buildMemberRanking(members);
         List<ProductivityInsight> patterns = buildPatternInsights(teamSummary, members);
         List<ProductivityInsight> recommendations = patterns.stream()
                 .filter(p -> !"positive".equals(p.getSeverity()))
@@ -67,6 +68,7 @@ public class ProductivityReportService {
                 "LOCAL_VECTOR_EMBEDDINGS_384D",
                 teamSummary,
                 members,
+                memberRanking,
                 patterns,
                 recommendations,
                 savings,
@@ -215,6 +217,94 @@ public class ProductivityReportService {
                     match == null ? "default" : match.getMatchedExample()));
         }
         return insights;
+    }
+
+    private List<MemberProductivityRank> buildMemberRanking(List<MemberProductivitySummary> members) {
+        List<MemberProductivityRank> scored = members.stream()
+                .map(member -> {
+                    String observation = memberObservation(member);
+                    ProductivityPatternMatcher.MatchedPattern match = patternMatcher.match(observation);
+                    int score = memberProductivityScore(member, match);
+                    String signal = match == null ? "Productivity signal" : match.getPattern().getTitle();
+                    return new MemberProductivityRank(
+                            0,
+                            member.getOracleId(),
+                            member.getName(),
+                            score,
+                            member.getDoneTasks(),
+                            member.getAssignedTasks(),
+                            member.getCompletionPct(),
+                            member.getOnEstimatePct(),
+                            member.getVarianceHours(),
+                            signal,
+                            memberRankingExplanation(member, signal));
+                })
+                .sorted(Comparator.comparing(MemberProductivityRank::getProductivityScore).reversed()
+                        .thenComparing(MemberProductivityRank::getCompletedTasks, Comparator.reverseOrder())
+                        .thenComparing(MemberProductivityRank::getVarianceHours))
+                .collect(Collectors.toList());
+
+        List<MemberProductivityRank> ranked = new ArrayList<>();
+        for (int i = 0; i < scored.size(); i++) {
+            MemberProductivityRank item = scored.get(i);
+            ranked.add(new MemberProductivityRank(
+                    i + 1,
+                    item.getOracleId(),
+                    item.getName(),
+                    item.getProductivityScore(),
+                    item.getCompletedTasks(),
+                    item.getAssignedTasks(),
+                    item.getCompletionPct(),
+                    item.getOnEstimatePct(),
+                    item.getVarianceHours(),
+                    item.getSignal(),
+                    item.getExplanation()));
+        }
+        return ranked;
+    }
+
+    private int memberProductivityScore(MemberProductivitySummary member,
+            ProductivityPatternMatcher.MatchedPattern match) {
+        int deliveryScore = pct(member.getDoneTasks(), Math.max(1, member.getAssignedTasks()));
+        int throughputScore = Math.min(100, member.getDoneTasks() * 20);
+        int estimateScore = member.getOnEstimatePct();
+        int qualityScore = Math.min(100, member.getBugsSolved() * 20);
+        int variancePenalty = member.getVarianceHours() > 0 ? Math.min(18, (int) Math.round(member.getVarianceHours() * 2)) : 0;
+
+        int vectorSignalBonus = 0;
+        if (match != null && "positive".equals(match.getPattern().getSeverity())) {
+            vectorSignalBonus = 5;
+        } else if (match != null && "warning".equals(match.getPattern().getSeverity())) {
+            vectorSignalBonus = -5;
+        } else if (match != null && "critical".equals(match.getPattern().getSeverity())) {
+            vectorSignalBonus = -10;
+        }
+
+        int score = (int) Math.round(
+                deliveryScore * 0.38
+                        + throughputScore * 0.24
+                        + estimateScore * 0.24
+                        + qualityScore * 0.10
+                        - variancePenalty
+                        + vectorSignalBonus);
+        return clamp(score, 0, 100);
+    }
+
+    private String memberObservation(MemberProductivitySummary member) {
+        return "member completed " + member.getDoneTasks()
+                + " of " + member.getAssignedTasks()
+                + " assigned tasks with " + member.getCompletionPct()
+                + " percent completion, " + member.getOnEstimatePct()
+                + " percent within estimate, " + member.getVarianceHours()
+                + " hours variance, and " + member.getBugsSolved()
+                + " bugs solved";
+    }
+
+    private String memberRankingExplanation(MemberProductivitySummary member, String signal) {
+        return signal + ": " + member.getDoneTasks() + " of " + member.getAssignedTasks()
+                + " tasks completed, " + member.getOnEstimatePct()
+                + "% within estimate, and " + member.getVarianceHours()
+                + "h estimate delta.";
     }
 
     private SavingsEstimate buildSavings(TeamProductivitySummary team, List<Task> tasks, List<Bug> bugs) {

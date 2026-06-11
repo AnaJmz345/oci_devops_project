@@ -53,6 +53,21 @@ class MatchedPattern {
 }
 
 
+class MemberProductivityRank {
+	{field} -assignedTasks : int
+	{field} -completedTasks : int
+	{field} -completionPct : int
+	{field} -explanation : String
+	{field} -name : String
+	{field} -onEstimatePct : int
+	{field} -oracleId : Long
+	{field} -productivityScore : int
+	{field} -rank : int
+	{field} -signal : String
+	{field} -varianceHours : double
+}
+
+
 class MemberProductivitySummary {
 	{field} -actualHours : double
 	{field} -assignedTasks : int
@@ -113,6 +128,7 @@ class ProductivityReportController {
 class ProductivityReportService {
 	{field} -hourlyRateUsd : double
 	{field} -userService : UserService
+	{method} -buildMemberRanking ( members : List ) : List
 	{method} -buildMembers ( developers : List , tasks : List , assignees : List , bugs : List ) : List
 	{method} -buildPatternInsights ( team : TeamProductivitySummary , members : List ) : List
 	{method} +buildReport ( sprintId : String ) : ProductivityReport
@@ -120,6 +136,9 @@ class ProductivityReportService {
 	{method} -buildTeamSummary ( sprintId : String , tasks : List , assignees : List , bugs : List ) : TeamProductivitySummary
 	{method} -clamp ( value : int , min : int , max : int ) : int
 	{method} -kpiExplanations () : List
+	{method} -memberObservation ( member : MemberProductivitySummary ) : String
+	{method} -memberProductivityScore ( member : MemberProductivitySummary , match : MatchedPattern ) : int
+	{method} -memberRankingExplanation ( member : MemberProductivitySummary , signal : String ) : String
 	{method} -memberSummary ( assigned : int , done : int , variance : double , workloadSharePct : int ) : String
 	{method} -pct ( part : int , total : int ) : int
 	{method} -round1 ( value : double ) : double
@@ -296,6 +315,7 @@ BugService -->  BugRepository : bugRepository
 MatchedPattern *--  ProductivityPattern : pattern
 ProductivityPatternMatcher "1" o-- "0..*"  ProductivityPattern : patterns
 ProductivityReport "1" o-- "0..*"  KpiExplanation : kpiExplanations
+ProductivityReport "1" o-- "0..*"  MemberProductivityRank : memberRanking
 ProductivityReport "1" o-- "0..*"  MemberProductivitySummary : members
 ProductivityReport "1" o-- "0..*"  ProductivityInsight : patterns
 ProductivityReport "1" o-- "0..*"  ProductivityInsight : recommendations

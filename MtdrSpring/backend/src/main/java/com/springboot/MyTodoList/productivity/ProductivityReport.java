@@ -8,6 +8,7 @@ public class ProductivityReport {
     private final String embeddingMode;
     private final TeamProductivitySummary teamSummary;
     private final List<MemberProductivitySummary> members;
+    private final List<MemberProductivityRank> memberRanking;
     private final List<ProductivityInsight> patterns;
     private final List<ProductivityInsight> recommendations;
     private final SavingsEstimate savingsEstimate;
@@ -15,12 +16,13 @@ public class ProductivityReport {
 
     public ProductivityReport(OffsetDateTime generatedAt, String embeddingMode,
             TeamProductivitySummary teamSummary, List<MemberProductivitySummary> members,
-            List<ProductivityInsight> patterns, List<ProductivityInsight> recommendations,
+            List<MemberProductivityRank> memberRanking, List<ProductivityInsight> patterns, List<ProductivityInsight> recommendations,
             SavingsEstimate savingsEstimate, List<KpiExplanation> kpiExplanations) {
         this.generatedAt = generatedAt;
         this.embeddingMode = embeddingMode;
         this.teamSummary = teamSummary;
         this.members = members;
+        this.memberRanking = memberRanking;
         this.patterns = patterns;
         this.recommendations = recommendations;
         this.savingsEstimate = savingsEstimate;
@@ -31,6 +33,7 @@ public class ProductivityReport {
     public String getEmbeddingMode() { return embeddingMode; }
     public TeamProductivitySummary getTeamSummary() { return teamSummary; }
     public List<MemberProductivitySummary> getMembers() { return members; }
+    public List<MemberProductivityRank> getMemberRanking() { return memberRanking; }
     public List<ProductivityInsight> getPatterns() { return patterns; }
     public List<ProductivityInsight> getRecommendations() { return recommendations; }
     public SavingsEstimate getSavingsEstimate() { return savingsEstimate; }

@@ -73,6 +73,20 @@ public class ProductivityPatternMatcher {
                 "The team shows strong progress with low variance.",
                 "Document successful practices and repeat the same planning pattern in the next sprint.",
                 List.of("strong team delivery", "high progress and few bugs", "healthy productivity")));
+        list.add(new ProductivityPattern(
+                "HIGH_MEMBER_PRODUCTIVITY",
+                "positive",
+                "High individual productivity",
+                "A team member is delivering assigned work with strong completion and healthy time control.",
+                "Use this member's delivery pattern as a reference for planning similar work.",
+                List.of("member completed many tasks within estimate", "high completion with low variance", "strong individual productivity")));
+        list.add(new ProductivityPattern(
+                "MEMBER_PRODUCTIVITY_RISK",
+                "warning",
+                "Individual productivity risk",
+                "A team member has low completion, high variance, or unresolved delivery pressure.",
+                "Review blockers, clarify scope, and rebalance work if needed.",
+                List.of("low member completion with high variance", "individual productivity risk", "assigned work not completed")));
         return list;
     }
 

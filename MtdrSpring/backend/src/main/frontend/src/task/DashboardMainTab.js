@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import LogActualHoursModal from './LogActualHoursModal';
+import { getDeveloperColor } from '../utils/memberColors';
 
 function DashboardMainTab({
   activeSprintId,
@@ -29,11 +30,13 @@ function DashboardMainTab({
     ? backlogTasks.filter(t => t.sprintId != null)
     : backlogTasks.filter(t => String(t.sprintId) === String(activeSprintId));
 
-  const getAssigneeName = (taskId) => {
+  const getAssigneeInfo = (taskId) => {
     const assignee = taskAssignees[taskId];
     if (!assignee) return null;
-    const u = users.find(usr => String(usr.oracleId) === String(assignee.oracleId));
-    return u ? u.name.split(' ')[0] : null;
+    const assigneeOracleId = assignee.oracleId ?? assignee.oracle_id;
+    const u = users.find(usr => String(usr.oracleId ?? usr.oracle_id) === String(assigneeOracleId));
+    const name = u?.name ? u.name.split(' ')[0] : null;
+    return name ? { name, oracleId: assigneeOracleId } : null;
   };
 
   const getSprintName = (sprintId) => {
@@ -46,7 +49,7 @@ function DashboardMainTab({
 
   const getAssigneeDisplayName = (oracleId) => {
     if (!oracleId) return null;
-    const found = users.find((usr) => String(usr.oracleId) === String(oracleId));
+    const found = users.find((usr) => String(usr.oracleId ?? usr.oracle_id) === String(oracleId));
     return found ? found.name.split(' ')[0] : null;
   };
 
@@ -214,7 +217,7 @@ function DashboardMainTab({
                   {colTasks.map(task => {
                     const isDragging = draggingTaskId === task.taskId;
                     const isUpdating = updating === task.taskId;
-                    const assigneeName = getAssigneeName(task.taskId);
+                    const assigneeInfo = getAssigneeInfo(task.taskId);
                     const sprintName = showAllSprints ? getSprintName(task.sprintId) : null;
 
                     return (
@@ -241,10 +244,15 @@ function DashboardMainTab({
                         )}
 
                         <div className="KB-card-footer">
-                          {assigneeName ? (
+                          {assigneeInfo ? (
                             <span className="KB-card-assignee">
-                              <span className="KB-card-avatar">{assigneeName[0]}</span>
-                              {assigneeName}
+                              <span
+                                className="KB-card-avatar"
+                                style={{ background: getDeveloperColor(assigneeInfo.oracleId, users) }}
+                              >
+                                {assigneeInfo.name[0]}
+                              </span>
+                              {assigneeInfo.name}
                             </span>
                           ) : (
                             <span className="KB-card-unassigned">Unassigned</span>

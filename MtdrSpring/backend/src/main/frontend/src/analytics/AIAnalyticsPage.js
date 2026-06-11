@@ -38,6 +38,7 @@ function AIAnalyticsPage({ activeSprintId }) {
   const recommendations = report?.recommendations || [];
   const patterns = report?.patterns || [];
   const kpis = report?.kpiExplanations || [];
+  const memberRanking = report?.memberRanking || [];
   const team = report?.teamSummary;
   const savings = report?.savingsEstimate;
 
@@ -150,6 +151,43 @@ function AIAnalyticsPage({ activeSprintId }) {
             <BarChart data={workloadShare} unit="%" color="#4C825C" />
           )}
         </div>
+      </div>
+
+      <div className="AN-card AN-card--breakdown">
+        <div className="AN-card-label">PRODUCTIVITY RANKING</div>
+        <div className="AN-card-title">MOST PRODUCTIVE MEMBERS</div>
+        {memberRanking.length === 0 ? (
+          <div className="AN-empty">No member ranking data available for this scope.</div>
+        ) : (
+          <div className="AN-ranking-list">
+            {memberRanking.map((member) => (
+              <div className="AN-ranking-row" key={member.oracleId}>
+                <div className="AN-ranking-position">#{member.rank}</div>
+                <div className="AN-ranking-main">
+                  <div className="AN-ranking-head">
+                    <div>
+                      <div className="AN-ranking-name">{member.name}</div>
+                      <div className="AN-ranking-signal">{member.signal}</div>
+                    </div>
+                    <div className="AN-ranking-score">
+                      <span>{member.productivityScore}</span>
+                      <small>score</small>
+                    </div>
+                  </div>
+                  <div className="AN-ranking-copy">{member.explanation}</div>
+                  <div className="AN-ranking-metrics">
+                    <span>{member.completedTasks}/{member.assignedTasks} tasks done</span>
+                    <span>{member.completionPct}% completion</span>
+                    <span>{member.onEstimatePct}% on estimate</span>
+                    <span className={member.varianceHours <= 0 ? 'AN-good' : 'AN-risk'}>
+                      {member.varianceHours}h delta
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="AN-card AN-card--breakdown">

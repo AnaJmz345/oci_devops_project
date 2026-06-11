@@ -1,16 +1,5 @@
 import React, { useEffect, useState } from 'react';
-
-// Distinct colors per member — vivid, accessible palette
-const MEMBER_COLORS = [
-  '#C74634', // red
-  '#F1B13F', // amber
-  '#4C825C', // green
-  '#2b2dbf', // blue
-  '#9b59b6', // purple
-  '#e07b39', // orange
-  '#16a085', // teal
-  '#8e44ad', // violet
-];
+import { getMemberColorByIndex } from '../utils/memberColors';
 
 function BarChart({ data = [], title = '', unit = '' }) {
   const [animated, setAnimated] = useState(false);
@@ -54,7 +43,7 @@ function BarChart({ data = [], title = '', unit = '' }) {
         ))}
 
         {data.map((d, i) => {
-          const color = MEMBER_COLORS[i % MEMBER_COLORS.length];
+          const color = d.color || getMemberColorByIndex(i);
           const heightPct = animated ? Math.max((d.value / max) * 100, d.value > 0 ? 4 : 0) : 0;
           return (
             <div key={i} style={{
@@ -85,7 +74,7 @@ function BarChart({ data = [], title = '', unit = '' }) {
       {/* X-axis labels with color dots */}
       <div style={{ display: 'flex', gap: 12 }}>
         {data.map((d, i) => {
-          const color = MEMBER_COLORS[i % MEMBER_COLORS.length];
+          const color = d.color || getMemberColorByIndex(i);
           return (
             <div key={i} style={{
               flex: 1, display: 'flex', flexDirection: 'column',

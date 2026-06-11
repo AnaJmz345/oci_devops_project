@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ProgressRing from './ProgressRing';
 import BarChart from './BarChart';
 import GroupedBarChart from './GroupedBarChart';
+import { getMemberColorByIndex } from '../utils/memberColors';
 import './analytics.css';
 
 function StatPill({ label, value, color }) {
@@ -82,9 +83,10 @@ function AnalyticsPage({ sprints, activeSprintId }) {
 
   const developers = users
     .filter((u) => u.role === 'DEVELOPER')
-    .map((u) => ({
+    .map((u, index) => ({
       id: String(getOracleId(u)),
       label: getFirstName(u.name),
+      color: getMemberColorByIndex(index),
     }))
     .filter((u) => u.id !== 'undefined' && u.id !== 'null');
 
@@ -98,7 +100,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
       const userTaskIds = new Set(userAssignees.map((a) => a.taskId));
       const doneCount = tasks.filter((t) => userTaskIds.has(t.taskId) && t.status === 'DONE').length;
       const totalCount = tasks.filter((t) => userTaskIds.has(t.taskId)).length;
-      return { label: u.label, value: doneCount, total: totalCount };
+      return { id: u.id, label: u.label, value: doneCount, total: totalCount, color: u.color };
     })
     .filter((d) => d.total > 0);
 
@@ -107,7 +109,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
       const actual = assignees
         .filter((a) => String(getOracleId(a)) === u.id)
         .reduce((sum, a) => sum + (a.realTimeSpent || 0), 0);
-      return { label: u.label, value: Math.round(actual * 10) / 10 };
+      return { id: u.id, label: u.label, value: Math.round(actual * 10) / 10, color: u.color };
     })
     .filter((d) => d.value > 0);
 
