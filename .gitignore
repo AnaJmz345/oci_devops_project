@@ -44,6 +44,7 @@ frontend/build
 .env.production.local
 .idea
 *.env
+MtdrSpring/backend/src/main/resources/application-local.properties
 
 frontend/package-lock.json
 frontend/npm-debug.log*
