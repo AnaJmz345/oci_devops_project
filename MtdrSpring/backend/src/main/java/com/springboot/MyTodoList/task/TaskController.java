@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import com.springboot.MyTodoList.service.AuthUserService;
 import org.springframework.security.core.Authentication;
 
+import com.springboot.MyTodoList.model.User;
+import java.util.Optional;
+
 import java.util.List;
 
 @RestController
@@ -18,6 +21,11 @@ public class TaskController {
 
     @Autowired
     private AuthUserService authUserService;
+
+    private boolean isAssignedToTask(Long taskId, Long oracleId) {
+        return taskService.getAssigneesByTaskId(taskId).stream()
+                .anyMatch(assignee -> String.valueOf(assignee.getOracleId()).equals(String.valueOf(oracleId)));
+    }
 
     @GetMapping
     public List<Task> getAllTasks() {
@@ -51,14 +59,37 @@ public class TaskController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateTask(@PathVariable Long id, @RequestBody Task task, Authentication authentication) {
-        if (!authUserService.isManager(authentication)) {
-            return new ResponseEntity<>("No tienes permisos para editar tareas.", HttpStatus.FORBIDDEN);
-        }
         try {
-            Task updated = taskService.updateTask(id, task);
+            if (authUserService.isManagerOrAdmin(authentication)) {
+                Task updated = taskService.updateTask(id, task);
+                if (updated != null) {
+                    return new ResponseEntity<>(updated, HttpStatus.OK);
+                }
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+
+            Optional<User> currentUserOpt = authUserService.getCurrentUser(authentication);
+
+            if (currentUserOpt.isEmpty()) {
+                return new ResponseEntity<>("No autenticado.", HttpStatus.UNAUTHORIZED);
+            }
+
+            User currentUser = currentUserOpt.get();
+
+            if (!authUserService.isDeveloper(authentication) || !isAssignedToTask(id, currentUser.getOracleId())) {
+                return new ResponseEntity<>("No tienes permisos para actualizar esta tarea.", HttpStatus.FORBIDDEN);
+            }
+
+            if (task.getStatus() == null || task.getStatus().isBlank()) {
+                return new ResponseEntity<>("Status es obligatorio.", HttpStatus.BAD_REQUEST);
+            }
+
+            Task updated = taskService.updateTaskStatus(id, task.getStatus());
+
             if (updated != null) {
                 return new ResponseEntity<>(updated, HttpStatus.OK);
             }
+
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             System.err.println("Error updating task " + id + ": " + e.getMessage());

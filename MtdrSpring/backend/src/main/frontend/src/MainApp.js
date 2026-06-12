@@ -122,11 +122,15 @@ function MainApp() {
   const activeTeamName = 'PLACEHOLDER TEAM';
 
   const projectPages = [
-    { id: 'backlog',   label: 'BACKLOG' },
-    { id: 'board',     label: 'BOARD' },
-    ...(canManageWork ? [{ id: 'analytics', label: 'ANALYTICS' }] : []),
+    { id: 'backlog', label: 'BACKLOG' },
+    { id: 'board', label: 'BOARD' },
+    ...(canManageWork
+      ? [
+          { id: 'analytics', label: 'ANALYTICS' },
+          { id: 'ai-analytics', label: 'AI ANALYTICS' },
+        ]
+      : []),
     ...(isAdmin ? [{ id: 'users', label: 'USERS' }] : []),
-    { id: 'calendar',  label: 'CALENDAR' },
   ];
 
   const sprintOptions = [
@@ -230,7 +234,7 @@ function MainApp() {
           {activePage === 'analytics' && canManageWork && (
             <AnalyticsPage sprints={sprints} activeSprintId={activeSprintId} />
           )}
-          {activePage === 'ai-analytics' && isManager && (
+          {activePage === 'ai-analytics' && canManageWork && (
             <AIAnalyticsPage activeSprintId={activeSprintId} />
           )}
           {activePage === 'users' && isAdmin && (

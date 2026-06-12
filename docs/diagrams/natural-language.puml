@@ -1,5 +1,15 @@
 @startuml
 
+class AuthUserService {
+	{method} +getCurrentUser ( authentication : Authentication ) : Optional
+	{method} +hasRole ( authentication : Authentication , role : String ) : boolean
+	{method} +isAdmin ( authentication : Authentication ) : boolean
+	{method} +isDeveloper ( authentication : Authentication ) : boolean
+	{method} +isManager ( authentication : Authentication ) : boolean
+	{method} +isManagerOrAdmin ( authentication : Authentication ) : boolean
+}
+
+
 class IntentCatalogService {
 	{method} -add ( target : List , intentKey : String , phrases : String[] ) : void
 	{method} +findActiveExamples () : List
@@ -114,8 +124,10 @@ class UserService {
 	{field} -userRepository : UserRepository
 	{method} +addUser ( newUser : User ) : User
 	{method} +checkPassword ( rawPassword : String , encodedPassword : String ) : boolean
+	{method} +createInternalUser ( name : String , mail : String , role : String ) : User
 	{method} +findAll () : List
 	{method} +findByMail ( mail : String ) : Optional
+	{method} +findByMailIgnoreCase ( mail : String ) : Optional
 	{method} +findByRole ( role : String ) : List
 	{method} +getUserById ( id : Long ) : ResponseEntity
 }
@@ -129,6 +141,7 @@ class VectorIntentMatchingService {
 
 
 
+AuthUserService -->  UserService : userService
 IntentCatalogService "1" o-- "0..*"  IntentExample : examples
 LocalHashEmbeddingService ..|>  IntentEmbeddingService
 NaturalLanguageIntentService *--  VectorIntentMatchingService : vectorIntentMatchingService

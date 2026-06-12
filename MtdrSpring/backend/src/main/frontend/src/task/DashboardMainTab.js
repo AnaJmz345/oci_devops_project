@@ -33,11 +33,21 @@ function DashboardMainTab({
   const getAssigneeInfo = (taskId) => {
     const assignee = taskAssignees[taskId];
     if (!assignee) return null;
+
     const assigneeOracleId = assignee.oracleId ?? assignee.oracle_id;
+
     const u = users.find(usr =>
       String(usr.oracleId ?? usr.oracle_id) === String(assigneeOracleId)
     );
-    return u ? u.name.split(' ')[0] : null;
+
+    if (!u) return null;
+
+    const firstName = u.name ? u.name.split(' ')[0] : 'User';
+
+    return {
+      oracleId: assigneeOracleId,
+      name: firstName,
+    };
   };
 
   const getSprintName = (sprintId) => {

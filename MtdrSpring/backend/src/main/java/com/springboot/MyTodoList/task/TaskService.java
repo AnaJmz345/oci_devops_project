@@ -39,6 +39,18 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
+    public Task updateTaskStatus(Long id, String status) {
+        Optional<Task> existing = taskRepository.findById(id);
+
+        if (existing.isEmpty()) {
+            return null;
+        }
+
+        Task task = existing.get();
+        task.setStatus(status);
+        return taskRepository.save(task);
+    }
+
     public Task updateTask(Long id, Task updated) {
         Optional<Task> existing = taskRepository.findById(id);
         if (existing.isPresent()) {

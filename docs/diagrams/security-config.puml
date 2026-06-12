@@ -30,6 +30,7 @@ class OracleConfiguration {
 
 
 class WebSecurityConfiguration {
+	{field} -frontendUrl : String
 	{method} +passwordEncoder () : PasswordEncoder
 	{method} +securityFilterChain ( http : HttpSecurity ) : SecurityFilterChain
 }

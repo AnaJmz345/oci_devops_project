@@ -52,12 +52,13 @@ class Sprint {
 
 
 class SprintController {
-	{method} +createSprint ( sprint : Sprint ) : ResponseEntity
-	{method} +deleteSprint ( id : Long ) : ResponseEntity
+	{field} -authUserService : AuthUserService
+	{method} +createSprint ( sprint : Sprint , authentication : Authentication ) : ResponseEntity
+	{method} +deleteSprint ( id : Long , authentication : Authentication ) : ResponseEntity
 	{method} +getAllSprints () : List
 	{method} +getByStatus ( status : String ) : List
 	{method} +getSprintById ( id : Long ) : ResponseEntity
-	{method} +updateSprint ( id : Long , sprint : Sprint ) : ResponseEntity
+	{method} +updateSprint ( id : Long , sprint : Sprint , authentication : Authentication ) : ResponseEntity
 }
 
 
@@ -124,18 +125,20 @@ class TaskCompletionRequest {
 
 
 class TaskController {
-	{method} +assignTask ( assignee : TaskAssignee ) : ResponseEntity
+	{field} -authUserService : AuthUserService
+	{method} +assignTask ( assignee : TaskAssignee , authentication : Authentication ) : ResponseEntity
 	{method} +completeTask ( id : Long , body : TaskCompletionRequest ) : ResponseEntity
-	{method} +createTask ( task : Task ) : ResponseEntity
-	{method} +deleteTask ( id : Long ) : ResponseEntity
+	{method} +createTask ( task : Task , authentication : Authentication ) : ResponseEntity
+	{method} +deleteTask ( id : Long , authentication : Authentication ) : ResponseEntity
 	{method} +getAllAssignees () : List
 	{method} +getAllTasks () : List
 	{method} +getAssignees ( id : Long ) : List
 	{method} +getTaskById ( id : Long ) : ResponseEntity
 	{method} +getTasksBySprint ( sprintId : Long ) : List
-	{method} +removeAssignee ( taskId : Long , oracleId : Long ) : ResponseEntity
+	{method} -isAssignedToTask ( taskId : Long , oracleId : Long ) : boolean
+	{method} +removeAssignee ( taskId : Long , oracleId : Long , authentication : Authentication ) : ResponseEntity
 	{method} +updateHours ( taskId : Long , oracleId : Long , body : Map ) : ResponseEntity
-	{method} +updateTask ( id : Long , task : Task ) : ResponseEntity
+	{method} +updateTask ( id : Long , task : Task , authentication : Authentication ) : ResponseEntity
 }
 
 
@@ -158,6 +161,7 @@ class TaskService {
 	{method} +removeAssignee ( taskId : Long , oracleId : Long ) : void
 	{method} +updateAssigneeHours ( taskId : Long , oracleId : Long , realTimeSpent : Double , estimatedCompletionTime : Double ) : TaskAssignee
 	{method} +updateTask ( id : Long , updated : Task ) : Task
+	{method} +updateTaskStatus ( id : Long , status : String ) : Task
 }
 
 
@@ -186,6 +190,7 @@ class User {
 
 interface UserRepository {
 	{method}  {abstract} +findByMail ( mail : String ) : Optional
+	{method}  {abstract} +findByMailIgnoreCase ( mail : String ) : Optional
 	{method}  {abstract} +findByRole ( role : String ) : List
 }
 

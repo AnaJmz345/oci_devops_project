@@ -1,5 +1,20 @@
 @startuml
 
+class AuthController {
+	{method} +status ( authentication : Authentication ) : Map
+}
+
+
+class AuthUserService {
+	{method} +getCurrentUser ( authentication : Authentication ) : Optional
+	{method} +hasRole ( authentication : Authentication , role : String ) : boolean
+	{method} +isAdmin ( authentication : Authentication ) : boolean
+	{method} +isDeveloper ( authentication : Authentication ) : boolean
+	{method} +isManager ( authentication : Authentication ) : boolean
+	{method} +isManagerOrAdmin ( authentication : Authentication ) : boolean
+}
+
+
 class BotActions {
 	{field} {static} -EMAIL_PATTERN : Pattern
 	{field} {static} -NO_SPRINT : String
@@ -234,7 +249,9 @@ class ToDoItemService {
 
 class UserController {
 	{method} +addUser ( newUser : User ) : ResponseEntity
-	{method} +getAllUsers () : List
+	{method} +createInternalUser ( request : CreateUserRequest , authentication : Authentication ) : ResponseEntity
+	{method} +getAllUsers ( authentication : Authentication ) : ResponseEntity
+	{method} +getCurrentUser ( authentication : Authentication ) : ResponseEntity
 	{method} +getDevelopers () : List
 	{method} +getUserById ( id : Long ) : ResponseEntity
 	{method} +login ( loginRequest : User ) : ResponseEntity
@@ -246,8 +263,10 @@ class UserService {
 	{field} -userRepository : UserRepository
 	{method} +addUser ( newUser : User ) : User
 	{method} +checkPassword ( rawPassword : String , encodedPassword : String ) : boolean
+	{method} +createInternalUser ( name : String , mail : String , role : String ) : User
 	{method} +findAll () : List
 	{method} +findByMail ( mail : String ) : Optional
+	{method} +findByMailIgnoreCase ( mail : String ) : Optional
 	{method} +findByRole ( role : String ) : List
 	{method} +getUserById ( id : Long ) : ResponseEntity
 }
@@ -255,6 +274,7 @@ class UserService {
 
 
 
+AuthUserService -->  UserService : userService
 BotActions -->  NaturalLanguageIntentService : naturalLanguageIntentService
 BotActions -->  TaskNaturalLanguageService : taskNaturalLanguageService
 BotActions -->  TelegramTaskDraftService : telegramTaskDraftService
@@ -268,6 +288,7 @@ ToDoItemBotController -->  TelegramTaskDraftService : telegramTaskDraftService
 ToDoItemBotController -->  ToDoItemService : toDoItemService
 ToDoItemBotController -->  UserService : userService
 ToDoItemController -->  ToDoItemService : toDoItemService
+UserController -->  AuthUserService : authUserService
 UserController -->  UserService : userService
 
 

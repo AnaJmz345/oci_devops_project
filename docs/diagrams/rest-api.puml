@@ -1,5 +1,20 @@
 @startuml
 
+class AuthController {
+	{method} +status ( authentication : Authentication ) : Map
+}
+
+
+class AuthUserService {
+	{method} +getCurrentUser ( authentication : Authentication ) : Optional
+	{method} +hasRole ( authentication : Authentication , role : String ) : boolean
+	{method} +isAdmin ( authentication : Authentication ) : boolean
+	{method} +isDeveloper ( authentication : Authentication ) : boolean
+	{method} +isManager ( authentication : Authentication ) : boolean
+	{method} +isManagerOrAdmin ( authentication : Authentication ) : boolean
+}
+
+
 class NaturalLanguageIntentService {
 	{field} {static} -CREATE_TASK : String
 	{field} {static} -DEBUG_FILE : Path
@@ -124,7 +139,9 @@ class User {
 
 class UserController {
 	{method} +addUser ( newUser : User ) : ResponseEntity
-	{method} +getAllUsers () : List
+	{method} +createInternalUser ( request : CreateUserRequest , authentication : Authentication ) : ResponseEntity
+	{method} +getAllUsers ( authentication : Authentication ) : ResponseEntity
+	{method} +getCurrentUser ( authentication : Authentication ) : ResponseEntity
 	{method} +getDevelopers () : List
 	{method} +getUserById ( id : Long ) : ResponseEntity
 	{method} +login ( loginRequest : User ) : ResponseEntity
@@ -133,6 +150,7 @@ class UserController {
 
 interface UserRepository {
 	{method}  {abstract} +findByMail ( mail : String ) : Optional
+	{method}  {abstract} +findByMailIgnoreCase ( mail : String ) : Optional
 	{method}  {abstract} +findByRole ( role : String ) : List
 }
 
@@ -141,8 +159,10 @@ class UserService {
 	{field} -passwordEncoder : PasswordEncoder
 	{method} +addUser ( newUser : User ) : User
 	{method} +checkPassword ( rawPassword : String , encodedPassword : String ) : boolean
+	{method} +createInternalUser ( name : String , mail : String , role : String ) : User
 	{method} +findAll () : List
 	{method} +findByMail ( mail : String ) : Optional
+	{method} +findByMailIgnoreCase ( mail : String ) : Optional
 	{method} +findByRole ( role : String ) : List
 	{method} +getUserById ( id : Long ) : ResponseEntity
 }
@@ -150,6 +170,7 @@ class UserService {
 
 
 
+AuthUserService -->  UserService : userService
 TelegramTaskDraftService "1" o-- "0..*"  TaskDraft : draftsByChat
 TelegramTaskDraftService *--  TaskNaturalLanguageService : taskNaturalLanguageService
 ToDoItemBotController -->  NaturalLanguageIntentService : naturalLanguageIntentService
@@ -159,6 +180,7 @@ ToDoItemBotController -->  ToDoItemService : toDoItemService
 ToDoItemBotController -->  UserService : userService
 ToDoItemController -->  ToDoItemService : toDoItemService
 ToDoItemService -->  ToDoItemRepository : toDoItemRepository
+UserController -->  AuthUserService : authUserService
 UserController -->  UserService : userService
 UserService -->  UserRepository : userRepository
 
