@@ -42,6 +42,9 @@ public class UserService {
     public Optional<User> findByMail(String mail) {
         return userRepository.findByMail(mail);
     }
+    public Optional<User> findByMailIgnoreCase(String mail) {
+        return userRepository.findByMailIgnoreCase(mail);
+    }
 
     // Nuevo: buscar por rol para el dropdown de assignees
     public List<User> findByRole(String role) {
@@ -50,5 +53,15 @@ public class UserService {
 
     public boolean checkPassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
+    }
+
+    public User createInternalUser(String name, String mail, String role) {
+        User user = new User();
+        user.setName(name);
+        user.setMail(mail);
+        user.setRole(role.toUpperCase());
+        user.setPassword(passwordEncoder.encode("OCI_LOGIN_DISABLED"));
+
+        return userRepository.save(user);
     }
 }

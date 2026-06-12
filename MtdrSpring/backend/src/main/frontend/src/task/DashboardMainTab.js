@@ -34,9 +34,10 @@ function DashboardMainTab({
     const assignee = taskAssignees[taskId];
     if (!assignee) return null;
     const assigneeOracleId = assignee.oracleId ?? assignee.oracle_id;
-    const u = users.find(usr => String(usr.oracleId ?? usr.oracle_id) === String(assigneeOracleId));
-    const name = u?.name ? u.name.split(' ')[0] : null;
-    return name ? { name, oracleId: assigneeOracleId } : null;
+    const u = users.find(usr =>
+      String(usr.oracleId ?? usr.oracle_id) === String(assigneeOracleId)
+    );
+    return u ? u.name.split(' ')[0] : null;
   };
 
   const getSprintName = (sprintId) => {
@@ -80,7 +81,8 @@ function DashboardMainTab({
 
     if (newStatus === 'DONE' && task.status !== 'DONE') {
       const assignee = getAssignee(taskId);
-      if (!assignee?.oracleId) {
+      const assigneeOracleId = assignee?.oracleId ?? assignee?.oracle_id;
+      if (!assigneeOracleId) {
         setCompletionError('Assign a developer to this task before marking it as DONE.');
         setPendingCompletion({
           task,
@@ -95,7 +97,7 @@ function DashboardMainTab({
       setPendingCompletion({
         task,
         assignee,
-        assigneeName: getAssigneeDisplayName(assignee.oracleId),
+        assigneeName: getAssigneeDisplayName(assigneeOracleId),
         initialHours: assignee.realTimeSpent ?? '',
       });
       return;
@@ -137,7 +139,9 @@ function DashboardMainTab({
   };
 
   const handleCompletionConfirm = async (realTimeSpent) => {
-    if (!pendingCompletion?.task?.taskId || !pendingCompletion?.assignee?.oracleId) {
+    const assigneeOracleId = pendingCompletion?.assignee?.oracleId ?? pendingCompletion?.assignee?.oracle_id;
+
+    if (!pendingCompletion?.task?.taskId || !assigneeOracleId) {
       setCompletionError('Assign a developer to this task before marking it as DONE.');
       return;
     }
@@ -152,7 +156,7 @@ function DashboardMainTab({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          oracleId: assignee.oracleId,
+          oracleId: assigneeOracleId,
           realTimeSpent,
         }),
       });

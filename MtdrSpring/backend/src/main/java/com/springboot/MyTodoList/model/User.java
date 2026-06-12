@@ -1,7 +1,7 @@
 package com.springboot.MyTodoList.model;
 
 import jakarta.persistence.*;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 @Entity
 @Table(name = "VANTAGE_USER", schema = "VANTAGE")
 public class User {
@@ -66,6 +66,7 @@ public class User {
         this.name = name;
     }
 
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String getPassword() {
         return password;
     }

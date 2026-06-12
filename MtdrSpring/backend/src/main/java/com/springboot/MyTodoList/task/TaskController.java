@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.springboot.MyTodoList.service.AuthUserService;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -13,6 +15,9 @@ public class TaskController {
 
     @Autowired
     private TaskService taskService;
+
+    @Autowired
+    private AuthUserService authUserService;
 
     @GetMapping
     public List<Task> getAllTasks() {
@@ -30,7 +35,10 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<Task> createTask(@RequestBody Task task) {
+    public ResponseEntity<?> createTask(@RequestBody Task task, Authentication authentication) {
+        if (!authUserService.isManager(authentication)) {
+            return new ResponseEntity<>("No tienes permisos para crear tareas.", HttpStatus.FORBIDDEN);
+        }
         try {
             Task saved = taskService.addTask(task);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
@@ -42,7 +50,10 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task task) {
+    public ResponseEntity<?> updateTask(@PathVariable Long id, @RequestBody Task task, Authentication authentication) {
+        if (!authUserService.isManager(authentication)) {
+            return new ResponseEntity<>("No tienes permisos para editar tareas.", HttpStatus.FORBIDDEN);
+        }
         try {
             Task updated = taskService.updateTask(id, task);
             if (updated != null) {
@@ -57,7 +68,10 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Boolean> deleteTask(@PathVariable Long id) {
+    public ResponseEntity<?> deleteTask(@PathVariable Long id, Authentication authentication) {
+        if (!authUserService.isManager(authentication)) {
+            return new ResponseEntity<>("No tienes permisos para borrar tareas.", HttpStatus.FORBIDDEN);
+        }
         try {
             taskService.deleteTask(id);
             return new ResponseEntity<>(true, HttpStatus.OK);
@@ -67,7 +81,10 @@ public class TaskController {
     }
 
     @PostMapping("/assignees")
-    public ResponseEntity<TaskAssignee> assignTask(@RequestBody TaskAssignee assignee) {
+    public ResponseEntity<?> assignTask(@RequestBody TaskAssignee assignee, Authentication authentication) {
+        if (!authUserService.isManager(authentication)) {
+            return new ResponseEntity<>("No tienes permisos para asignar tareas.", HttpStatus.FORBIDDEN);
+        }
         try {
             TaskAssignee saved = taskService.assignTask(assignee);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
@@ -89,8 +106,13 @@ public class TaskController {
 
     // DELETE /tasks/assignees/{taskId}/{oracleId} — elimina un assignee específico
     @DeleteMapping("/assignees/{taskId}/{oracleId}")
-    public ResponseEntity<Boolean> removeAssignee(
-            @PathVariable Long taskId, @PathVariable Long oracleId) {
+    public ResponseEntity<?> removeAssignee(
+            @PathVariable Long taskId,
+            @PathVariable Long oracleId,
+            Authentication authentication) {
+        if (!authUserService.isManager(authentication)) {
+            return new ResponseEntity<>("No tienes permisos para quitar asignaciones.", HttpStatus.FORBIDDEN);
+        }
         try {
             taskService.removeAssignee(taskId, oracleId);
             return new ResponseEntity<>(true, HttpStatus.OK);

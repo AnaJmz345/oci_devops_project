@@ -18,8 +18,10 @@ import VantageTopbar from './VantageTopbar';
 import BacklogMainTab from './task/BacklogMainTab';
 import DashboardMainTab from './task/DashboardMainTab';
 
+import UserManagementPage from './users/UserManagementPage';
+
 function MainApp() {
-  const { user } = useAuth();
+  const { user, loadingAuth } = useAuth();
   const [page, setPage] = useState('login');
   const [activePage, setActivePage] = useState('backlog');
   const [activeSprintId, setActiveSprintId] = useState('all');
@@ -44,7 +46,9 @@ function MainApp() {
   const [viewBugsTask, setViewBugsTask] = useState(null);
   const [taskBugCounts, setTaskBugCounts] = useState({});
 
+  const isAdmin = user?.role === 'ADMIN';
   const isManager = user?.role === 'MANAGER';
+  const canManageWork = isManager || isAdmin;
 
   const fetchBacklogTasks = React.useCallback(() => {
     setBacklogLoading(true);
@@ -89,12 +93,13 @@ function MainApp() {
     if (user) {
       setActivePage('backlog');
       fetchSprints();
-      fetch('/users')
+      const usersEndpoint = canManageWork ? '/users' : '/users/developers';
+      fetch(usersEndpoint)
         .then(r => r.ok ? r.json() : [])
         .then(setUsers)
         .catch(() => {});
     }
-  }, [user, fetchSprints]);
+  }, [user, canManageWork, fetchSprints]);
 
   useEffect(() => {
     if (user && (activePage === 'backlog' || activePage === 'board')) {
@@ -105,6 +110,10 @@ function MainApp() {
     }
   }, [user, activePage, fetchBacklogTasks, fetchSprints]);
 
+  if (loadingAuth) {
+    return null;
+  }
+  
   if (!user) {
     return <AuthLanding mode={page} onModeChange={setPage} />;
   }
@@ -115,10 +124,9 @@ function MainApp() {
   const projectPages = [
     { id: 'backlog',   label: 'BACKLOG' },
     { id: 'board',     label: 'BOARD' },
-    ...(isManager ? [
-      { id: 'analytics', label: 'ANALYTICS' },
-      { id: 'ai-analytics', label: 'AI ANALYTICS' },
-    ] : []),
+    ...(canManageWork ? [{ id: 'analytics', label: 'ANALYTICS' }] : []),
+    ...(isAdmin ? [{ id: 'users', label: 'USERS' }] : []),
+    { id: 'calendar',  label: 'CALENDAR' },
   ];
 
   const sprintOptions = [
@@ -219,11 +227,14 @@ function MainApp() {
               setTaskAssignees={setTaskAssignees}
             />
           )}
-          {activePage === 'analytics' && isManager && (
+          {activePage === 'analytics' && canManageWork && (
             <AnalyticsPage sprints={sprints} activeSprintId={activeSprintId} />
           )}
           {activePage === 'ai-analytics' && isManager && (
             <AIAnalyticsPage activeSprintId={activeSprintId} />
+          )}
+          {activePage === 'users' && isAdmin && (
+            <UserManagementPage />
           )}
         </main>
       </div>

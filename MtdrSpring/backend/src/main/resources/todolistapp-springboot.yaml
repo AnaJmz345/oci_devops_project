@@ -39,13 +39,15 @@ spec:
   replicas: 2
   template:
     metadata:
+      annotations:
+        ci-build: "${IMAGE_TAG}"
       labels:
         app: todolistapp-springboot
         version: v1
     spec:
       containers:
         - name: todolistapp-springboot
-          image: %DOCKER_REGISTRY%/todolistapp-springboot:0.1
+          image: ${DOCKER_REGISTRY}/todolistapp-springboot:${IMAGE_TAG}
           imagePullPolicy: Always
           env:
             - name: db_user
@@ -72,6 +74,23 @@ spec:
                   name: frontendadmin
                   key: password
                   optional: true
+            - name: DEEPSEEK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gemini-api-secret
+                  key: DEEPSEEK_API_KEY
+                  optional: false
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: telegram-bot-secret
+                  key: TELEGRAM_BOT_TOKEN
+                  optional: false
+            - name: TELEGRAM_BOT_NAME
+              value: "vantage_assistant_bot"
+            - name: APP_FRONTEND_URL
+              value: "https://vantage.myvnc.com"
+            
           volumeMounts:
             - name: creds
               mountPath: /mtdrworkshop/creds

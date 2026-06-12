@@ -1,30 +1,72 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('vantage_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
 
-  const login = (userData) => {
-    // Normaliza el id sin importar si el backend devuelve oracleId o oracle_id
-    const normalized = {
-      ...userData,
-      oracle_id: userData.oracle_id ?? userData.oracleId ?? null,
-    };
-    localStorage.setItem('vantage_user', JSON.stringify(normalized));
-    setUser(normalized);
+  const loadCurrentUser = async () => {
+    try {
+      const response = await fetch('/users/me', {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const currentUser = await response.json();
+        setUser(currentUser);
+        return currentUser;
+      }
+
+      setUser(null);
+      return null;
+    } catch (error) {
+      console.error('Error loading current user:', error);
+      setUser(null);
+      return null;
+    } finally {
+      setLoadingAuth(false);
+    }
   };
 
-  const logout = () => {
+  useEffect(() => {
+    loadCurrentUser();
+  }, []);
+
+  const login = () => {
+    const isLocal = window.location.hostname === 'localhost';
+
+    window.location.href = isLocal
+      ? 'http://localhost:8080/oauth2/authorization/oci'
+      : '/oauth2/authorization/oci';
+  };
+
+  const logout = async () => {
     localStorage.removeItem('vantage_user');
     setUser(null);
-  };
 
+    try {
+      await fetch('/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Error closing Spring session:', error);
+    }
+
+    window.location.href = '/';
+  };
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        loadingAuth,
+        loadCurrentUser,
+        isAuthenticated: !!user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

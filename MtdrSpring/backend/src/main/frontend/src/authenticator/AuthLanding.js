@@ -23,29 +23,7 @@ function AuthLanding({ mode = 'login', onModeChange }) {
 
   const handleLogin = async (e) => {
     if (e && typeof e.preventDefault === 'function') e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const response = await fetch('/users/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginForm),
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        login(userData);
-      } else if (response.status === 401) {
-        setError('Credenciales incorrectas.');
-      } else {
-        setError('Error al iniciar sesión.');
-      }
-    } catch {
-      setError('No se pudo conectar al servidor.');
-    } finally {
-      setLoading(false);
-    }
+    login();
   };
 
   const handleRegister = async (e) => {
@@ -106,102 +84,35 @@ function AuthLanding({ mode = 'login', onModeChange }) {
     <div className={`AuthRoot ${isRegister ? 'is-register' : ''}`}>
       <div className="AuthCard" role="region" aria-label="Authentication">
         <div className="AuthPane AuthPane--login" aria-hidden={isRegister ? 'true' : 'false'}>
-          <p className="AuthKicker">WELCOME BACK TO</p>
-          <p className="AuthBrand">VANTAGE</p>
-          <h1 className="AuthTitle">SIGN IN</h1>
+            <h1 className="AuthWelcomeTitle">
+              WELCOME BACK TO<br />
+              <span>VANTAGE</span>
+            </h1>
 
-          <form className="AuthForm" onSubmit={handleLogin}>
-            <label className="AuthLabel">
-              <span className="AuthLabelText">Mail</span>
-              <input
-                className="AuthInput"
-                name="mail"
-                autoComplete="email"
-                placeholder="MAIL..."
-                value={loginForm.mail}
-                onChange={(e) => setLoginForm((prev) => ({ ...prev, mail: e.target.value }))}
-              />
-            </label>
+            <p className="AuthLoginSubtitle">Let's continue doing great things</p>
 
-            <label className="AuthLabel">
-              <span className="AuthLabelText">Password</span>
-              <input
-                className="AuthInput"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="PASSWORD..."
-                value={loginForm.password}
-                onChange={(e) => setLoginForm((prev) => ({ ...prev, password: e.target.value }))}
-              />
-            </label>
+            <form className="AuthForm AuthForm--login" onSubmit={handleLogin}>
+              <button className="AuthPrimaryButton" type="submit" disabled={loading}>
+                {loading ? 'SIGNING IN...' : 'SIGN IN'}
+              </button>
 
-            <button className="AuthPrimaryButton" type="submit" disabled={loading}>
-              {loading ? 'SIGNING IN...' : 'SIGN IN'}
-            </button>
-
-            {error && !isRegister && <p className="AuthError">{error}</p>}
-          </form>
+              {error && !isRegister && <p className="AuthError">{error}</p>}
+            </form>
         </div>
 
         <div className="AuthPane AuthPane--register" aria-hidden={!isRegister ? 'true' : 'false'}>
-          <p className="AuthKicker">WELCOME TO</p>
-          <p className="AuthBrand">VANTAGE</p>
-          <h1 className="AuthTitle">SIGN UP</h1>
+          <h1 className="AuthWelcomeTitle">
+            REQUEST ACCESS<br />
+            <span>VANTAGE</span>
+          </h1>
 
-          <form className="AuthForm" onSubmit={handleRegister}>
-            <label className="AuthLabel">
-              <span className="AuthLabelText">Name</span>
-              <input
-                className="AuthInput"
-                name="name"
-                autoComplete="name"
-                placeholder="NAME..."
-                value={registerForm.name}
-                onChange={(e) => setRegisterForm((prev) => ({ ...prev, name: e.target.value }))}
-              />
-            </label>
+          <p className="AuthLoginSubtitle">
+            Contact your project manager to create your Vantage account.
+          </p>
 
-            <label className="AuthLabel">
-              <span className="AuthLabelText">Mail</span>
-              <input
-                className="AuthInput"
-                name="mail"
-                autoComplete="email"
-                placeholder="MAIL..."
-                value={registerForm.mail}
-                onChange={(e) => setRegisterForm((prev) => ({ ...prev, mail: e.target.value }))}
-              />
-            </label>
-
-            <label className="AuthLabel">
-              <span className="AuthLabelText">Password</span>
-              <input
-                className="AuthInput"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                placeholder="PASSWORD..."
-                value={registerForm.password}
-                onChange={(e) => setRegisterForm((prev) => ({ ...prev, password: e.target.value }))}
-              />
-            </label>
-
-            <label className="AuthLabel">
-              <span className="AuthLabelText">Confirm password</span>
-              <input
-                className="AuthInput"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                placeholder="CONFIRM PASSWORD..."
-                value={registerForm.confirmPassword}
-                onChange={(e) => setRegisterForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-              />
-            </label>
-
+          <form className="AuthForm AuthForm--login" onSubmit={goLogin}>
             <button className="AuthPrimaryButton" type="submit" disabled={loading}>
-              {loading ? 'SIGNING UP...' : 'SIGN UP'}
+              BACK TO SIGN IN
             </button>
 
             {error && isRegister && <p className="AuthError">{error}</p>}
