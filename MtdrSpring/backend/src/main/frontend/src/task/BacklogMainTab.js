@@ -388,10 +388,11 @@ function BacklogMainTab({
             )}
 
             {isManager && !assignMode && (
-              <button
-                type="button"
-                onClick={() => setIsCreateTaskOpen(true)}
-                style={{
+                <button
+                  type="button"
+                  onClick={() => setIsCreateTaskOpen(true)}
+                  data-testid="create-task-button"
+                  style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
@@ -419,7 +420,7 @@ function BacklogMainTab({
               Loading tasks…
             </div>
           ) : (
-            <table className="VantageTable">
+            <table className="VantageTable" data-testid="backlog-table">
               <thead>
                 <tr>
                   {assignMode && (
@@ -559,6 +560,7 @@ function BacklogMainTab({
                     return (
                       <tr
                         key={task.taskId}
+                        data-testid={`backlog-row-${task.taskId}`}
                         style={{
                           transition: 'background 120ms',
                           background: assignMode && selectedTaskIds.has(task.taskId) ? 'rgba(199,70,52,0.06)' : 'transparent',
@@ -600,6 +602,7 @@ function BacklogMainTab({
                           {!isManager ? (
                             <select
                               className="VantageInlineSelect"
+                              data-testid={`task-category-${task.taskId}`}
                               value={task.category || 'FEATURE'}
                               onChange={async e => {
                                 const newCat = e.target.value;
@@ -638,6 +641,7 @@ function BacklogMainTab({
                           {!isManager ? (
                             <select
                               className={'VantageStatusSelect VantageStatus--' + (task.status || 'TODO')}
+                              data-testid={`task-status-${task.taskId}`}
                               value={task.status || 'TODO'}
                               onChange={async e => {
                                 const newStatus = e.target.value;

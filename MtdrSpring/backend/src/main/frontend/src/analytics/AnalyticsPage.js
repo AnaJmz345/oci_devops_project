@@ -7,7 +7,7 @@ import './analytics.css';
 
 function StatPill({ label, value, color }) {
   return (
-    <div className="AN-stat-pill" style={{ borderColor: color + '30' }}>
+    <div className="AN-stat-pill" data-testid={`analytics-pill-${label}`} style={{ borderColor: color + '30' }}>
       <span className="AN-stat-value" style={{ color }}>{value}</span>
       <span className="AN-stat-label">{label}</span>
     </div>
@@ -300,7 +300,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
   );
 
   const renderProgressCard = () => (
-    <div className="AN-card AN-card--ring">
+    <div className="AN-card AN-card--ring" data-testid="analytics-progress-card">
       <div className="AN-card-label">SPRINT PROGRESS</div>
       <div className="AN-card-title">{ringLabel}</div>
       {ringGoal && <p className="AN-goal">"{ringGoal}"</p>}
@@ -364,7 +364,7 @@ function AnalyticsPage({ sprints, activeSprintId }) {
   );
 
   return (
-    <div className="AN-root">
+    <div className="AN-root" data-testid="analytics-root">
       <div className="AN-header">
         <div>
           <div className="AN-kicker">MANAGER VIEW</div>

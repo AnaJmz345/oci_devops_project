@@ -164,7 +164,7 @@ function MainApp() {
   };
 
   return (
-    <div className="VantageShell">
+    <div className="VantageShell" data-testid="vantage-shell">
       {isSidebarOpen && (
         <VantageSidebar
           activePage={activePage}

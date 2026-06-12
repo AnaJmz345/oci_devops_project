@@ -55,6 +55,7 @@ function LogActualHoursModal({
             <label className="TM-label">Actual Hours</label>
             <input
               className="TM-input"
+              aria-label="Actual Hours"
               type="number"
               min={0}
               step={0.5}

@@ -81,8 +81,8 @@ function AuthLanding({ mode = 'login', onModeChange }) {
   };
 
   return (
-    <div className={`AuthRoot ${isRegister ? 'is-register' : ''}`}>
-      <div className="AuthCard" role="region" aria-label="Authentication">
+    <div className={`AuthRoot ${isRegister ? 'is-register' : ''}`} data-testid="auth-root">
+      <div className="AuthCard" role="region" aria-label="Authentication" data-testid="auth-card">
         <div className="AuthPane AuthPane--login" aria-hidden={isRegister ? 'true' : 'false'}>
             <h1 className="AuthWelcomeTitle">
               WELCOME BACK TO<br />
@@ -92,7 +92,7 @@ function AuthLanding({ mode = 'login', onModeChange }) {
             <p className="AuthLoginSubtitle">Let's continue doing great things</p>
 
             <form className="AuthForm AuthForm--login" onSubmit={handleLogin}>
-              <button className="AuthPrimaryButton" type="submit" disabled={loading}>
+              <button className="AuthPrimaryButton" type="submit" disabled={loading} data-testid="auth-sign-in-button">
                 {loading ? 'SIGNING IN...' : 'SIGN IN'}
               </button>
 
@@ -111,7 +111,7 @@ function AuthLanding({ mode = 'login', onModeChange }) {
           </p>
 
           <form className="AuthForm AuthForm--login" onSubmit={goLogin}>
-            <button className="AuthPrimaryButton" type="submit" disabled={loading}>
+            <button className="AuthPrimaryButton" type="submit" disabled={loading} data-testid="auth-back-to-sign-in-button">
               BACK TO SIGN IN
             </button>
 
@@ -128,7 +128,7 @@ function AuthLanding({ mode = 'login', onModeChange }) {
                   <span className="AuthOverlayEm">VANTAGE?</span>
                 </h2>
                 <p className="AuthOverlaySubtitle">Sign in into your account!</p>
-                <button className="AuthOverlayButton" type="button" onClick={goLogin} disabled={loading}>
+                <button className="AuthOverlayButton" type="button" onClick={goLogin} disabled={loading} data-testid="auth-overlay-sign-in-button">
                   SIGN IN
                 </button>
               </>
@@ -139,7 +139,7 @@ function AuthLanding({ mode = 'login', onModeChange }) {
                   <span className="AuthOverlayEm">VANTAGE?</span>
                 </h2>
                 <p className="AuthOverlaySubtitle">Sign up and start managing your project!</p>
-                <button className="AuthOverlayButton" type="button" onClick={goRegister} disabled={loading}>
+                <button className="AuthOverlayButton" type="button" onClick={goRegister} disabled={loading} data-testid="auth-sign-up-button">
                   SIGN UP
                 </button>
               </>

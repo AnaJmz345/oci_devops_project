@@ -204,7 +204,7 @@ function DashboardMainTab({
           <div className="VantageMuted">Drag tasks between columns to update their status</div>
         </div>
 
-        <div className="KB-board">
+        <div className="KB-board" data-testid="kanban-board">
           {COLUMNS.map(col => {
             const colTasks = filteredTasks.filter(t => t.status === col.status);
             const isOver = dragOverCol === col.status;
@@ -213,6 +213,7 @@ function DashboardMainTab({
               <div
                 key={col.status}
                 className={`KB-column ${isOver ? 'KB-column--over' : ''}`}
+                data-testid={`kanban-column-${col.status}`}
                 onDragOver={(e) => handleDragOver(e, col.status)}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, col.status)}
@@ -238,6 +239,7 @@ function DashboardMainTab({
                       <div
                         key={task.taskId}
                         className={`KB-card ${isDragging ? 'KB-card--dragging' : ''} ${isUpdating ? 'KB-card--updating' : ''}`}
+                        data-testid={`kanban-card-${task.taskName}`}
                         draggable
                         onDragStart={(e) => handleDragStart(e, task.taskId)}
                         onDragEnd={handleDragEnd}
