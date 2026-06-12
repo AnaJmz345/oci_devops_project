@@ -81,8 +81,8 @@ function AuthLanding({ mode = 'login', onModeChange }) {
   };
 
   return (
-    <div className={`AuthRoot ${isRegister ? 'is-register' : ''}`}>
-      <div className="AuthCard" role="region" aria-label="Authentication">
+    <div className={`AuthRoot ${isRegister ? 'is-register' : ''}`} data-testid="auth-root">
+      <div className="AuthCard" role="region" aria-label="Authentication" data-testid="auth-card">
         <div className="AuthPane AuthPane--login" aria-hidden={isRegister ? 'true' : 'false'}>
             <h1 className="AuthWelcomeTitle">
               WELCOME BACK TO<br />
@@ -92,7 +92,13 @@ function AuthLanding({ mode = 'login', onModeChange }) {
             <p className="AuthLoginSubtitle">Let's continue doing great things</p>
 
             <form className="AuthForm AuthForm--login" onSubmit={handleLogin}>
-              <button className="AuthPrimaryButton" type="submit" disabled={loading}>
+              <button
+                className="AuthPrimaryButton"
+                type="submit"
+                disabled={loading}
+                title="Start sign in"
+                data-testid="sign-in-button"
+              >
                 {loading ? 'SIGNING IN...' : 'SIGN IN'}
               </button>
 
@@ -111,7 +117,13 @@ function AuthLanding({ mode = 'login', onModeChange }) {
           </p>
 
           <form className="AuthForm AuthForm--login" onSubmit={goLogin}>
-            <button className="AuthPrimaryButton" type="submit" disabled={loading}>
+            <button
+              className="AuthPrimaryButton"
+              type="submit"
+              disabled={loading}
+              title="Return to sign in"
+              data-testid="back-to-sign-in-button"
+            >
               BACK TO SIGN IN
             </button>
 
@@ -139,7 +151,14 @@ function AuthLanding({ mode = 'login', onModeChange }) {
                   <span className="AuthOverlayEm">VANTAGE?</span>
                 </h2>
                 <p className="AuthOverlaySubtitle">Sign up and start managing your project!</p>
-                <button className="AuthOverlayButton" type="button" onClick={goRegister} disabled={loading}>
+                <button
+                  className="AuthOverlayButton"
+                  type="button"
+                  onClick={goRegister}
+                  disabled={loading}
+                  title="Request access"
+                  data-testid="sign-up-button"
+                >
                   SIGN UP
                 </button>
               </>

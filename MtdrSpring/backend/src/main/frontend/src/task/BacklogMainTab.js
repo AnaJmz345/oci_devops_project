@@ -391,6 +391,8 @@ function BacklogMainTab({
               <button
                 type="button"
                 onClick={() => setIsCreateTaskOpen(true)}
+                title="Create a new task"
+                data-testid="create-task-button"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -419,7 +421,7 @@ function BacklogMainTab({
               Loading tasks…
             </div>
           ) : (
-            <table className="VantageTable">
+            <table className="VantageTable" data-testid="backlog-table">
               <thead>
                 <tr>
                   {assignMode && (
@@ -559,6 +561,7 @@ function BacklogMainTab({
                     return (
                       <tr
                         key={task.taskId}
+                        data-testid={`task-row-${task.taskId}`}
                         style={{
                           transition: 'background 120ms',
                           background: assignMode && selectedTaskIds.has(task.taskId) ? 'rgba(199,70,52,0.06)' : 'transparent',

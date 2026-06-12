@@ -23,7 +23,7 @@ function VantageSidebar({
   const { user, logout } = useAuth();
 
   return (
-    <aside className="VantageSidebar">
+    <aside className="VantageSidebar" data-testid="vantage-sidebar">
       <div className="VantageSidebarHeader">
         <div className="VantageBrandName">VANTAGE</div>
         <button
@@ -81,6 +81,8 @@ function VantageSidebar({
                     type="button"
                     className={`VantagePageLink ${activePage === p.id ? 'is-active' : ''}`}
                     onClick={() => setActivePage(p.id)}
+                    title={`Open ${p.label}`}
+                    data-testid={`sidebar-link-${p.id}`}
                   >
                     {p.label}
                   </button>

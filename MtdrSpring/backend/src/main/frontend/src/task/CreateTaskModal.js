@@ -112,7 +112,7 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
 
   return (
     <div className="TM-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="TM-modal">
+      <div className="TM-modal" data-testid="create-task-modal">
         <div className="TM-header">
           <div className="TM-header-left">
             <span className="TM-tag">NEW TASK</span>
@@ -125,21 +125,21 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
           <div className="TM-col TM-col--main">
             <div className="TM-field">
               <label className="TM-label">Task Name <span className="TM-required">*</span></label>
-              <input className="TM-input" name="task_name"
+             <input className="TM-input" name="task_name" aria-label="Task Name"
                 placeholder="e.g. Implement login endpoint…"
                 value={form.task_name} onChange={handleChange} autoFocus />
             </div>
 
             <div className="TM-field">
               <label className="TM-label">Description</label>
-              <textarea className="TM-textarea" name="description"
+              <textarea className="TM-textarea" name="description" aria-label="Description"
                 placeholder="Describe what needs to be done…"
                 value={form.description} onChange={handleChange} rows={4} />
             </div>
 
             <div className="TM-field">
               <label className="TM-label">Assignee <span className="TM-required">*</span></label>
-              <select className="TM-select" name="assignee_oracle_id"
+              <select className="TM-select" name="assignee_oracle_id" aria-label="Assignee"
                 value={form.assignee_oracle_id} onChange={handleChange}>
                 <option value="">— Select developer —</option>
                 {developers.map(dev => (
@@ -152,7 +152,7 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
 
             <div className="TM-field">
               <label className="TM-label">Additional Comments for Assignee</label>
-              <textarea className="TM-textarea" name="additional_comments"
+              <textarea className="TM-textarea" name="additional_comments" aria-label="Additional Comments for Assignee"
                 placeholder="Any notes for the assignee…"
                 value={form.additional_comments} onChange={handleChange} rows={2} />
             </div>
@@ -161,7 +161,7 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
           <div className="TM-col TM-col--meta">
             <div className="TM-field">
               <label className="TM-label">Status</label>
-              <select className="TM-select" name="status" value={form.status} onChange={handleChange}>
+              <select className="TM-select" name="status" aria-label="Status" value={form.status} onChange={handleChange}>
                 <option value="TODO">TODO</option>
                 <option value="IN_PROGRESS">IN PROGRESS</option>
                 <option value="DONE">DONE</option>
@@ -171,7 +171,7 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
 
             <div className="TM-field">
               <label className="TM-label">Category</label>
-              <select className="TM-select" name="category" value={form.category} onChange={handleChange}>
+              <select className="TM-select" name="category" aria-label="Category" value={form.category} onChange={handleChange}>
                 <option value="FEATURE">FEATURE</option>
                 <option value="BUG">BUG</option>
                 <option value="ISSUE">ISSUE</option>
@@ -180,7 +180,7 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
 
             <div className="TM-field">
               <label className="TM-label">Sprint</label>
-              <select className="TM-select" name="sprint_id" value={form.sprint_id} onChange={handleChange}>
+              <select className="TM-select" name="sprint_id" aria-label="Sprint" value={form.sprint_id} onChange={handleChange}>
                 <option value="">— Backlog (no sprint) —</option>
                 {sprints.map(s => (
                   <option key={s.sprintId ?? s.sprint_id} value={s.sprintId ?? s.sprint_id}>
@@ -193,19 +193,19 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
             <div className="TM-row">
               <div className="TM-field">
                 <label className="TM-label">Story Points</label>
-                <input className="TM-input" type="number" name="story_points"
+                <input className="TM-input" type="number" name="story_points" aria-label="Story Points"
                   min={1} max={100} value={form.story_points} onChange={handleChange} />
               </div>
               <div className="TM-field">
                 <label className="TM-label">Est. Time (h)</label>
-                <input className="TM-input" type="number" name="estimated_completion_time"
+                <input className="TM-input" type="number" name="estimated_completion_time" aria-label="Estimated Completion Time"
                   min={0} placeholder="—" value={form.estimated_completion_time} onChange={handleChange} />
               </div>
             </div>
 
             <div className="TM-field">
               <label className="TM-label">Due Date <span className="TM-required">*</span></label>
-              <input className="TM-input" type="date" name="due_date"
+              <input className="TM-input" type="date" name="due_date" aria-label="Due Date"
                 value={form.due_date} onChange={handleChange} />
             </div>
           </div>
