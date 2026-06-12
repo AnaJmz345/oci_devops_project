@@ -10,7 +10,7 @@ spec:
     - name: http
       protocol: TCP
       port: 80
-      targetPort: http
+      targetPort: 8080
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -20,7 +20,7 @@ spec:
   selector:
     matchLabels:
       app: todolistapp-springboot
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       annotations:
@@ -33,16 +33,21 @@ spec:
         - name: todolistapp-springboot
           image: ${DOCKER_REGISTRY}/todolistapp-springboot:${IMAGE_TAG}
           imagePullPolicy: Always
+
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
+
           env:
             - name: db_user
               value: "VANTAGE"
 
             - name: db_url
               value: "jdbc:oracle:thin:@%TODO_PDB_NAME%_tp?TNS_ADMIN=/mtdrworkshop/creds"
+
+            - name: todo.table.name
+              value: "todoitem"
 
             - name: driver_class_name
               value: "oracle.jdbc.OracleDriver"
@@ -55,6 +60,16 @@ spec:
                 secretKeyRef:
                   name: dbuser
                   key: dbpassword
+                  optional: true
+
+            - name: ui_username
+              value: "%UI_USERNAME%"
+
+            - name: ui_password
+              valueFrom:
+                secretKeyRef:
+                  name: frontendadmin
+                  key: password
                   optional: true
 
             - name: DEEPSEEK_API_KEY
