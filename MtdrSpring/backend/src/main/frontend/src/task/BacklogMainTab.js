@@ -274,7 +274,7 @@ function BacklogMainTab({
     (!assignMode && isManager ? 1 : 0);
 
   return (
-    <div className="VantagePage">
+    <div className="VantagePage" data-testid="backlog-page">
       <div className="VantagePageHeader">
         <h1 className="VantageH1">Backlog</h1>
         <div className="VantageMuted">Project: {activeProjectName} • Sprint: {activeSprintLabel}</div>
@@ -366,6 +366,8 @@ function BacklogMainTab({
                     setAssignMode(true);
                     setSelectedTaskIds(new Set());
                   }}
+                  title="Assign tasks to sprint"
+                  data-testid="assign-to-sprint-button"
                   style={{
                     appearance: 'none',
                     border: '1.5px solid rgba(30,50,36,0.22)',
@@ -448,6 +450,9 @@ function BacklogMainTab({
                         aria-haspopup="listbox"
                         aria-expanded={assigneeMenuOpen}
                         aria-controls="assignee-filter-menu"
+                        aria-label="Assignee Filter"
+                        title="Filter by assignee"
+                        data-testid="assignee-filter"
                         onClick={() => setAssigneeMenuOpen(open => !open)}
                         style={{
                           appearance: 'none',
@@ -503,6 +508,8 @@ function BacklogMainTab({
                                   role="option"
                                   aria-selected={isSelected}
                                   onClick={() => applyAssigneeFilter(item.value)}
+                                  title={`Filter assignee ${item.label}`}
+                                  data-testid={`assignee-option-${item.value === '' ? 'all' : item.value}`}
                                   onMouseEnter={e => {
                                     if (!isSelected) e.currentTarget.style.background = 'rgba(194,212,212,0.35)';
                                   }}
@@ -819,6 +826,8 @@ function BacklogMainTab({
                               <button
                                 onClick={() => setEditingTask(task)}
                                 title="Edit task"
+                                aria-label={`Edit ${task.taskName}`}
+                                data-testid={`edit-task-${task.taskId}`}
                                 style={{
                                   appearance: 'none',
                                   border: '1px solid rgba(30,50,36,0.16)',
@@ -841,6 +850,8 @@ function BacklogMainTab({
                               <button
                                 onClick={() => setEditingTask({ ...task, _confirmDelete: true })}
                                 title="Delete task"
+                                aria-label={`Delete ${task.taskName}`}
+                                data-testid={`delete-task-${task.taskId}`}
                                 style={{
                                   appearance: 'none',
                                   border: '1px solid rgba(199,70,52,0.25)',

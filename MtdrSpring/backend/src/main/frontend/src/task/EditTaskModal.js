@@ -195,7 +195,7 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
   return (
     <>
       <div className="TM-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-        <div className="TM-modal">
+        <div className="TM-modal" data-testid="edit-task-modal">
           <div className="TM-header">
             <div className="TM-header-left">
               <span className="TM-tag">EDIT TASK</span>
@@ -214,7 +214,14 @@ function EditTaskModal({ open, onClose, onTaskUpdated, onTaskDeleted, task, spri
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: '#C74634' }}>Delete?</span>
-                  <button className="TM-btn TM-btn--submit" style={{ padding: '5px 12px', fontSize: 12 }} onClick={handleDelete} disabled={deleting}>
+                  <button
+                    className="TM-btn TM-btn--submit"
+                    style={{ padding: '5px 12px', fontSize: 12 }}
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    title="Confirm delete task"
+                    data-testid="confirm-delete-task-button"
+                  >
                     {deleting ? '...' : 'Yes'}
                   </button>
                   <button className="TM-btn TM-btn--cancel" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setConfirmDelete(false)}>

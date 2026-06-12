@@ -215,7 +215,13 @@ function CreateTaskModal({ open, onClose, onTaskCreated, sprintId, createdBy }) 
 
         <div className="TM-footer">
           <button className="TM-btn TM-btn--cancel" onClick={onClose} disabled={loading}>Cancel</button>
-          <button className="TM-btn TM-btn--submit" onClick={handleSubmit} disabled={loading}>
+          <button
+          className="TM-btn TM-btn--submit"
+          onClick={handleSubmit}
+          disabled={loading}
+          title="Submit new task"
+          data-testid="submit-create-task-button"
+        >
             {loading ? 'Creating…' : '+ Create Task'}
           </button>
         </div>

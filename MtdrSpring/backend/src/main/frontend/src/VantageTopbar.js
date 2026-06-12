@@ -42,6 +42,9 @@ function VantageTopbar({
             className="VantageSprintSelect2"
             value={activeSprintId}
             onChange={(e) => setActiveSprintId(e.target.value)}
+            aria-label="Sprint Filter"
+            title="Filter by sprint"
+            data-testid="sprint-filter"
           >
             {sprintOptions.map(s => (
               <option key={s.id} value={s.id}>{s.label}</option>
