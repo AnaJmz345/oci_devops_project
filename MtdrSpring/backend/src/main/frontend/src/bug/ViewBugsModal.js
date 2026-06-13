@@ -45,7 +45,7 @@ function ViewBugsModal({ open, onClose, task, userId, isManager, onBugsChanged }
 
   return (
     <div className="TM-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="TM-modal" style={{ width: 'min(560px, 94vw)' }}>
+      <div className="TM-modal" data-testid="view-bugs-modal" style={{ width: 'min(560px, 94vw)' }}>
         <div className="TM-header">
           <div className="TM-header-left">
             <span className="TM-tag">DEFECT LOG</span>
@@ -84,7 +84,7 @@ function ViewBugsModal({ open, onClose, task, userId, isManager, onBugsChanged }
                     Open
                   </span>
                   {openBugs.map(bug => (
-                    <div key={bug.bugId} style={{
+                    <div key={bug.bugId} data-testid={`bug-row-${bug.bugId}`} style={{
                       display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12,
                       padding: '10px 14px',
                       background: 'rgba(199,70,52,0.04)',
@@ -103,6 +103,8 @@ function ViewBugsModal({ open, onClose, task, userId, isManager, onBugsChanged }
                         <button
                           onClick={() => handleSolve(bug.bugId)}
                           disabled={solving === bug.bugId}
+                          title={`Mark bug ${bug.bugId} solved`}
+                          data-testid={`solve-bug-${bug.bugId}`}
                           style={{
                             appearance: 'none',
                             border: '1px solid rgba(76,130,92,0.35)',
@@ -135,7 +137,7 @@ function ViewBugsModal({ open, onClose, task, userId, isManager, onBugsChanged }
                     Solved
                   </span>
                   {solvedBugs.map(bug => (
-                    <div key={bug.bugId} style={{
+                    <div key={bug.bugId} data-testid={`bug-row-${bug.bugId}`} style={{
                       padding: '10px 14px',
                       background: 'rgba(76,130,92,0.04)',
                       border: '1px solid rgba(76,130,92,0.12)',

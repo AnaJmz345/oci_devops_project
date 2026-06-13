@@ -33,7 +33,7 @@ function LogActualHoursModal({
 
   return (
     <div className="TM-overlay" onClick={(e) => e.target === e.currentTarget && !loading && onCancel?.()}>
-      <div className="TM-modal TM-modal--compact">
+      <div className="TM-modal TM-modal--compact" data-testid="actual-hours-modal">
         <div className="TM-header">
           <div className="TM-header-left">
             <span className="TM-tag">LOG ACTUAL HOURS</span>
@@ -55,6 +55,8 @@ function LogActualHoursModal({
             <label className="TM-label">Actual Hours</label>
             <input
               className="TM-input"
+              aria-label="Actual Hours"
+              data-testid="actual-hours-input"
               type="number"
               min={0}
               step={0.5}
@@ -72,7 +74,13 @@ function LogActualHoursModal({
 
         <div className="TM-footer">
           <button className="TM-btn TM-btn--cancel" onClick={onCancel} disabled={loading}>Cancel</button>
-          <button className="TM-btn TM-btn--submit" onClick={handleSubmit} disabled={loading}>
+          <button
+            className="TM-btn TM-btn--submit"
+            onClick={handleSubmit}
+            disabled={loading}
+            title="Submit actual hours"
+            data-testid="submit-actual-hours-button"
+          >
             {loading ? 'Saving...' : 'Complete task'}
           </button>
         </div>

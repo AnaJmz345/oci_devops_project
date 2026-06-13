@@ -649,6 +649,8 @@ function BacklogMainTab({
                             <select
                               className={'VantageStatusSelect VantageStatus--' + (task.status || 'TODO')}
                               value={task.status || 'TODO'}
+                              aria-label={`Status for ${task.taskName}`}
+                              data-testid={`task-status-${task.taskId}`}
                               onChange={async e => {
                                 const newStatus = e.target.value;
 
@@ -766,6 +768,8 @@ function BacklogMainTab({
                                   <span
                                     onClick={() => onViewBugs && onViewBugs(task)}
                                     title="View bugs for this task"
+                                    aria-label={`View bugs for ${task.taskName}`}
+                                    data-testid={`view-bugs-${task.taskId}`}
                                     style={{
                                       display: 'inline-flex',
                                       alignItems: 'center',
@@ -790,6 +794,8 @@ function BacklogMainTab({
                                   <button
                                     onClick={() => onReportBug && onReportBug(task)}
                                     title="Report a bug on this task"
+                                    aria-label={`Report bug for ${task.taskName}`}
+                                    data-testid={`report-bug-${task.taskId}`}
                                     style={{
                                       appearance: 'none',
                                       border: '1px solid rgba(199,70,52,0.25)',

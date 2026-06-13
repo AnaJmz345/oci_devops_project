@@ -46,7 +46,7 @@ function ReportBugModal({ open, onClose, task, userId, onBugCreated }) {
 
   return (
     <div className="TM-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="TM-modal" style={{ width: 'min(520px, 94vw)' }}>
+      <div className="TM-modal" data-testid="report-bug-modal" style={{ width: 'min(520px, 94vw)' }}>
         <div className="TM-header">
           <div className="TM-header-left">
             <span className="TM-tag">REPORT BUG</span>
@@ -84,6 +84,8 @@ function ReportBugModal({ open, onClose, task, userId, onBugCreated }) {
             <label className="TM-label">Bug Description <span className="TM-required">*</span></label>
             <textarea
               className="TM-textarea"
+              aria-label="Bug Description"
+              data-testid="bug-description-input"
               placeholder="Describe the error or defect found in this task…"
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -97,7 +99,13 @@ function ReportBugModal({ open, onClose, task, userId, onBugCreated }) {
 
         <div className="TM-footer">
           <button className="TM-btn TM-btn--cancel" onClick={onClose} disabled={loading}>Cancel</button>
-          <button className="TM-btn TM-btn--submit" onClick={handleSubmit} disabled={loading}>
+          <button
+            className="TM-btn TM-btn--submit"
+            onClick={handleSubmit}
+            disabled={loading}
+            title="Submit bug report"
+            data-testid="submit-bug-report-button"
+          >
             {loading ? 'Reporting…' : 'Report Bug'}
           </button>
         </div>
